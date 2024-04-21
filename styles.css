@@ -9,6 +9,20 @@ body {
     padding: 20px;
     box-sizing: border-box;
 }
+.main-content {
+    display: flex; /* Using Flexbox to lay out children side by side */
+    align-items: flex-start; /* Aligns children at the start of the cross axis */
+}
+
+.clinic-details,
+.notes-list {
+    flex: 1; /* Each child will take up equal width */
+}
+
+.notes-list {
+    overflow-y: auto; /* Makes the div scrollable vertically */
+    max-height: 100%; /* Limits the height to the parent's height */
+}
 .header-title {
     font-size: 24px;
     font-weight: bold;
