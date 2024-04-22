@@ -15,6 +15,13 @@ body {
     border-radius: 8px;
     padding: 10px 20px;
 }
+.page-header {
+    margin-top: 200px;
+}
+.caspio-embed {
+    max-width: 80%; /* Ensures content does not overflow */
+    overflow-x: hidden; /* Prevents horizontal scrolling if content is too wide */
+}
 
 .header-title {
     font-size: 20px;
@@ -34,8 +41,7 @@ body {
 }
 
 /* Bootstrap override for column padding */
-.row .col-md-4 {
-    padding: 20px 15px; /* Adjust as needed, but this must be consistent */
+.row .col-md {
     background-color: #e2e2e2;
 
 }
