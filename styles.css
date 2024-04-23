@@ -16,7 +16,6 @@ body {
     padding: 10px 20px;
 }
 .page-header {
-    margin-top: 200px;
 }
 .caspio-embed {
     max-width: 80%; /* Ensures content does not overflow */
