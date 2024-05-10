@@ -137,6 +137,9 @@ body {
     transition: all 0.1s ease-in-out;
 }
 
+.cbFormData input[type="radio"][disabled] + label {
+    background-color: #ff0000;}
+
 .cbFormData input[type="radio"] + label:hover {
     cursor: pointer;
 }
