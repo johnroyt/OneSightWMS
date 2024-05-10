@@ -154,3 +154,9 @@ body {
 .cbFormData input[type="radio"] + label:last-of-type {
     border-radius: 0 4px 4px 0;
 }
+.cbSearchSpa {
+    width: 100%;
+}
+.ST0FE1F70FF6904C8EBA94D74FF1BE9897 {
+    z-index: 5010; /* or higher if necessary */
+  }
