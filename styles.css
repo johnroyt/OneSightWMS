@@ -138,14 +138,14 @@ body {
 }
 
 .cbFormData input[type="radio"][disabled] + label {
-    background-color: #ff0000;}
+    background-color: #ffe1e1;}
 
 .cbFormData input[type="radio"] + label:hover {
     cursor: pointer;
 }
 
 .cbFormData input[type="radio"]:checked + label {
-    background-color: #909090;
+    background-color: #578af6;
     box-shadow: none;
 }
 
