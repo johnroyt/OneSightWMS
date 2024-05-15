@@ -6,6 +6,7 @@
     <style>
         .top-page-header {
             background-color: black;
+            padding: 10px 0;
         }
         .nav-bar {
             list-style-type: none;
@@ -63,7 +64,8 @@
         <li>
             <a href="./ClinicSearch.html">Stations</a>
             <div class="dropdown-content">
-                <script type="text/javascript" src="https://c2ect483.caspio.com/dp/9759400033d1c10777014263bc83/emb"></script>            </div>
+                <script type="text/javascript" src="https://c2ect483.caspio.com/dp/9759400033d1c10777014263bc83/emb"></script>
+            </div>
         </li>
         <li><a href="#contact">My Profile</a></li>
         <li><a href="#contact">Logout</a></li>
@@ -74,7 +76,7 @@
     document.addEventListener("DOMContentLoaded", function() {
         // Check if the Caspio script is loaded
         if (typeof Caspio !== "undefined") {
-            // Initialize the DataTable
+            // Initialize the DataPage
             Caspio.initAll();
         } else {
             console.error("Caspio script not loaded");
@@ -84,3 +86,4 @@
 
 </body>
 </html>
+    
