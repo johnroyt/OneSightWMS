@@ -26,10 +26,15 @@ body {
     overflow-x: hidden; /* Prevents horizontal scrolling if content is too wide */
 }
 
+
 .header-title {
     font-size: 20px;
     font-weight: bold;
 }
+.container-fluid {
+    margin-top: 60px;
+}
+
 .sub-header {
     background-color: #eee;
     display: flex;
