@@ -123,15 +123,6 @@ $(document).ready(function() {
     adjustTabHeight(); // Initial adjustment
 });
 
-document.addEventListener("DOMContentLoaded", function() {
-    fetch('header.html')
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('header-container').innerHTML = data;
-        })
-        .catch(error => console.error('Error loading the header:', error));
-});
-
 function loadReport(datapageId) {
     var scriptElement = $('#reportScript');
     scriptElement.remove(); // Remove the current script element if it exists
@@ -145,6 +136,15 @@ function loadReport(datapageId) {
     $('#reportContainer').append(newScript);
     setTimeout(adjustTabHeight, 1000); // Adjust height after a delay to allow content to load
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    fetch('header.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('header-container').innerHTML = data;
+        })
+        .catch(error => console.error('Error loading the header:', error));
+});
 
     </script>
 
