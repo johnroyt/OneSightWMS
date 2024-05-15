@@ -18,6 +18,8 @@ body {
 .top-page-header {
     margin: 0;
     margin-top: 0;
+    position: fixed;
+
 }
 .caspio-embed {
     max-width: 80%; /* Ensures content does not overflow */
