@@ -69,6 +69,7 @@ body {
 .modal-body {
     max-height: calc(200vh - 10px);
     overflow-y: auto;
+    z-index: 2000;
 }
 
 /* Utility and component styles */

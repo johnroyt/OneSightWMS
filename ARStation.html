@@ -17,8 +17,8 @@
 
 <!-- index.html or any other HTML file -->
 <div id="header-container"></div>
-<!-- Rest of your page's HTML -->  
-        </div>  
+<!-- Rest of your page's HTML -->
+<div class="main-content" >
                     <!--Begin boostrap page layout-->   
         <div class="container-fluid">
             <div class="row" style="background-color: rgb(231, 231, 231); margin-bottom: 10px;">
@@ -32,13 +32,13 @@
             </div>
         </div>
 
-
+</div>
 
 </body>
 </html>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    fetch('header.html')
+    fetch('volunteerHeader.html')
         .then(response => response.text())
         .then(data => {
             document.getElementById('header-container').innerHTML = data;
