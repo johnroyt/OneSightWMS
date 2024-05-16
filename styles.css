@@ -35,6 +35,8 @@ body {
 
 .main-content {
     padding-top: 460px; /* Adjust this value based on your header height */
+    padding: 35px; /* This padding applies to all sides */
+
 }
 
 .header-title {
@@ -49,12 +51,6 @@ body {
     align-items: center;
     padding: 30px; /* Adjust padding if needed */
 }
-
-/* Main content does not need to be full viewport height */
-.main-content {
-    padding: 10px; /* This padding applies to all sides */
-}
-
 /* Bootstrap override for column padding */
 .row .col-md {
     background-color: #e2e2e2;

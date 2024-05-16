@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Details Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div id="header-container" class="top-page-header">
+</div>
+<div class="main-content" >
+    <script type="text/javascript" src="https://c2ect483.caspio.com/dp/975940004737cf52dfe1448096cc/emb"></script>
+</div>
+
+<script>
+    function searchReports() {
+        var input, filter, ul, li, a, i, txtValue;
+        input = document.getElementById("reportSearch");
+        filter = input.value.toUpperCase();
+        ul = document.getElementById("reportList");
+        li = ul.getElementsByTagName("li");
+
+        for (i = 0; i < li.length; i++) {
+            a = li[i].getElementsByTagName("a")[0];
+            txtValue = a.textContent || a.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                li[i].style.display = "";
+            } else {
+                li[i].style.display = "none";
+            }
+        }
+    }
+
+    function adjustTabHeight() {
+        var maxHeight = 0;
+        $('.tab-pane').each(function() {
+            var thisHeight = $(this).height();
+            if (thisHeight > maxHeight) {
+                maxHeight = thisHeight;
+            }
+        });
+        $('.tab-content').height(maxHeight);
+    }
+
+    $(document).ready(function() {
+        adjustTabHeight(); // Initial adjustment
+    });
+
+    function loadReport(datapageId) {
+        var scriptElement = $('#reportScript');
+        scriptElement.remove(); // Remove the current script element if it exists
+
+        var newScript = $('<script>', {
+            id: 'reportScript',
+            type: 'text/javascript',
+            src: 'https://c2ect483.caspio.com/dp/' + datapageId + '/emb'
+        });
+
+        $('#reportContainer').append(newScript);
+        setTimeout(adjustTabHeight, 1000); // Adjust height after a delay to allow content to load
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading the header:', error));
+    });
+</script>
+
+</body>
+</html>
