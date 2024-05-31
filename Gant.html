@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gantt Chart</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['gantt']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+      // Fetch data from the DataPage
+      fetch('YOUR_DATA_PAGE_URL')
+        .then(response => response.json())
+        .then(data => {
+          var dataArray = [
+            ['Task ID', 'Task Name', 'Start Date', 'End Date', 'Duration', 'Percent Complete', 'Dependencies']
+          ];
+
+          // Parse data from Caspio DataPage
+          data.forEach(function(row) {
+            dataArray.push([
+              row.ClinicID,
+              row.ClinicName,
+              new Date(row.StartDate),
+              new Date(row.EndDate),
+              null,
+              0,
+              null
+            ]);
+          });
+
+          var dataTable = new google.visualization.DataTable();
+          dataTable.addColumn('string', 'Task ID');
+          dataTable.addColumn('string', 'Task Name');
+          dataTable.addColumn('date', 'Start Date');
+          dataTable.addColumn('date', 'End Date');
+          dataTable.addColumn('number', 'Duration');
+          dataTable.addColumn('number', 'Percent Complete');
+          dataTable.addColumn('string', 'Dependencies');
+          
+          dataTable.addRows(dataArray);
+
+          var options = {
+            height: 400,
+            gantt: {
+              trackHeight: 30
+            }
+          };
+
+          var chart = new google.visualization.Gantt(document.getElementById('chart_div'));
+          chart.draw(dataTable, options);
+        });
+    }
+  </script>
+</head>
+<body>
+  <div id="chart_div" style="width: 100%; height: 500px;"></div>
+</body>
+</html>

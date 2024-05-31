@@ -4,7 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        .nav-bar {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
 
+        .nav-bar li {
+            position: relative;
+        }
+
+        .nav-bar a {
+            text-decoration: none;
+            padding: 10px 20px;
+            display: block;
+            color: white;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content script {
+            display: block;
+        }
+
+        .nav-bar li:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content script {
+            margin: 0;
+        }
     </style>
     <script type="text/javascript" src="https://bridge.caspio.net/scripts/e1.js"></script>
 </head>
@@ -16,13 +54,15 @@
         <li>
             <a href="./ClinicSearch.html">Clinics</a>
             <div class="dropdown-content">
-                <script type="text/javascript" src="https://c2ect483.caspio.com/dp/9759400033d1c10777014263bc83/emb"></script>            </div>
+                <!-- The DataPage will be loaded here -->
+                <div id="clinics-datapage"></div>
+            </div>
         </li>
         <li><a href="./PatientSearch.html">Patients</a></li>
         <li><a href="#contact">Partners</a></li>
         <li><a href="#contact">Contacts</a></li>
         <li><a href="#contact">Reports</a></li>
-        <li><a href="#contact">blahhhhh.</a></li>
+        <li><a href="#contact">Support</a></li>
     </ul>
 </div>
 
@@ -30,13 +70,22 @@
     document.addEventListener("DOMContentLoaded", function() {
         // Check if the Caspio script is loaded
         if (typeof Caspio !== "undefined") {
-            // Initialize the DataTable
-            Caspio.initAll();
+            // Function to load DataPage
+            function loadDataPage() {
+                const container = document.getElementById('clinics-datapage');
+                container.innerHTML = '';
+                var dataPageScript = document.createElement("script");
+                dataPageScript.src = "https://c2ect483.caspio.com/dp/9759400033d1c10777014263bc83/emb";
+                container.appendChild(dataPageScript);
+            }
+
+            // Attach the function to the hover event
+            const clinicsTab = document.querySelector('.nav-bar li:nth-child(2)');
+            clinicsTab.addEventListener('mouseover', loadDataPage);
         } else {
             console.error("Caspio script not loaded");
         }
     });
 </script>
-
 </body>
 </html>

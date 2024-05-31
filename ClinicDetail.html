@@ -12,15 +12,14 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
 <body>
-<div id="header-container" class="top-page-header">
-</div>
-<div class="main-content" >
+<div id="header-container" class="top-page-header"></div>
+<div class="main-content">
     <div class="container-fluid">
         <div class="row" style="background-color: rgb(231, 231, 231); margin-bottom: 10px;">
-            <div class="col-md-9">
+            <div class="col-md-8">
                 <script type="text/javascript" src="https://c2ect483.caspio.com/dp/9759400021c59445090d4a3a87ca/emb"></script>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 Is this chart even useful here?
                 <script type="text/javascript" src="https://c2ect483.caspio.com/dp/9759400061e2354f8d66461689d7/emb"></script>
             </div>
@@ -30,11 +29,11 @@
                 <div class="row">
                     <div class="col-md-8">
                         <ul class="nav nav-tabs">
-                            <li class="active"><a data-toggle="tab" href="#home">Community Groups</a></li>
-                            <li><a data-toggle="tab" href="#menu1">Patients</a></li>
-                            <li><a data-toggle="tab" href="#menu2">Team</a></li>
-                            <li><a data-toggle="tab" href="#menu2">Funding Partners</a></li>
-                            <li><a data-toggle="tab" href="#menu3">Reports</a></li>
+                            <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#home" onclick="setTabParam('home')">Community Groups</a></li>
+                            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu1" onclick="setTabParam('menu1')">Patients</a></li>
+                            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu2" onclick="setTabParam('menu2')">Team</a></li>
+                            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu3" onclick="setTabParam('menu3')">Funding Partners</a></li>
+                            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu4" onclick="setTabParam('menu4')">Reports</a></li>
                         </ul>
                         <div class="tab-content">
                             <div id="home" class="tab-pane fade in active">
@@ -69,23 +68,39 @@
 </div>
 
 <script>
-    function searchReports() {
-        var input, filter, ul, li, a, i, txtValue;
-        input = document.getElementById("reportSearch");
-        filter = input.value.toUpperCase();
-        ul = document.getElementById("reportList");
-        li = ul.getElementsByTagName("li");
-
-        for (i = 0; i < li.length; i++) {
-            a = li[i].getElementsByTagName("a")[0];
-            txtValue = a.textContent || a.innerText;
-            if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                li[i].style.display = "";
-            } else {
-                li[i].style.display = "none";
-            }
-        }
+    function setTabParam(tab) {
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tab);
+        window.history.pushState({}, '', url);
     }
+
+    function getTabParam() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('tab');
+    }
+
+    function activateTab(tab) {
+        // Remove the 'active' class from all tabs
+        $('.nav-tabs .nav-item .nav-link').removeClass('active');
+        $('.tab-content .tab-pane').removeClass('in active');
+
+        // Add the 'active' class to the selected tab
+        $('.nav-tabs a[href="#' + tab + '"]').addClass('active');
+        $('#' + tab).addClass('in active');
+    }
+
+    $(document).ready(function() {
+        const activeTab = getTabParam();
+        if (activeTab) {
+            activateTab(activeTab);
+        }
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function () {
+            adjustTabHeight();
+        });
+
+        adjustTabHeight();
+    });
 
     function adjustTabHeight() {
         var maxHeight = 0;
@@ -96,24 +111,6 @@
             }
         });
         $('.tab-content').height(maxHeight);
-    }
-
-    $(document).ready(function() {
-        adjustTabHeight(); // Initial adjustment
-    });
-
-    function loadReport(datapageId) {
-        var scriptElement = $('#reportScript');
-        scriptElement.remove(); // Remove the current script element if it exists
-
-        var newScript = $('<script>', {
-            id: 'reportScript',
-            type: 'text/javascript',
-            src: 'https://c2ect483.caspio.com/dp/' + datapageId + '/emb'
-        });
-
-        $('#reportContainer').append(newScript);
-        setTimeout(adjustTabHeight, 1000); // Adjust height after a delay to allow content to load
     }
 
     document.addEventListener("DOMContentLoaded", function() {
