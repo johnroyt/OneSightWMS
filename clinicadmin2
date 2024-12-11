@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizational Dashboard</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        .sidebar {
+            background-color: #0E1111;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            transition: width 0.3s ease;
+        }
+        .logo {
+            width: 100%;
+            height: 80px;
+            background-image: url('https://static.wixstatic.com/media/40d359_88b978311a5148b7b4905691e654094f~mv2.png/v1/fill/w_400,h_67,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/OS_Logo_Dark.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin-bottom: 20px;
+        }
+        .sidebar-button, .dropdown-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            color: white;
+            background-color: #0E1111;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s;
+        }
+        .sidebar-button:hover, .dropdown-button:hover {
+            background-color: #1A1C1D;
+        }
+        .dropdown-button.active {
+            background-color: #333;
+        }
+        .dropdown-content {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+        }
+        .dropdown-button {
+            padding-left: 30px;
+        }
+        .arrow {
+            transition: transform 0.3s;
+        }
+        #mainContent {
+            margin-left: 250px;
+            padding: 20px;
+            width: calc(100% - 250px);
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+        iframe {
+            width: 100%;
+            height: calc(100% - 20px); /* Adjust height to allow margin */
+            border: none;
+            margin-bottom: 20px; /* Add margin to avoid clipping */
+        }
+        @media screen and (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: absolute;
+                left: -100%;
+                transition: left 0.3s ease;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            #mainContent {
+                margin-left: 0;
+                width: 100%;
+                height: calc(100vh - 60px); /* Adjust height for the remaining space */
+                padding-top: 10px;
+            }
+            .dropdown-button {
+                padding-left: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="hamburger" onclick="toggleSidebar()">&#9776;</span>
+        <nav class="sidebar">
+            <div class="logo"></div>
+            <button class="sidebar-button" data-title="Clinics">
+                <span>Clinics</span>
+                <span class="arrow">&#10095;</span>
+            </button>
+            <div class="dropdown-content">
+                <button class="dropdown-button" data-title="Schedule">Schedule</button>
+                <button class="dropdown-button" data-title="New Clinic">New Clinic</button>
+                <button class="dropdown-button" data-title="New School/Group">New School/Group</button>
+                <button class="dropdown-button" data-title="View School/Group">View School/Group</button>
+                <button class="dropdown-button" data-title="Assign User">Assign User</button>
+                <button class="dropdown-button" data-title="Close Clinic">Close Clinic</button>
+            </div>
+            <button class="sidebar-button" data-title="Volunteers">
+                <span>Volunteers</span>
+                <span class="arrow">&#10095;</span>
+            </button>
+            <div class="dropdown-content">
+                <button class="dropdown-button" data-title="Status">Status</button>
+                <button class="dropdown-button" data-title="Email">Email</button>
+                <button class="dropdown-button" data-title="Master">Master</button>
+                <button class="dropdown-button" data-title="Health & Safety">Health & Safety</button>
+                <button class="dropdown-button" data-title="Payroll">Payroll</button>
+                <button class="dropdown-button" data-title="Stipened">Stipened</button>
+            </div>
+            <button class="sidebar-button" data-title="Reporting">
+                <span>Reporting</span>
+                <span class="arrow">&#10095;</span>
+            </button>
+            <div class="dropdown-content">
+                <button class="dropdown-button" data-title="Closed Loop Admin">Closed Loop Admin</button>
+                <button class="dropdown-button" data-title="Age & Gender">Age & Gender</button>
+                <button class="dropdown-button" data-title="RX Report">RX Report</button>
+                <button class="dropdown-button" data-title="Registration & Consent Recall">Registration & Consent Recall</button>
+                <button class="dropdown-button" data-title="Patient Letter Look Up">Patient Letter Look Up</button>
+                <button class="dropdown-button" data-title="Consenting Patient Contact Info">Consenting Patient Contact Info</button>
+            </div>
+            <button class="sidebar-button" data-title="Shuttles">
+                <span>Shuttles</span>
+                <span class="arrow">&#10095;</span>
+            </button>
+            <div class="dropdown-content">
+                <button class="dropdown-button" data-title="Shuttle Search">Shuttle Search</button>
+                <button class="dropdown-button" data-title="Shuttle Check-In">Shuttle Check-In</button>
+                <button class="dropdown-button" data-title="Re-Make Shuttle">Re-Make Shuttle</button>
+                <button class="dropdown-button" data-title="Shuttle Dispensing">Shuttle Dispensing</button>
+            </div>
+            <button class="sidebar-button" data-title="Scheduler">
+                <span>Scheduler</span>
+                <span class="arrow">&#10095;</span>
+            </button>
+            <div class="dropdown-content">
+                <button class="dropdown-button" data-title="Create New Clinic">Create New Clinic</button>
+                <button class="dropdown-button" data-title="Create New Group">Create New Group</button>
+                <button class="dropdown-button" data-title="Create New TimeSlots">Create New TimeSlots</button>
+                <button class="dropdown-button" data-title="View Group List">View Group List</button>
+                <button class="dropdown-button" data-title="View TimeSlots List">View TimeSlots List</button>
+                <button class="dropdown-button" data-title="View Schedule">View Schedule</button>
+            </div>
+        </nav>
+        <div id="mainContent">
+            <!-- Main content will be loaded here based on the selection -->
+        </div>
+    </div>
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+
+        document.querySelectorAll('.sidebar-button').forEach((button, index) => {
+            button.addEventListener('click', function() {
+                const dropdown = document.querySelectorAll('.dropdown-content')[index];
+                const arrow = button.querySelector('.arrow');
+                const isOpen = dropdown.style.display === 'flex';
+
+                // Close all other dropdowns and reset arrows
+                document.querySelectorAll('.dropdown-content').forEach((otherDropdown, idx) => {
+                    if (otherDropdown !== dropdown) {
+                        otherDropdown.style.display = 'none';
+                        document.querySelectorAll('.sidebar-button')[idx].querySelector('.arrow').style.transform = 'rotate(0deg)';
+                    }
+                });
+
+                // Toggle the current dropdown
+                dropdown.style.display = isOpen ? 'none' : 'flex';
+                arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+                // Remove active class from all main buttons
+                document.querySelectorAll('.sidebar-button').forEach(btn => btn.classList.remove('active'));
+            });
+        });
+
+        document.querySelectorAll('.dropdown-button').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.stopPropagation(); // Prevent the dropdown from toggling
+                document.querySelectorAll('.dropdown-button').forEach(btn => btn.classList.remove('active')); // Remove active class from all dropdown buttons
+                this.classList.add('active'); // Add active class to the clicked dropdown button
+                const title = this.getAttribute('data-title');
+                const content = document.getElementById('mainContent');
+                let iframeSrc = "";
+                switch(title) {
+                    case "Schedule":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940001893a85070034f04be79";
+                        break;
+                    case "New Clinic":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940001dc6b2d6a896453bae9c";
+                        break;
+                    case "New School/Group":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/9759400058f76b2baf2d4df496c0";
+                        break;
+                    case "View School/Group":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940000632e8e9442c4567ae00";
+                        break;
+                    case "Assign User":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/9759400065a7597e9ae44be88c5a";
+                        break;
+                    case "Close Clinic":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000cbfd25d02999449ab861";
+                        break;
+                    case "Status":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000661ecec333af45ebaf86";
+                        break;
+                    case "Email":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000540c8b86351046398cbd";
+                        break;
+                    case "Master":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000b6bc072062b4473fb2ff";
+                        break;
+                    case "Health & Safety":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000d9f4eb962c464bff9adb";
+                        break;
+                    case "Payroll":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940002778fde26cf34791b03d";
+                        break;
+                    case "Stipened":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/9759400026838dea3f5a4fee9b2f";
+                        break;
+                    case "Age & Gender":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/9759400016e7c43bf5094779b24c";
+                        break;
+                    case "RX Report":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940008043bdc548754344b2db";
+                        break;
+                    case "Shuttle Dispensing":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/9759400087d166bf1adb4cb5a683";
+                        break;
+                    case "Closed Loop Admin":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940007207e1a455bc40f1a09b";
+                        break;
+                    case "Registration & Consent Recall":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940000dd127d7bffa4c64ad4d";
+                        break;
+                    case "Patient Letter Look Up":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940006dbea4f618bf4f2eac68";
+                        break;
+                    case "Consenting Patient Contact Info":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000c4af1a43e0d748c281ff";
+                        break;
+                    case "Shuttle Search":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940004fc51ddefeac4f06a046";
+                        break;
+                    case "Shuttle Check-In":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000484d112b8112438cba0f";
+                        break;
+                    case "Re-Make Shuttle":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940009b42f0a82bd043adb554";
+                        break;
+                    case "Create New Group":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940009625009be15c4194a07e";
+                        break;
+                    case "Create New TimeSlots":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000fd9fd816cd954c33bc20";
+                        break;
+                    case "View Group List":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/975940004cb0e564779b4d68a562";
+                        break;
+                    case "View Schedule":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/9759400091eb5a88b317491aaae4";
+                        break;
+                    case "View TimeSlots List":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/97594000b9b30774a12c437bb3f9";
+                        break;
+                    case "Create New Clinic":
+                        iframeSrc = "https://c2ect483.caspio.com/dp/9759400021b4a6b7bec54af498fb";
+                        break;
+                }
+                if (iframeSrc) {
+                    content.innerHTML = `<iframe src="${iframeSrc}"></iframe>`;
+                }
+                // Reset all arrows to default position
+                document.querySelectorAll('.arrow').forEach(arrow => {
+                    arrow.style.transform = 'rotate(0deg)';
+                });
+                // Ensure main categories do not retain the active class
+                document.querySelectorAll('.sidebar-button').forEach(btn => btn.classList.remove('active'));
+            });
+        });
+
+        // Trigger the click event for the "Home" dropdown on initial page load
+        document.querySelector('[data-title="Schedule"]').click();
+    </script>
+</body>
+</html>
