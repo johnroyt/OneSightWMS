@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RX Check-in Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        #reader {
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            display: none;
+            animation: fadeOut 2s forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        #scanned-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .scanned-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .scanned-item:last-child {
+            border-bottom: none;
+        }
+
+        .time {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .manual-entry {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+        }
+
+        .manual-entry-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input {
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            flex-grow: 1;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 1.5rem;">RX Check-in Scanner</h1>
+        
+        <div class="stats">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="items-scanned">0</div>
+                    <div class="stat-label">Items Scanned</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="scan-time">0:00</div>
+                    <div class="stat-label">Session Time</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="reader"></div>
+        
+        <div class="manual-entry">
+            <form id="manual-form" onsubmit="handleManualSubmit(event)" class="manual-entry-form">
+                <input 
+                    type="text" 
+                    id="sp-number" 
+                    pattern="[A-Za-z0-9]{8}"
+                    placeholder="Enter SP number (e.g. SP5GP4AZ)" 
+                    title="Please enter an 8-character code"
+                    required
+                >
+                <button type="submit">Submit</button>
+            </form>
+            <div id="error-message" class="error-message">Please enter a valid SP number</div>
+        </div>
+
+        <div id="scanned-list"></div>
+    </div>
+
+    <div id="success-message" class="success-message">
+        Item successfully checked in!
+    </div>
+
+    <script>
+        let html5QrcodeScanner = null;
+        let sessionStart = new Date();
+        let scannedItems = [];
+    
+        async function submitToWebhook(spNumber) {
+            try {
+                // Convert to uppercase for consistency
+                spNumber = spNumber.toUpperCase();
+    
+                // Send the request to the webhook
+                const response = await fetch(`https://hook.us1.make.com/iguor7qv57nj2als01422vypf1qzb253?SP=${spNumber}&status=Received%20at%20ROC`);
+    
+                if (!response.ok) {
+                    throw new Error(`Webhook request failed: ${response.status}`);
+                }
+    
+                const responseText = await response.text();
+                if (!responseText.startsWith("SUCCESS")) {
+                    throw new Error(`Unexpected response: ${responseText}`);
+                }
+    
+                // Parse the response
+                const [, location, organization, firstName, lastInitial] = responseText.split('|');
+    
+                // Update UI
+                const scannedItem = {
+                    spNumber: spNumber,
+                    location: location,
+                    organization: organization,
+                    name: `${firstName} ${lastInitial}.`,
+                    timestamp: new Date()
+                };
+                scannedItems.push(scannedItem);
+    
+                showSuccess();
+                updateStats();
+                addToScannedList(scannedItem);
+    
+                // Clear input if it was a manual entry
+                const input = document.getElementById('sp-number');
+                if (input) {
+                    input.value = '';
+                }
+    
+                // Resume scanner after a delay
+                setTimeout(restartScanner, 1000);
+            } catch (e) {
+                console.error('Webhook submission error:', e);
+                alert('Error submitting data. Please try again.');
+                restartScanner();
+            }
+        }
+    
+        function handleManualSubmit(event) {
+            event.preventDefault();
+            const input = document.getElementById('sp-number');
+            const errorMsg = document.getElementById('error-message');
+    
+            if (input.value.length !== 8) {
+                errorMsg.style.display = 'block';
+                return false;
+            }
+    
+            errorMsg.style.display = 'none';
+            submitToWebhook(input.value);
+        }
+    
+        function showSuccess() {
+            const message = document.getElementById('success-message');
+            message.style.display = 'block';
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 2000);
+        }
+    
+        function updateStats() {
+            document.getElementById('items-scanned').textContent = scannedItems.length;
+    
+            const timeDiff = Math.floor((new Date() - sessionStart) / 1000);
+            const minutes = Math.floor(timeDiff / 60);
+            const seconds = timeDiff % 60;
+            document.getElementById('scan-time').textContent =
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    
+        function addToScannedList({ spNumber, location, organization, name, timestamp }) {
+            const list = document.getElementById('scanned-list');
+            const item = document.createElement('div');
+            item.className = 'scanned-item';
+            item.innerHTML = `
+                <div><strong>SP Number:</strong> ${spNumber}</div>
+                <div><strong>Location:</strong> ${location}</div>
+                <div><strong>Organization:</strong> ${organization}</div>
+                <div><strong>Name:</strong> ${name}</div>
+                <div class="time"><strong>Scanned At:</strong> ${timestamp.toLocaleTimeString()}</div>
+            `;
+            list.insertBefore(item, list.firstChild);
+        }
+    
+        function handleScan(decodedText) {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.pause(true);
+            }
+            submitToWebhook(decodedText);
+        }
+    
+        function restartScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.resume();
+            }
+        }
+    
+        function initScanner() {
+            if (!html5QrcodeScanner && document.getElementById('reader')) {
+                html5QrcodeScanner = new Html5Qrcode("reader", {
+                    verbose: false
+                });
+                html5QrcodeScanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    handleScan,
+                    () => {} // Empty error handler to prevent console spam
+                ).catch((err) => {
+                    console.error(`Scanner init error: ${err}`);
+                });
+            }
+        }
+    
+        // Start session timer
+        setInterval(updateStats, 1000);
+    
+        // Initialize scanner
+        initScanner();
+    </script>
+    
+</body>
+</html>
