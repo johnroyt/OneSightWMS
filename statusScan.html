@@ -279,6 +279,7 @@
         </div>
 
         <div id="scanned-list"></div>
+        <button id="print-slip-btn" onclick="printPackingSlip()">Print Packing Slip</button>
     </div>
 
     <div id="success-message" class="success-message">
@@ -474,6 +475,16 @@
                 <div class="time"><strong>Scanned At:</strong> ${timestamp.toLocaleTimeString()}</div>
             `;
             list.insertBefore(item, list.firstChild);
+        }
+
+        function printPackingSlip() {
+            const trackingNumber = document.getElementById('tracking-number').value;
+            if (!trackingNumber) {
+                alert('Please enter a tracking number.');
+                return;
+            }
+            const url = `https://c2ect483.caspio.com/dp/97594000f91cdc0844e74c7b8863?trackingNumber=${encodeURIComponent(trackingNumber)}`;
+            window.open(url, '_blank');
         }
 
         document.addEventListener('DOMContentLoaded', initScanners);
