@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -376,8 +378,7 @@
                                 Html5QrcodeSupportedFormats.UPC_E,
                                 Html5QrcodeSupportedFormats.EAN_13,
                                 Html5QrcodeSupportedFormats.EAN_8,
-                                Html5QrcodeSupportedFormats.CODABAR,
-                                Html5QrcodeSupportedFormats.ITF
+                                Html5QrcodeSupportedFormats.CODABAR
                             ]
                         },
                         handleTrackingScan,
@@ -461,8 +462,7 @@
             } catch (e) {
                 console.error('Webhook submission error:', e);
                 alert('Error submitting data. Please try again.');
-                await restartSPScanner();
-            }
+                await restartSPScanner();}
         }
     
         async function restartSPScanner() {
