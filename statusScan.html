@@ -397,6 +397,7 @@
         async function handleSPScan(decodedText) {
             spScanner.pause(true);
             await submitToWebhook(decodedText);
+            spScanner.resume();
         }
 
         async function handleTrackingScan(decodedText) {
@@ -433,7 +434,7 @@
                     timestamp: new Date()
                 };
                 scannedItems.push(scannedItem);
-                showSuccess();
+                showSuccess(`${firstName} ${lastInitial}.`);
                 updateStats();
                 addToScannedList(scannedItem);
             } catch (err) {
@@ -442,8 +443,9 @@
             }
         }
 
-        function showSuccess() {
+        function showSuccess(name) {
             const message = document.getElementById('success-message');
+            message.textContent = `Item successfully checked in for ${name}!`;
             message.style.display = 'block';
             setTimeout(() => {
                 message.style.display = 'none';
