@@ -236,14 +236,6 @@
                         id="tracking-number" 
                         placeholder="Enter tracking number" 
                     >
-                    <button 
-                        type="button" 
-                        id="scan-tracking" 
-                        class="scanner-toggle"
-                        onclick="toggleTrackingScanner()"
-                    >
-                        Scan Tracking Number
-                    </button>
                 </div>
                 <button type="button" id="assign-btn" style="display: none;" onclick="lockInputsAndStartScanning()">
                     Assign to Jobs
@@ -304,7 +296,6 @@
         async function initScanners() {
             if (!spScanner) {
                 spScanner = new Html5Qrcode("sp-reader");
-                await startSPScanner();
             }
 
             if (!trackingScanner) {
