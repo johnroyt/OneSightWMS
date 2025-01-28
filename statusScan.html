@@ -241,9 +241,10 @@
     <div class="container">
         <h1 style="text-align: center; margin-bottom: 1.5rem;">RX Check-in Scanner</h1>
         
-        <div class="tracking-section">
+        <!-- Tracking Step -->
+        <div class="tracking-section" id="tracking-step">
             <h2 style="margin-bottom: 1rem;">Shipment Details</h2>
-            <form id="tracking-form" class="tracking-form">
+            <form id="tracking-form" class="tracking-form" onsubmit="handleTrackingSubmit(event)">
                 <div class="tracking-controls">
                     <input 
                         type="text" 
@@ -266,32 +267,22 @@
                     <option value="Received at ROC">Received at ROC</option>
                     <option value="In Transit">In Transit</option>
                     <option value="Delivered">Delivered</option>
+                    <option value="Shipped to Partner">Shipped to Partner</option>
                     <option value="Exception">Exception</option>
                 </select>
+                <button type="submit">Next</button>
             </form>
             <div class="scanner-container">
                 <div id="tracking-reader"></div>
             </div>
         </div>
 
-        <div class="stats">
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-number" id="items-scanned">0</div>
-                    <div class="stat-label">Items Scanned</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="scan-time">0:00</div>
-                    <div class="stat-label">Session Time</div>
-                </div>
+        <!-- SP Scanner Section -->
+        <div class="manual-entry" id="sp-step" style="display: none;">
+            <h2>Scan SP Numbers</h2>
+            <div class="scanner-container">
+                <div id="sp-reader"></div>
             </div>
-        </div>
-
-        <div class="scanner-container">
-            <div id="sp-reader"></div>
-        </div>
-        
-        <div class="manual-entry">
             <form id="manual-form" onsubmit="handleManualSubmit(event)" class="manual-entry-form">
                 <input 
                     type="text" 
@@ -305,18 +296,6 @@
             </form>
             <div id="error-message" class="error-message">Please enter a valid SP number</div>
         </div>
-
-        <div id="scanned-list"></div>
-
-        <div class="packing-slip-section">
-            <button 
-                type="button" 
-                onclick="generatePackingSlip()" 
-                class="packing-slip-button"
-            >
-                Generate Packing Slip
-            </button>
-        </div>
     </div>
 
     <div id="success-message" class="success-message">
@@ -326,39 +305,11 @@
     <script>
         let spScanner = null;
         let trackingScanner = null;
-        let sessionStart = new Date();
-        let scannedItems = [];
         let isTrackingScannerActive = false;
 
         // Initialize ZXing Barcode Reader
         const codeReader = new ZXing.BrowserBarcodeReader();
 
-        async function initScanners() {
-            if (!spScanner) {
-                spScanner = new Html5Qrcode("sp-reader");
-                await startSPScanner();
-            }
-        }
-
-        // SP Number Scanner (QR Codes Only)
-        async function startSPScanner() {
-            try {
-                await spScanner.start(
-                    { facingMode: "environment" },
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 },
-                        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
-                    },
-                    handleSPScan,
-                    () => {}
-                );
-            } catch (err) {
-                console.error('SP Scanner init error:', err);
-            }
-        }
-
-        // Toggle Tracking Scanner (Barcodes Only)
         async function toggleTrackingScanner() {
             const trackingReader = document.getElementById('tracking-reader');
             const scanButton = document.getElementById('scan-tracking');
@@ -369,24 +320,22 @@
                 scanButton.textContent = 'Stop';
 
                 try {
-                    // Start ZXing Barcode Scanner
                     await codeReader.decodeFromVideoDevice(
                         undefined,
                         'tracking-reader',
                         (result) => {
                             if (result) {
-                                handleTrackingScan(result.text);
+                                document.getElementById('tracking-number').value = result.text;
+                                toggleTrackingScanner(); // Turn off scanner after scan
                             }
                         }
                     );
                     isTrackingScannerActive = true;
                 } catch (err) {
                     console.error('Failed to start tracking scanner:', err);
-                    alert('Failed to start tracking scanner. Please try again.');
                 }
             } else {
                 try {
-                    // Stop ZXing Barcode Scanner
                     await codeReader.reset();
                     trackingReader.style.display = 'none';
                     scanButton.classList.remove('active');
@@ -398,20 +347,59 @@
             }
         }
 
-        // Handle SP Number Scan (QR Codes)
+        function handleTrackingSubmit(event) {
+            event.preventDefault();
+            const status = document.getElementById('status-select').value;
+            if (status === "Shipped to Partner") {
+                document.getElementById('tracking-step').style.display = 'none';
+                document.getElementById('sp-step').style.display = 'block';
+                initSPScanner();
+            } else {
+                alert("SP scanning is only available for 'Shipped to Partner' status.");
+            }
+        }
+
+        async function initSPScanner() {
+            if (!spScanner) {
+                spScanner = new Html5Qrcode("sp-reader");
+                try {
+                    await spScanner.start(
+                        { facingMode: "environment" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 },
+                            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+                        },
+                        handleSPScan,
+                        () => {}
+                    );
+                } catch (err) {
+                    console.error('SP Scanner init error:', err);
+                }
+            }
+        }
+
         async function handleSPScan(decodedText) {
             await spScanner.pause(true);
-            await submitToWebhook(decodedText);
+            console.log("Scanned SP Number:", decodedText);
+            showSuccess("SP Number Scanned: " + decodedText);
         }
 
-        // Handle Tracking Number Scan (Barcodes)
-        function handleTrackingScan(decodedText) {
-            document.getElementById('tracking-number').value = decodedText;
-            toggleTrackingScanner(); // Turn off scanner after successful scan
+        function showSuccess(message) {
+            const successMessage = document.getElementById('success-message');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 2000);
         }
 
-        // Rest of the code remains the same...
-        // (submitToWebhook, restartSPScanner, handleManualSubmit, showSuccess, updateStats, addToScannedList, generatePackingSlip)
+        function handleManualSubmit(event) {
+            event.preventDefault();
+            const spNumber = document.getElementById('sp-number').value;
+            console.log("Manually Entered SP Number:", spNumber);
+            showSuccess("SP Number Submitted: " + spNumber);
+        }
     </script>
 </body>
 </html>
