@@ -71,12 +71,23 @@
         }
 
         .scanner-toggle.active {
-            background-color: #28a745;
+            background-color: #dc3545;
+        }
+
+        .scanner-container {
+            width: 100%;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #tracking-reader, #sp-reader {
+            width: 100%;
+            min-height: 300px;
         }
 
         #tracking-reader {
-            margin-top: 1rem;
-            width: 100%;
             display: none;
         }
 
@@ -111,11 +122,6 @@
             font-size: 0.875rem;
             color: #6c757d;
             margin-top: 0.25rem;
-        }
-
-        #reader {
-            margin-bottom: 1rem;
-            width: 100%;
         }
 
         .success-message {
@@ -241,7 +247,9 @@
                     <option value="Exception">Exception</option>
                 </select>
             </form>
-            <div id="tracking-reader"></div>
+            <div class="scanner-container">
+                <div id="tracking-reader"></div>
+            </div>
         </div>
 
         <div class="stats">
@@ -257,7 +265,9 @@
             </div>
         </div>
 
-        <div id="reader"></div>
+        <div class="scanner-container">
+            <div id="sp-reader"></div>
+        </div>
         
         <div class="manual-entry">
             <form id="manual-form" onsubmit="handleManualSubmit(event)" class="manual-entry-form">
@@ -282,11 +292,94 @@
     </div>
 
     <script>
-        let html5QrcodeScanner = null;
+        let spScanner = null;
         let trackingScanner = null;
         let sessionStart = new Date();
         let scannedItems = [];
         let isTrackingScannerActive = false;
+
+        // Initialize both scanners
+        async function initScanners() {
+            // Initialize SP Scanner
+            if (!spScanner) {
+                spScanner = new Html5Qrcode("sp-reader");
+                await startSPScanner();
+            }
+
+            // Initialize Tracking Scanner (but don't start it yet)
+            if (!trackingScanner) {
+                trackingScanner = new Html5Qrcode("tracking-reader");
+            }
+        }
+
+        // Start SP Scanner
+        async function startSPScanner() {
+            try {
+                await spScanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    handleSPScan,
+                    () => {} // Empty error handler to prevent console spam
+                );
+            } catch (err) {
+                console.error('SP Scanner init error:', err);
+            }
+        }
+
+        // Toggle Tracking Scanner
+        async function toggleTrackingScanner() {
+            const trackingReader = document.getElementById('tracking-reader');
+            const scanButton = document.getElementById('scan-tracking');
+            
+            if (!isTrackingScannerActive) {
+                // Start tracking scanner
+                trackingReader.style.display = 'block';
+                scanButton.classList.add('active');
+                scanButton.textContent = 'Stop';
+                
+                try {
+                    await trackingScanner.start(
+                        { facingMode: "environment" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        handleTrackingScan,
+                        () => {} // Empty error handler
+                    );
+                    isTrackingScannerActive = true;
+                } catch (err) {
+                    console.error('Failed to start tracking scanner:', err);
+                    alert('Failed to start tracking scanner. Please try again.');
+                }
+            } else {
+                // Stop tracking scanner
+                try {
+                    await trackingScanner.stop();
+                    trackingReader.style.display = 'none';
+                    scanButton.classList.remove('active');
+                    scanButton.textContent = 'Scan';
+                    isTrackingScannerActive = false;
+                } catch (err) {
+                    console.error('Failed to stop tracking scanner:', err);
+                }
+            }
+        }
+
+        // Handle SP Number Scan
+        async function handleSPScan(decodedText) {
+            await spScanner.pause(true);
+            await submitToWebhook(decodedText);
+        }
+
+        // Handle Tracking Number Scan
+        async function handleTrackingScan(decodedText) {
+            document.getElementById('tracking-number').value = decodedText;
+            await toggleTrackingScanner(); // Turn off scanner after successful scan
+        }
     
         async function submitToWebhook(spNumber) {
             try {
@@ -295,6 +388,7 @@
                 
                 if (!trackingNumber || !status) {
                     alert('Please enter tracking number and select status first');
+                    await restartSPScanner();
                     return;
                 }
 
@@ -339,11 +433,17 @@
                 }
     
                 // Resume scanner after a delay
-                setTimeout(restartScanner, 1000);
+                setTimeout(restartSPScanner, 1000);
             } catch (e) {
                 console.error('Webhook submission error:', e);
                 alert('Error submitting data. Please try again.');
-                restartScanner();
+                await restartSPScanner();
+            }
+        }
+    
+        async function restartSPScanner() {
+            if (spScanner) {
+                await spScanner.resume();
             }
         }
     
@@ -394,66 +494,12 @@
             `;
             list.insertBefore(item, list.firstChild);
         }
-    
-        function handleScan(decodedText) {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.pause(true);
-            }
-            submitToWebhook(decodedText);
-        }
 
-        function handleTrackingScan(decodedText) {
-            document.getElementById('tracking-number').value = decodedText;
-            toggleTrackingScanner(); // Turn off scanner after successful scan
-        }
-    
-        function restartScanner() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.resume();
-            }
-        }
-    
-        function initScanner() {
-            if (!html5QrcodeScanner && document.getElementById('reader')) {
-                html5QrcodeScanner = new Html5Qrcode("reader", {
-                    verbose: false
-                });
-                html5QrcodeScanner.start(
-                    { facingMode: "environment" },
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 }
-                    },
-                    handleScan,
-                    () => {} // Empty error handler to prevent console spam
-                ).catch((err) => {
-                    console.error(`Scanner init error: ${err}`);
-                });
-            }
-        }
+        // Start session timer
+        setInterval(updateStats, 1000);
 
-        function toggleTrackingScanner() {
-            const trackingReader = document.getElementById('tracking-reader');
-            const scanButton = document.getElementById('scan-tracking');
-            
-            if (!isTrackingScannerActive) {
-                // Start tracking scanner
-                trackingReader.style.display = 'block';
-                scanButton.classList.add('active');
-                scanButton.textContent = 'Stop';
-                
-                if (!trackingScanner) {
-                    trackingScanner = new Html5Qrcode("tracking-reader");
-                }
-                
-                trackingScanner.start(
-                    { facingMode: "environment" },
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 }
-                    },
-                    handleTrackingScan,
-                    () => {} // Empty error handler
-                ).catch((err) => {
-                    console.error(`Tracking scanner error: ${err}`);
-                    alert('Failed to start
+        // Initialize scanners when page loads
+        document.addEventListener('DOMContentLoaded', initScanners);
+    </script>
+</body>
+</html>
