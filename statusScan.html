@@ -31,6 +31,55 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
+        .tracking-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tracking-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .tracking-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .status-select {
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            flex-grow: 1;
+        }
+
+        .scanner-toggle {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background-color: #6c757d;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .scanner-toggle:hover {
+            background-color: #5a6268;
+        }
+
+        .scanner-toggle.active {
+            background-color: #28a745;
+        }
+
+        #tracking-reader {
+            margin-top: 1rem;
+            width: 100%;
+            display: none;
+        }
+
         .stats {
             background: #f8f9fa;
             padding: 1rem;
@@ -164,6 +213,37 @@
     <div class="container">
         <h1 style="text-align: center; margin-bottom: 1.5rem;">RX Check-in Scanner</h1>
         
+        <div class="tracking-section">
+            <h2 style="margin-bottom: 1rem;">Shipment Details</h2>
+            <form id="tracking-form" class="tracking-form">
+                <div class="tracking-controls">
+                    <input 
+                        type="text" 
+                        id="tracking-number" 
+                        placeholder="Enter tracking number" 
+                        required
+                    >
+                    <button 
+                        type="button" 
+                        id="scan-tracking" 
+                        class="scanner-toggle"
+                        onclick="toggleTrackingScanner()"
+                    >
+                        Scan
+                    </button>
+                </div>
+                
+                <select id="status-select" class="status-select" required>
+                    <option value="">Select Status</option>
+                    <option value="Received at ROC">Received at ROC</option>
+                    <option value="In Transit">In Transit</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Exception">Exception</option>
+                </select>
+            </form>
+            <div id="tracking-reader"></div>
+        </div>
+
         <div class="stats">
             <div class="stats-grid">
                 <div class="stat-box">
@@ -203,16 +283,26 @@
 
     <script>
         let html5QrcodeScanner = null;
+        let trackingScanner = null;
         let sessionStart = new Date();
         let scannedItems = [];
+        let isTrackingScannerActive = false;
     
         async function submitToWebhook(spNumber) {
             try {
+                const trackingNumber = document.getElementById('tracking-number').value;
+                const status = document.getElementById('status-select').value;
+                
+                if (!trackingNumber || !status) {
+                    alert('Please enter tracking number and select status first');
+                    return;
+                }
+
                 // Convert to uppercase for consistency
                 spNumber = spNumber.toUpperCase();
     
-                // Send the request to the webhook
-                const response = await fetch(`https://hook.us1.make.com/iguor7qv57nj2als01422vypf1qzb253?SP=${spNumber}&status=Received%20at%20ROC`);
+                // Send the request to the webhook with tracking and status
+                const response = await fetch(`https://hook.us1.make.com/iguor7qv57nj2als01422vypf1qzb253?SP=${spNumber}&status=${encodeURIComponent(status)}&tracking=${encodeURIComponent(trackingNumber)}`);
     
                 if (!response.ok) {
                     throw new Error(`Webhook request failed: ${response.status}`);
@@ -228,9 +318,11 @@
     
                 // Update UI
                 const scannedItem = {
-                    spNumber: spNumber,
-                    location: location,
-                    organization: organization,
+                    spNumber,
+                    trackingNumber,
+                    status,
+                    location,
+                    organization,
                     name: `${firstName} ${lastInitial}.`,
                     timestamp: new Date()
                 };
@@ -287,12 +379,14 @@
                 `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
     
-        function addToScannedList({ spNumber, location, organization, name, timestamp }) {
+        function addToScannedList({ spNumber, trackingNumber, status, location, organization, name, timestamp }) {
             const list = document.getElementById('scanned-list');
             const item = document.createElement('div');
             item.className = 'scanned-item';
             item.innerHTML = `
                 <div><strong>SP Number:</strong> ${spNumber}</div>
+                <div><strong>Tracking:</strong> ${trackingNumber}</div>
+                <div><strong>Status:</strong> ${status}</div>
                 <div><strong>Location:</strong> ${location}</div>
                 <div><strong>Organization:</strong> ${organization}</div>
                 <div><strong>Name:</strong> ${name}</div>
@@ -306,6 +400,11 @@
                 html5QrcodeScanner.pause(true);
             }
             submitToWebhook(decodedText);
+        }
+
+        function handleTrackingScan(decodedText) {
+            document.getElementById('tracking-number').value = decodedText;
+            toggleTrackingScanner(); // Turn off scanner after successful scan
         }
     
         function restartScanner() {
@@ -332,13 +431,29 @@
                 });
             }
         }
-    
-        // Start session timer
-        setInterval(updateStats, 1000);
-    
-        // Initialize scanner
-        initScanner();
-    </script>
-    
-</body>
-</html>
+
+        function toggleTrackingScanner() {
+            const trackingReader = document.getElementById('tracking-reader');
+            const scanButton = document.getElementById('scan-tracking');
+            
+            if (!isTrackingScannerActive) {
+                // Start tracking scanner
+                trackingReader.style.display = 'block';
+                scanButton.classList.add('active');
+                scanButton.textContent = 'Stop';
+                
+                if (!trackingScanner) {
+                    trackingScanner = new Html5Qrcode("tracking-reader");
+                }
+                
+                trackingScanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    handleTrackingScan,
+                    () => {} // Empty error handler
+                ).catch((err) => {
+                    console.error(`Tracking scanner error: ${err}`);
+                    alert('Failed to start
