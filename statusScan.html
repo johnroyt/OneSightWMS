@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -215,6 +213,25 @@
             margin-top: 0.5rem;
             display: none;
         }
+
+        /* New Packing Slip Styles */
+        .packing-slip-section {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 2px solid #eee;
+            text-align: center;
+        }
+
+        .packing-slip-button {
+            background-color: #28a745;
+            padding: 1rem 2rem;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .packing-slip-button:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
@@ -287,6 +304,16 @@
         </div>
 
         <div id="scanned-list"></div>
+
+        <div class="packing-slip-section">
+            <button 
+                type="button" 
+                onclick="generatePackingSlip()" 
+                class="packing-slip-button"
+            >
+                Generate Packing Slip
+            </button>
+        </div>
     </div>
 
     <div id="success-message" class="success-message">
@@ -491,6 +518,16 @@
                 <div class="time"><strong>Scanned At:</strong> ${timestamp.toLocaleTimeString()}</div>
             `;
             list.insertBefore(item, list.firstChild);
+        }
+
+        function generatePackingSlip() {
+            const trackingNumber = document.getElementById('tracking-number').value;
+            if (!trackingNumber) {
+                alert('Please enter a tracking number first');
+                return;
+            }
+            const url = `https://c2ect483.caspio.com/dp/97594000f91cdc0844e74c7b8863?trackingNumber=${encodeURIComponent(trackingNumber)}`;
+            window.open(url, '_blank');
         }
 
         // Start session timer
