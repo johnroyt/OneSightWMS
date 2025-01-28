@@ -273,8 +273,9 @@
                 <button type="submit">Next</button>
             </form>
             <div class="scanner-container">
-                <div id="tracking-reader"></div>
-            </div>
+                <!-- Change div to video for ZXing -->
+                <video id="tracking-reader"></video>
+            </div>            
         </div>
 
         <!-- SP Scanner Section -->
@@ -311,41 +312,45 @@
         const codeReader = new ZXing.BrowserBarcodeReader();
 
         async function toggleTrackingScanner() {
-            const trackingReader = document.getElementById('tracking-reader');
-            const scanButton = document.getElementById('scan-tracking');
+    const trackingReader = document.getElementById('tracking-reader');
+    const scanButton = document.getElementById('scan-tracking');
 
-            if (!isTrackingScannerActive) {
-                trackingReader.style.display = 'block';
-                scanButton.classList.add('active');
-                scanButton.textContent = 'Stop';
+    if (!isTrackingScannerActive) {
+        trackingReader.style.display = 'block';
+        scanButton.classList.add('active');
+        scanButton.textContent = 'Stop';
 
-                try {
-                    await codeReader.decodeFromVideoDevice(
-                        undefined,
-                        'tracking-reader',
-                        (result) => {
-                            if (result) {
-                                document.getElementById('tracking-number').value = result.text;
-                                toggleTrackingScanner(); // Turn off scanner after scan
-                            }
-                        }
-                    );
-                    isTrackingScannerActive = true;
-                } catch (err) {
-                    console.error('Failed to start tracking scanner:', err);
+        try {
+            // Start ZXing Barcode Scanner with <video> element
+            await codeReader.decodeFromVideoDevice(
+                undefined,
+                'tracking-reader',
+                (result) => {
+                    if (result) {
+                        document.getElementById('tracking-number').value = result.text;
+                        toggleTrackingScanner(); // Turn off scanner after scan
+                    }
                 }
-            } else {
-                try {
-                    await codeReader.reset();
-                    trackingReader.style.display = 'none';
-                    scanButton.classList.remove('active');
-                    scanButton.textContent = 'Scan';
-                    isTrackingScannerActive = false;
-                } catch (err) {
-                    console.error('Failed to stop tracking scanner:', err);
-                }
-            }
+            );
+            isTrackingScannerActive = true;
+        } catch (err) {
+            console.error('Failed to start tracking scanner:', err);
+            alert('Failed to start tracking scanner. Please try again.');
         }
+    } else {
+        try {
+            // Stop ZXing Barcode Scanner
+            await codeReader.reset();
+            trackingReader.style.display = 'none';
+            scanButton.classList.remove('active');
+            scanButton.textContent = 'Scan';
+            isTrackingScannerActive = false;
+        } catch (err) {
+            console.error('Failed to stop tracking scanner:', err);
+        }
+    }
+}
+
 
         function handleTrackingSubmit(event) {
             event.preventDefault();
