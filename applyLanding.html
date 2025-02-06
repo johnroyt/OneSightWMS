@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
         @import url('https://cdnjs.cloudflare.com/ajax/libs/inter/3.19.3/inter.min.css');
  
@@ -30,7 +31,10 @@
         .container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 4rem 1.5rem;
+            padding: 1rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
  
         .title {
@@ -177,12 +181,6 @@
             color: var(--text-light);
         }
  
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
- 
         .requirements-list li::before {
             content: "✓";
             color: var(--primary);
@@ -234,64 +232,120 @@
             border: none;
             border-radius: 12px;
         }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
  
         @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
             .title {
-                font-size: 2rem;
+                font-size: 1.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .stats {
+                margin-bottom: 1.5rem;
+            }
+
+            .stat-card {
+                height: 150px;
             }
  
             .card {
-                padding: 2rem 1.5rem;
+                padding: 1.5rem 1rem;
+                margin: 0;
+                border-radius: 16px;
+            }
+
+            .button-group {
+                gap: 1rem;
+            }
+
+            .button-container {
+                margin-bottom: 0.5rem;
+            }
+
+            .button-label {
+                font-size: 0.85rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .btn {
+                padding: 0.75rem;
+                font-size: 0.9rem;
             }
  
             .requirements-list {
                 flex-direction: column;
                 align-items: center;
+                gap: 1rem;
+            }
+
+            .requirements {
+                margin-top: 1.5rem;
+                padding-top: 1.5rem;
             }
 
             .modal-content {
-                margin: 1rem;
+                margin: 0.5rem;
+                padding: 1rem;
             }
 
             .modal iframe {
-                height: 500px;
+                height: 80vh;
+            }
+
+            .help-btn {
+                margin-top: 1.5rem;
+                padding: 0.75rem 1.5rem;
             }
         }
 </style>
 </head>
 <body>
 <div class="container">
-<h1 class="title">OneSight 2025 Clinic Applications</h1>
-<p class="subtitle">Join OneSight EssilorLuxottica Foundation in our mission to bring clear vision to communities in need.</p>
- 
-        <div class="stats">
-<div class="stat-card"></div>
-<div class="stat-card"></div>
-<div class="stat-card"></div>
-</div>
- 
-        <div class="card">
-<div class="button-group">
-<div class="button-container">
-<div class="button-label">First time applying?</div>
-<button onclick="handleRegistration()" class="btn">Start New Application</button>
-</div>
-<div class="button-container">
-<div class="button-label">Did you submit a volunteer application last year?</div>
-<button onclick="handleLogin()" class="btn">Continue with Existing Account</button>
-</div>
-</div>
- 
-            <div class="requirements">
-<div class="requirements-title">Requirements</div>
-<ul class="requirements-list">
-<li>1+ year at EssilorLuxottica</li>
-<li>Manager approval</li>
-<li>Good standing required</li>
-</ul>
-<button onclick="openHelpModal()" class="btn help-btn">Need help?</button>
-</div>
-</div>
+    <h1 class="title">OneSight 2025 Clinic Applications</h1>
+    <p class="subtitle">Join OneSight EssilorLuxottica Foundation in our mission to bring clear vision to communities in need.</p>
+    
+    <div class="stats">
+        <div class="stat-card"></div>
+        <div class="stat-card"></div>
+        <div class="stat-card"></div>
+    </div>
+    
+    <div class="card">
+        <div class="button-group">
+            <div class="button-container">
+                <div class="button-label">First time applying?</div>
+                <button onclick="handleRegistration()" class="btn">Start New Application</button>
+            </div>
+            <div class="button-container">
+                <div class="button-label">Did you submit a volunteer application last year?</div>
+                <button onclick="handleLogin()" class="btn">Continue with Existing Account</button>
+            </div>
+        </div>
+        
+        <div class="requirements">
+            <div class="requirements-title">Requirements</div>
+            <ul class="requirements-list">
+                <li>1+ year at EssilorLuxottica</li>
+                <li>Manager approval</li>
+                <li>Good standing required</li>
+            </ul>
+            <button onclick="openHelpModal()" class="btn help-btn">Need help?</button>
+        </div>
+    </div>
 </div>
 
 <div id="helpModal" class="modal">
@@ -316,7 +370,6 @@
         document.getElementById('helpModal').style.display = 'none';
         document.body.style.overflow = 'auto';
     }
-    // Close modal when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('helpModal');
         if (event.target === modal) {
