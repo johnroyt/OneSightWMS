@@ -33,6 +33,67 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
+    .header-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .info-button {
+        position: absolute;
+        right: 0;
+        top: 0;
+        background: none;
+        border: none;
+        color: #007bff;
+        font-size: 1.25rem;
+        cursor: pointer;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background-color: white;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .close-modal {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close-modal:hover {
+        color: #555;
+    }
+
+    .instructions-list {
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+    }
+
+    .instructions-list li {
+        margin-bottom: 0.5rem;
+    }
+
     .tracking-section {
         margin-bottom: 1.5rem;
         padding-bottom: 1.5rem;
@@ -66,6 +127,10 @@
     .input-with-camera input {
         flex-grow: 1;
     }
+    
+    .sp-entry-form {
+        margin-bottom: 1rem;
+    }
 
     .camera-button {
         padding: 0.75rem;
@@ -82,10 +147,6 @@
 
     .camera-button:hover {
         background-color: #5a6268;
-    }
-
-    .camera-button i {
-        font-size: 1.25rem;
     }
 
     .camera-button.active {
@@ -303,7 +364,27 @@
 </style>
 <body>
     <div class="container">
-        <h1 style="text-align: center; margin-bottom: 1.5rem;">RX Check-in Scanner</h1>
+        <div class="header-section">
+            <h1 style="text-align: center;">RX Check-in Scanner</h1>
+            <button type="button" class="info-button" onclick="openInstructions()">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        </div>
+
+        <div id="instructions-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeInstructions()">&times;</span>
+                <h2>How to Use the Scanner</h2>
+                <ol class="instructions-list">
+                    <li>Select a status from the dropdown menu.</li>
+                    <li>If you selected "Shipped to Partner", enter or scan a tracking number.</li>
+                    <li>Scan SP numbers using the camera button or a barcode scanner.</li>
+                    <li>Each successful scan will update the record in the system.</li>
+                    <li>You can also enter SP numbers manually in the field at the bottom.</li>
+                    <li>If you selected "Shipped to Partner", you can print a packing slip once you've scanned items.</li>
+                </ol>
+            </div>
+        </div>
 
         <div class="tracking-section">
             <h2 style="margin-bottom: 1rem;">Shipment Details</h2>
@@ -320,31 +401,29 @@
                         <input 
                             type="text" 
                             id="tracking-number" 
-                            placeholder="Enter tracking number" 
+                            placeholder="Enter tracking number"
+                            onchange="updatePackingSlipButton()"
                         >
                         <button type="button" class="camera-button" id="tracking-camera-btn" onclick="toggleTrackingScanner()">
                             <i class="fas fa-camera"></i>
                         </button>
                     </div>
                 </div>
-                <button type="button" id="assign-btn" style="display: none;" onclick="lockInputsAndStartScanning()">
-                    Assign to Jobs
-                </button>
             </form>
+        </div>
 
-            <div id="tracking-scanner-container" class="scanner-container" style="display: none;">
-                <div id="tracking-reader" class="scanner"></div>
-                <div class="scanner-overlay">
-                    <button type="button" class="scanner-button" id="tracking-flip-btn" onclick="flipCamera('tracking')">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button type="button" class="scanner-button" id="tracking-close-btn" onclick="toggleTrackingScanner()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="tracking-loading" class="loading-indicator" style="display: none;">
-                    <div class="spinner"></div>
-                </div>
+        <div id="tracking-scanner-container" class="scanner-container" style="display: none;">
+            <div id="tracking-reader" class="scanner"></div>
+            <div class="scanner-overlay">
+                <button type="button" class="scanner-button" id="tracking-flip-btn" onclick="flipCamera('tracking')">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button type="button" class="scanner-button" id="tracking-close-btn" onclick="toggleTrackingScanner()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="tracking-loading" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
             </div>
         </div>
 
@@ -361,21 +440,25 @@
             </div>
         </div>
 
-        <div id="sp-scanner-section">
+        <div id="sp-scanner-section" style="display: none;">
             <h2 style="margin-bottom: 1rem;">SP Item Scanner</h2>
             
-            <div class="input-with-camera">
-                <input 
-                    type="text" 
-                    id="sp-number-input" 
-                    placeholder="Scan SP number" 
-                    pattern="[A-Za-z0-9]{8}"
-                    disabled
-                >
-                <button type="button" class="camera-button" id="sp-camera-btn" onclick="toggleSPScanner()">
-                    <i class="fas fa-camera"></i>
-                </button>
-            </div>
+            <form id="sp-form" onsubmit="handleSPSubmit(event)" class="sp-entry-form">
+                <div class="input-with-camera">
+                    <input 
+                        type="text" 
+                        id="sp-number" 
+                        pattern="[A-Za-z0-9]{8}"
+                        placeholder="Enter or scan SP number (e.g. SP5GP4AZ)" 
+                        title="Please enter an 8-character code"
+                        required
+                    >
+                    <button type="button" class="camera-button" id="sp-camera-btn" onclick="toggleSPScanner()">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button type="submit">Submit</button>
+                </div>
+            </form>
             
             <div id="sp-scanner-container" class="scanner-container" style="display: none;">
                 <div id="sp-reader" class="scanner"></div>
@@ -391,28 +474,13 @@
                     <div class="spinner"></div>
                 </div>
             </div>
-        </div>
-
-        <div class="manual-entry">
-            <h3 style="margin-bottom: 1rem;">Manual Entry</h3>
-            <form id="manual-form" onsubmit="handleManualSubmit(event)" class="manual-entry-form">
-                <input 
-                    type="text" 
-                    id="sp-number" 
-                    pattern="[A-Za-z0-9]{8}"
-                    placeholder="Enter SP number (e.g. SP5GP4AZ)" 
-                    title="Please enter an 8-character code"
-                    required
-                >
-                <button type="submit">Submit</button>
-            </form>
             <div id="error-message" class="error-message">Please enter a valid SP number</div>
         </div>
 
         <h3 style="margin: 1.5rem 0 0.5rem 0;">Scanned Items</h3>
         <div id="scanned-list"></div>
         
-        <button id="print-slip-btn" onclick="printPackingSlip()" style="margin-top: 1rem;">Print Packing Slip</button>
+        <button id="print-slip-btn" onclick="printPackingSlip()" style="margin-top: 1rem; display: none;">Print Packing Slip</button>
     </div>
 
     <div id="success-message" class="success-message">
@@ -420,6 +488,203 @@
     </div>
 
     <script>
+        // Define the Caspio API object at the global level
+        const CASPIO_API = {
+            baseUrl: 'https://c2ect483.caspio.com',
+            clientId: '8f29fd25c8c54d15d9a9422fceca15e148fb045c78388992e3', // Replace with your actual client ID
+            clientSecret: '0b59b87d8b6c453e98a41337054a2aeb6490348e0b4fb259ce', // Replace with your actual client secret
+            tokenStorage: {
+                token: null,
+                expiresAt: 0
+            },
+            
+            // Get authentication token (with more detailed error handling)
+            async getToken() {
+                try {
+                    // Check if we have a valid cached token
+                    const now = Date.now();
+                    if (this.tokenStorage.token && this.tokenStorage.expiresAt > now) {
+                        return this.tokenStorage.token;
+                    }
+                    
+                    console.log("Requesting new auth token...");
+                    
+                    // Request new token
+                    const response = await fetch(`${this.baseUrl}/oauth/token`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `grant_type=client_credentials&client_id=${this.clientId}&client_secret=${this.clientSecret}`
+                    });
+                    
+                    const responseText = await response.text();
+                    console.log("Auth response:", response.status, responseText);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Authentication failed: ${response.status} - ${responseText}`);
+                    }
+                    
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (e) {
+                        throw new Error(`Failed to parse auth response: ${responseText}`);
+                    }
+                    
+                    // Cache the token with expiration time (subtract 60 seconds for safety)
+                    this.tokenStorage.token = data.access_token;
+                    this.tokenStorage.expiresAt = now + ((data.expires_in - 60) * 1000);
+                    
+                    return data.access_token;
+                } catch (error) {
+                    console.error('Failed to get authentication token:', error);
+                    throw error;
+                }
+            },
+            
+            // Find a record by SP_Number (with more detailed error handling)
+            async findRecordBySPNumber(spNumber) {
+                try {
+                    const token = await this.getToken();
+                    
+                    // URL encode the SP number for safe query
+                    const encodedSP = encodeURIComponent(spNumber);
+                    
+                    // Use the JRTTEST table name and try a different query format
+                    const url = `${this.baseUrl}/rest/v2/tables/Shuttle_Order_Processing_JRTTEST/records?q.where=SP_Number='${encodedSP}'`;
+                    console.log("Querying record with URL:", url);
+                    
+                    const response = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const responseText = await response.text();
+                    console.log("Find record response:", response.status, responseText);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed: ${response.status} - ${responseText}`);
+                    }
+                    
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (e) {
+                        throw new Error(`Failed to parse API response: ${responseText}`);
+                    }
+                    
+                    if (data.Result && data.Result.length > 0) {
+                        console.log("Found record:", data.Result[0]);
+                        return data.Result[0]; // Return the found record
+                    } else {
+                        throw new Error(`SP Number ${spNumber} not found in the system`);
+                    }
+                } catch (error) {
+                    console.error('Error finding record:', error);
+                    throw error;
+                }
+            },
+            
+            async updateRecord(recordId, jobStatus, trackingNumber = null) {
+                try {
+                    const token = await this.getToken();
+                    
+                    // Prepare update payload
+                    const updateData = {
+                        JOB_STATUS: jobStatus
+                    };
+                    
+                    // Only include tracking number if it exists and is applicable
+                    if (trackingNumber) {
+                        updateData.TrackingNumber_ToPartner = trackingNumber;
+                    }
+                    
+                    console.log(`Updating record ${recordId} with data:`, updateData);
+                    
+                    // Instead of trying to update by record ID, use a query to match the PK_ID
+                    // This works around possible REST API limitations in your account
+                    const url = `${this.baseUrl}/rest/v2/tables/Shuttle_Order_Processing_JRTTEST/records?q.where=PK_ID=${recordId}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    const responseText = await response.text();
+                    console.log("Update response:", response.status, responseText);
+                    
+                    if (!response.ok) {
+                        // Try alternative update format if the first one fails
+                        if (response.status === 404) {
+                            console.log("Trying alternative update format...");
+                            
+                            // Some Caspio accounts require this format
+                            const altUrl = `${this.baseUrl}/rest/v2/tables/Shuttle_Order_Processing_JRTTEST/rows`;
+                            
+                            const altResponse = await fetch(altUrl, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    "where": `PK_ID=${recordId}`,
+                                    "values": updateData
+                                })
+                            });
+                            
+                            const altResponseText = await altResponse.text();
+                            console.log("Alternative update response:", altResponse.status, altResponseText);
+                            
+                            if (!altResponse.ok) {
+                                throw new Error(`Alternative record update failed: ${altResponse.status} - ${altResponseText}`);
+                            }
+                            
+                            return altResponseText ? JSON.parse(altResponseText) : {};
+                        }
+                        
+                        throw new Error(`Record update failed: ${response.status} - ${responseText}`);
+                    }
+                    
+                    return responseText ? JSON.parse(responseText) : {};
+                } catch (error) {
+                    console.error('Error updating record:', error);
+                    throw error;
+                }
+            }
+        };
+    
+        // Test Caspio API connection function
+        async function testCaspioConnection() {
+            try {
+                // Test the authentication
+                const token = await CASPIO_API.getToken();
+                console.log("Authentication successful. Token:", token.substring(0, 10) + "...");
+                
+                // Test a simple query to list tables
+                const response = await fetch(`${CASPIO_API.baseUrl}/rest/v2/tables`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const responseText = await response.text();
+                console.log("Tables response:", response.status, responseText);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to get tables: ${response.status} - ${responseText}`);
+                }
+                
+                const data = JSON.parse(responseText);
+                console.log("Available tables:", data);
+                
+                alert("Caspio API connection test successful!");
+            } catch (error) {
+                console.error("Caspio API connection test failed:", error);
+                alert("Caspio API connection test failed: " + error.message);
+            }
+        }
+    
         let spScanner = null;
         let trackingScanner = null;
         let isSPScannerActive = false;
@@ -429,6 +694,15 @@
         let timerInterval = null;
         let currentCameraId = 'environment';
 
+        // Show/hide instructions modal
+        function openInstructions() {
+            document.getElementById('instructions-modal').style.display = 'block';
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructions-modal').style.display = 'none';
+        }
+    
         // Initialize scanners
         async function initScanners() {
             try {
@@ -442,22 +716,27 @@
                 
                 // Start the session timer
                 startSessionTimer();
-
+    
                 // Add event listener for barcode scanner input
                 document.addEventListener('keydown', handleBarcodeScanner);
+                
+                // Show instructions modal on first load
+                setTimeout(() => {
+                    openInstructions();
+                }, 500);
             } catch (err) {
                 console.error('Scanner initialization error:', err);
                 alert('Error initializing scanners. Please try again or use manual entry.');
             }
         }
-
+    
         // Start session timer
         function startSessionTimer() {
             timerInterval = setInterval(() => {
                 updateStats();
             }, 1000);
         }
-
+    
         // Function to flip camera between front and back
         async function flipCamera(scannerType) {
             // Toggle camera
@@ -472,13 +751,19 @@
                 startTrackingScanner();
             }
         }
-
+    
         // Function to toggle SP Scanner
         async function toggleSPScanner() {
             const scannerContainer = document.getElementById('sp-scanner-container');
             const cameraButton = document.getElementById('sp-camera-btn');
             
             if (!isSPScannerActive) {
+                // Check if status is selected
+                if (!document.getElementById('status-select').value) {
+                    alert('Please select a status first.');
+                    return;
+                }
+                
                 // Show loading indicator
                 document.getElementById('sp-loading').style.display = 'flex';
                 
@@ -510,7 +795,7 @@
                 }
             }
         }
-
+    
         // Start SP Scanner
         async function startSPScanner() {
             try {
@@ -536,7 +821,7 @@
                 throw err;
             }
         }
-
+    
         // Function to toggle Tracking Scanner
         async function toggleTrackingScanner() {
             const scannerContainer = document.getElementById('tracking-scanner-container');
@@ -574,7 +859,7 @@
                 }
             }
         }
-
+    
         // Start Tracking Scanner
         async function startTrackingScanner() {
             try {
@@ -599,81 +884,94 @@
                 throw err;
             }
         }
-
+    
         // Handle status change
         function handleStatusChange() {
             const status = document.getElementById('status-select').value;
             const trackingSection = document.getElementById('tracking-section');
-            const assignBtn = document.getElementById('assign-btn');
-
+            const spScannerSection = document.getElementById('sp-scanner-section');
+    
+            // Show/hide tracking number section based on status
             if (status === "Shipped to Partner") {
                 trackingSection.style.display = "block";
             } else {
                 trackingSection.style.display = "none";
             }
             
+            // Enable/disable SP scanner section based on status
             if (status) {
-                assignBtn.style.display = "block";
+                spScannerSection.style.display = "block";
+                document.getElementById('sp-number').disabled = false;
             } else {
-                assignBtn.style.display = "none";
-            }
-        }
-
-        // Lock inputs and start scanning
-        function lockInputsAndStartScanning() {
-            const statusSelect = document.getElementById('status-select');
-            const trackingInput = document.getElementById('tracking-number');
-            const assignBtn = document.getElementById('assign-btn');
-            const spInput = document.getElementById('sp-number-input');
-
-            // Validate inputs
-            if (!statusSelect.value) {
-                alert('Please select a status.');
-                return;
+                spScannerSection.style.display = "none";
+                document.getElementById('sp-number').disabled = true;
             }
             
-            if (statusSelect.value === "Shipped to Partner" && !trackingInput.value) {
-                alert('Please enter a tracking number.');
-                return;
-            }
-
-            // Disable inputs
-            statusSelect.disabled = true;
-            if (trackingInput) trackingInput.disabled = true;
-            assignBtn.disabled = true;
-            spInput.disabled = false;
-
-            // Show scanning is ready
-            alert('Ready to scan SP numbers. Use the camera button or a barcode scanner.');
+            // Update packing slip button visibility
+            updatePackingSlipButton();
         }
-
+        
+        // Update packing slip button visibility
+        function updatePackingSlipButton() {
+            const status = document.getElementById('status-select').value;
+            const trackingNumber = document.getElementById('tracking-number').value;
+            const printSlipBtn = document.getElementById('print-slip-btn');
+            
+            if (status === "Shipped to Partner" && trackingNumber) {
+                printSlipBtn.style.display = "block";
+            } else {
+                printSlipBtn.style.display = "none";
+            }
+        }
+    
         // Handle SP scan
         async function handleSPScan(decodedText) {
-            // Check if we're in active scanning mode
-            if (document.getElementById('status-select').disabled) {
-                try {
-                    // Pause scanner to prevent multiple scans
-                    spScanner.pause();
-                    
-                    // Display the scanned value in the input field
-                    document.getElementById('sp-number-input').value = decodedText;
-                    
-                    // Submit the scanned value
-                    await submitToWebhook(decodedText);
-                    
-                    // Clear the input field for next scan
-                    document.getElementById('sp-number-input').value = '';
-                    
-                    // Resume scanner
-                    spScanner.resume();
-                } catch (err) {
-                    console.error('Error processing SP scan:', err);
-                    alert('Error processing scan. Please try again.');
-                    spScanner.resume();
+            try {
+                // Check if a status is selected
+                const statusSelect = document.getElementById('status-select');
+                if (!statusSelect.value) {
+                    alert('Please select a status first.');
+                    return;
                 }
+                
+                // Pause scanner to prevent multiple scans
+                spScanner.pause();
+                
+                // Display the scanned value in the input field
+                document.getElementById('sp-number').value = decodedText;
+                
+                // Submit the scanned value with retry logic
+                let attempts = 0;
+                const maxAttempts = 2;
+                
+                while (attempts < maxAttempts) {
+                    try {
+                        await submitToAPI(decodedText);
+                        break; // Success - exit retry loop
+                    } catch (error) {
+                        attempts++;
+                        if (attempts >= maxAttempts) {
+                            throw error; // Re-throw if all retries failed
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
+                    }
+                }
+                
+                // Clear the input field for next scan
+                document.getElementById('sp-number').value = '';
+                
+                // Resume scanner
+                spScanner.resume();
+            } catch (err) {
+                console.error('Error processing SP scan:', err);
+                alert(`Error processing scan: ${err.message}. Please try again.`);
+                
+                // Always make sure scanner is resumed even after error
+                document.getElementById('sp-number').value = '';
+                spScanner.resume();
             }
         }
-
+    
         // Handle Tracking scan
         async function handleTrackingScan(decodedText) {
             try {
@@ -690,6 +988,9 @@
                 document.getElementById('tracking-camera-btn').classList.remove('active');
                 isTrackingScannerActive = false;
                 
+                // Update packing slip button
+                updatePackingSlipButton();
+                
                 alert(`Tracking number scanned: ${decodedText}`);
             } catch (err) {
                 console.error('Error processing tracking scan:', err);
@@ -697,15 +998,20 @@
                 trackingScanner.resume();
             }
         }
-
+    
         // Handle barcode scanner input (for physical scanners)
         let barcodeBuffer = '';
         let lastKeyTime = 0;
         
         function handleBarcodeScanner(e) {
-            // Check if we're in an input field
+            // Check if we're in an input field - if so, let the default behavior handle it
             if (document.activeElement.tagName === 'INPUT') {
                 return;
+            }
+            
+            // Prevent barcode Enter key from submitting forms
+            if (e.key === 'Enter') {
+                e.preventDefault();
             }
             
             const currentTime = new Date().getTime();
@@ -722,7 +1028,6 @@
                 if (barcodeBuffer.length > 0) {
                     processBarcodeInput(barcodeBuffer);
                     barcodeBuffer = '';
-                    e.preventDefault();
                 }
             } else if (e.key.length === 1) {
                 // Add character to buffer
@@ -731,122 +1036,139 @@
         }
         
         function processBarcodeInput(barcode) {
+            console.log("Processing barcode:", barcode);
+            
             // Determine what type of barcode and process accordingly
             if (barcode.match(/^[A-Za-z0-9]{8}$/)) {
                 // Looks like an SP number
-                if (document.getElementById('status-select').disabled) {
-                    submitToWebhook(barcode);
+                const statusSelect = document.getElementById('status-select');
+                if (statusSelect.value) {
+                    // Populate the field first for user visibility
+                    document.getElementById('sp-number').value = barcode;
+                    submitToAPI(barcode);
                 } else {
-                    alert('Please select a status and click "Assign to Jobs" first.');
+                    alert('Please select a status first.');
                 }
-            } else if (barcode.match(/^1Z[0-9A-Z]{16}$/)) {
-                // Looks like a UPS tracking number
-                document.getElementById('tracking-number').value = barcode;
+            } else if (barcode.match(/^1Z[0-9A-Z]{16}$/) || barcode.length > 10) {
+                // Looks like a tracking number
+                const trackingInput = document.getElementById('tracking-number');
+                trackingInput.value = barcode;
+                updatePackingSlipButton();
                 alert(`Tracking number scanned: ${barcode}`);
             }
         }
-
-        // Handle manual submit
-        async function handleManualSubmit(event) {
+    
+        // Handle SP number submit
+        async function handleSPSubmit(event) {
             event.preventDefault();
             
             const spNumber = document.getElementById('sp-number').value;
+            const statusSelect = document.getElementById('status-select');
             
-            if (!document.getElementById('status-select').disabled) {
-                alert('Please select a status and click "Assign to Jobs" first.');
+            if (!statusSelect.value) {
+                alert('Please select a status first.');
                 return;
             }
             
             try {
-                await submitToWebhook(spNumber);
+                await submitToAPI(spNumber);
                 document.getElementById('sp-number').value = '';
+                // Set focus back to the input field for the next scan
+                document.getElementById('sp-number').focus();
             } catch (err) {
-                console.error('Manual submission error:', err);
+                console.error('Submission error:', err);
+                document.getElementById('error-message').textContent = err.message;
                 document.getElementById('error-message').style.display = 'block';
                 setTimeout(() => {
                     document.getElementById('error-message').style.display = 'none';
                 }, 3000);
             }
         }
-
-        // Submit to webhook
-        async function submitToWebhook(spNumber) {
+    
+        // Submit to Caspio API
+        async function submitToAPI(spNumber) {
             try {
                 const trackingNumber = document.getElementById('tracking-number').value || '';
                 const status = document.getElementById('status-select').value;
-
+    
                 if (!status) {
                     alert('Please select a status.');
                     return;
                 }
                 
                 if (status === "Shipped to Partner" && !trackingNumber) {
-                    alert('Please enter a tracking number.');
+                    alert('Please enter a tracking number for "Shipped to Partner" status.');
                     return;
                 }
-
+    
                 // Format the SP number (uppercase)
                 spNumber = spNumber.toUpperCase();
                 
                 // Show loading state
                 const submitBtn = document.querySelector('#manual-form button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Submitting...';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Submitting...';
+                }
                 
-                // Make API call
-                const response = await fetch(`https://hook.us1.make.com/iguor7qv57nj2als01422vypf1qzb253?SP=${spNumber}&status=${encodeURIComponent(status)}&tracking=${encodeURIComponent(trackingNumber)}`);
-
+                // Step 1: Find the record associated with this SP number
+                const record = await CASPIO_API.findRecordBySPNumber(spNumber);
+                
+                // Step 2: Update the record with new status and tracking number
+                await CASPIO_API.updateRecord(record.PK_ID, status, trackingNumber);
+                
                 // Reset button state
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit';
-
-                if (!response.ok) {
-                    throw new Error(`Webhook request failed: ${response.status}`);
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit';
                 }
-
-                const responseText = await response.text();
-                
-                if (!responseText.startsWith("SUCCESS")) {
-                    throw new Error(`Unexpected response: ${responseText}`);
-                }
-
-                const [, location, organization, firstName, lastInitial] = responseText.split('|');
-                
+    
+                // Create scanned item object with record data
                 const scannedItem = {
                     spNumber,
                     trackingNumber,
                     status,
-                    location,
-                    organization,
-                    name: `${firstName} ${lastInitial}.`,
+                    location: record.CLINIC || record.Clinic || "Unknown",
+                    organization: record.SCHOOL || record.School || "Unknown",
+                    name: `${record.FIRSTNAME || record.FirstName || ""} ${(record.LASTNAME || record.LastName || "").charAt(0)}.`,
                     timestamp: new Date()
                 };
                 
+                // Add to list and update UI
                 scannedItems.push(scannedItem);
-                showSuccess(`${firstName} ${lastInitial}.`);
+                showSuccess(scannedItem.name);
                 updateStats();
                 addToScannedList(scannedItem);
+                
+                // Update packing slip button visibility
+                updatePackingSlipButton();
+                
             } catch (err) {
-                console.error('Webhook submission error:', err);
-                alert('Error submitting data. Please try again.');
+                console.error('Submission error:', err);
+                alert(`Error: ${err.message}`);
+                
+                // Reset button state on error
+                const submitBtn = document.querySelector('#manual-form button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit';
+                }
+                
                 throw err;
             }
         }
-
+    
         // Show success message
         function showSuccess(name) {
             const message = document.getElementById('success-message');
             message.textContent = `Item successfully checked in for ${name}!`;
             message.style.display = 'block';
             
-            // Play success sound
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77FdGAg+l9ryxnMpBSl+zPLaizsIGGS57OihUBELTKXh8bllHgU2jdXzzn0vBSF1xe/glEILElyx6OyrWBUIQ5zd8sFuJAUuhM/z1YU2Bhxqvu7mnEoODlOq5O+zYBoGPJTY88p2KwUme8rx3I4+CRZiturqqVITC0mi4PK8aB8GM4nU8tGAMQYfcsLu45ZFDBFYr+ftrVoXCECY3PLEcSYELIHO8diJOQcZaLvt559NEAxPqOPwtmMcBjiP1/PMeS0GI3fH8OCRQQoUXrTp66hVFApGnt/yvmwhBTCG0fPTgjQGHW/A7eSaRw0PVqzl77JeGQc9ltryxnUoBSh+zPDaizsIGGS56+mjTxELTKXh8bllHgU1jdT0z3wvBSJ0xe/glEIKElyx6OyrWRUIRJve8sFuJAUug8/y1oU2Bhxqvu7mnEoPDVKq5PCzYRoGPJTY88p3KgUme8rx3I4+CRVht+rqqVMSC0mh4fK8aiAFM4nU8tGAMQYfcsPu45ZEDBFYsObtrlwWCECZ3PLEcSYGK4DN8tiIOQcZZ7zs56BODwxPpuPxtmQcBjiP1/PMeS0FI3fH8OCRQQsUXrTp66hVFApGnt/yv2wiBTCG0fPTgzQGHm/A7eSaSA0PVqvm77FfGQc9ltrzxnUoBSh9y/HajDsIF2W56+mjUREKTKXh8bllHwU1jdT0z3wvBSF0xPDglEIKElyx6eyrWRUJQ5vd88FwJAQug8/y1oY2Bhxqv+3mnEoPDVOq5PCzYRsGO5PZ88p3KgUmfMrx3I4+CRVht+vqqVMSC0mh4PK+aiAFMojV8tGAMQYfccPu45ZEDBFYsObtrlwXCECZ3PLEcScFLIHO8tiIOQcZZ7vs56BODwxPpuPxtmQdBTiP1/PMeS0FI3bH8OCRQQsUXrTp66hVFQlGnt/yv2wiBDCG0fPUgzQHHW/A7eSaSA0PVqvm77FfGQc9ltvyxnUoBSh9y/HajDwIF2S56+mjUREKTKXh8blmHwU1jdT0z3wvBSF0xPDglEIKElux6eyrWRUJQ5vd88FwJAUtg8/y1oY3BRxqv+3mnEwODVOq5PC0YRsGO5PZ88p3KgUmfMrx3I4+CRVht+vqqVMSC0mh4PK+aiAFMojV8tGAMQYfccPu45ZFCxFYsObtrlwXCECZ3PLEcScFLIHO8tiIOQcZZ7vs56BODwxPpuPxt2MdBTeP1/PMeS0FI3bH79+RQQsUXrTp66hWFAlFnt/yv2wiBDCG0fPUgzUGHW/A7eSaSA0PVqvm77FfGQc9ltvyxnUoBSh9y/HajDwIF2S56+mjUREKTKTi8blmHwU1jdT0z3wvBSJ0xe/glEIKElux6eyrWRUJQ5vd88FwJAUtg8/y1oY3BRxpv+3mnEwODVOq5PC0YRsGO5PZ88p3KgUmfMrx3I4/CBVht+vqqVMSC0mh4PK+aiAFMojV8tGAMQYfccPu45ZFCxFYsObtrlwXCECZ3PLEcScFLIHO8tiIOQcZZ7vs56BODwxPpuPxt2MdBTeP1/PMeS0FI3bH79+RQQsUXrTp66hWFAlFnt/yv2wiBDCG0fPUgzUGHW/A7eSaSA4OVqvm77FfGQc9ltvyxnUoBSh9y/HajDwIF2S56+mjUREKTKTi8blmHwU1jdT0z3wvBSJ0xe/glEIKElux6eyrWRUJQ5vd88FwJAUtg8/y1oY3BRxpv+3mnEwODVOq5PC0YRsGO5PZ88p3KgUmfMrx3I4/CBVht+vpqlMSC0mh4PK+aiAFMojV8tGAMQYfccPu45ZFCxFYsObtrlwXCECZ3PLEcScFLIHO8tiIOQcZZ7vs56BODwxPpuPxt2MdBTeP1/PMeS0FI3bH79+RQQsUXrTp66hWFAlFnt/yv2wiBDCG0fPUgzUGHW/A7eSaSA4OVqvm77FfGQc9ltvyxnUoBSh9y/Ha');
-            
             setTimeout(() => {
                 message.style.display = 'none';
             }, 2000);
         }
-
+    
         // Update stats
         function updateStats() {
             document.getElementById('items-scanned').textContent = scannedItems.length;
@@ -857,7 +1179,7 @@
             
             document.getElementById('scan-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
-
+    
         // Add to scanned list
         function addToScannedList({ spNumber, trackingNumber, status, location, organization, name, timestamp }) {
             const list = document.getElementById('scanned-list');
@@ -881,7 +1203,7 @@
                 list.removeChild(list.lastChild);
             }
         }
-
+    
         // Print packing slip
         function printPackingSlip() {
             const trackingNumber = document.getElementById('tracking-number').value;
@@ -894,9 +1216,30 @@
             const url = `https://c2ect483.caspio.com/dp/97594000f91cdc0844e74c7b8863?trackingNumber=${encodeURIComponent(trackingNumber)}`;
             window.open(url, '_blank');
         }
-
+    
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', initScanners);
+        document.addEventListener('DOMContentLoaded', () => {
+            initScanners();
+            
+            // Add event listeners for input changes
+            document.getElementById('tracking-number').addEventListener('input', updatePackingSlipButton);
+            
+            // Set focus on the SP number field when status changes
+            document.getElementById('status-select').addEventListener('change', function() {
+                if (this.value) {
+                    setTimeout(() => {
+                        document.getElementById('sp-number').focus();
+                    }, 100);
+                }
+            });
+            
+            // Add a test button to the UI
+            const testButton = document.createElement('button');
+            testButton.textContent = 'Test Caspio API Connection';
+            testButton.onclick = testCaspioConnection;
+            testButton.style.marginTop = '1rem';
+            document.querySelector('.container').appendChild(testButton);
+        });
     </script>
 </body>
 </html>
