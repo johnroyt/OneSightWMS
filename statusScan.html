@@ -87,7 +87,7 @@
             background-color: #dc3545;
         }
 
-        /* Ensure there's space for scanned items when scanner is open */
+        /* Scanner container with proper dimensions for camera viewport */
         .scanner-container {
             width: 100%;
             margin-top: 1rem;
@@ -96,12 +96,12 @@
             border-radius: 8px;
             overflow: hidden;
             position: relative;
-            max-height: 250px; /* Limit scanner height to leave room for other content */
+            height: 350px; /* Fixed height to ensure proper camera display */
         }
 
         .scanner {
             width: 100%;
-            min-height: 300px;
+            height: 100%; /* Fill the entire container */
             display: none;
         }
 
@@ -552,9 +552,9 @@
                         const viewportHeight = window.innerHeight;
                         
                         // If scanner takes too much space, scroll slightly more to show some of scanned items
-                        if (scannerRect.bottom > viewportHeight * 0.7) {
+                        if (scannerRect.bottom > viewportHeight * 2.7) {
                             window.scrollBy({
-                                top: scannerRect.height * 0.3,
+                                top: scannerRect.height * 0.7,
                                 behavior: 'smooth'
                             });
                         }
@@ -605,6 +605,14 @@
                     handleSPScan,
                     () => {}
                 );
+                
+                // Ensure camera view fills container properly
+                const videoElement = document.querySelector('#sp-reader video');
+                if (videoElement) {
+                    videoElement.style.width = '100%';
+                    videoElement.style.height = '100%';
+                    videoElement.style.objectFit = 'cover';
+                }
             } catch (err) {
                 console.error('SP Scanner start error:', err);
                 throw err;
@@ -687,6 +695,14 @@
                     handleTrackingScan,
                     () => {}
                 );
+                
+                // Ensure camera view fills container properly
+                const videoElement = document.querySelector('#tracking-reader video');
+                if (videoElement) {
+                    videoElement.style.width = '100%';
+                    videoElement.style.height = '100%';
+                    videoElement.style.objectFit = 'cover';
+                }
             } catch (err) {
                 console.error('Tracking Scanner start error:', err);
                 throw err;
@@ -821,25 +837,33 @@
             }
         }
         
-        function processBarcodeInput(barcode) {
-            // Status must be selected
-            if (!document.getElementById('status-select').value) {
-                alert('Please select a status first.');
-                return;
-            }
-            
-            // Determine what type of barcode and process accordingly
-            if (barcode.match(/^[A-Za-z0-9]{8}$/)) {
-                // Looks like an SP number
-                document.getElementById('sp-number-input').value = barcode;
-                submitToWebhook(barcode);
-            } else if (barcode.match(/^1Z[0-9A-Z]{16}$/)) {
-                // Looks like a UPS tracking number
-                document.getElementById('tracking-number').value = barcode;
-                updatePrintButtonVisibility();
-                alert(`Tracking number scanned: ${barcode}`);
-            }
-        }
+        // The issue is in the processBarcodeInput function, where the SP number input isn't cleared after submission
+// Here's the fixed version:
+
+function processBarcodeInput(barcode) {
+    // Status must be selected
+    if (!document.getElementById('status-select').value) {
+        alert('Please select a status first.');
+        return;
+    }
+    
+    // Determine what type of barcode and process accordingly
+    if (barcode.match(/^[A-Za-z0-9]{8}$/)) {
+        // Looks like an SP number
+        document.getElementById('sp-number-input').value = barcode;
+        submitToWebhook(barcode).then(() => {
+            // Clear the input field after successful submission
+            document.getElementById('sp-number-input').value = '';
+        }).catch(err => {
+            console.error('Error in barcode processing:', err);
+        });
+    } else if (barcode.match(/^1Z[0-9A-Z]{16}$/)) {
+        // Looks like a UPS tracking number
+        document.getElementById('tracking-number').value = barcode;
+        updatePrintButtonVisibility();
+        alert(`Tracking number scanned: ${barcode}`);
+    }
+}
 
         // Submit SP number from input field
         function submitSPNumber() {
