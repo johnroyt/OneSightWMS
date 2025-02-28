@@ -587,37 +587,34 @@
 
         // Start SP Scanner
         async function startSPScanner() {
-            try {
-                const scanConfig = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    formatsToSupport: [
-                        Html5QrcodeSupportedFormats.QR_CODE,
-                        Html5QrcodeSupportedFormats.CODE_39,
-                        Html5QrcodeSupportedFormats.CODE_128,
-                        Html5QrcodeSupportedFormats.EAN_13
-                    ]
-                };
-                
-                await spScanner.start(
-                    { facingMode: currentCameraId },
-                    scanConfig,
-                    handleSPScan,
-                    () => {}
-                );
-                
-                // Ensure camera view fills container properly
-                const videoElement = document.querySelector('#sp-reader video');
-                if (videoElement) {
-                    videoElement.style.width = '100%';
-                    videoElement.style.height = '100%';
-                    videoElement.style.objectFit = 'cover';
-                }
-            } catch (err) {
-                console.error('SP Scanner start error:', err);
-                throw err;
-            }
+    try {
+        const scanConfig = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.QR_CODE
+            ]
+        };
+        
+        await spScanner.start(
+            { facingMode: currentCameraId },
+            scanConfig,
+            handleSPScan,
+            () => {}
+        );
+        
+        // Ensure camera view fills container properly
+        const videoElement = document.querySelector('#sp-reader video');
+        if (videoElement) {
+            videoElement.style.width = '100%';
+            videoElement.style.height = '100%';
+            videoElement.style.objectFit = 'cover';
         }
+    } catch (err) {
+        console.error('SP Scanner start error:', err);
+        throw err;
+    }
+}
 
         // Function to toggle Tracking Scanner
         async function toggleTrackingScanner() {
@@ -678,36 +675,40 @@
 
         // Start Tracking Scanner
         async function startTrackingScanner() {
-            try {
-                const scanConfig = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    formatsToSupport: [
-                        Html5QrcodeSupportedFormats.CODE_128,
-                        Html5QrcodeSupportedFormats.CODE_39,
-                        Html5QrcodeSupportedFormats.EAN_13
-                    ]
-                };
-                
-                await trackingScanner.start(
-                    { facingMode: currentCameraId },
-                    scanConfig,
-                    handleTrackingScan,
-                    () => {}
-                );
-                
-                // Ensure camera view fills container properly
-                const videoElement = document.querySelector('#tracking-reader video');
-                if (videoElement) {
-                    videoElement.style.width = '100%';
-                    videoElement.style.height = '100%';
-                    videoElement.style.objectFit = 'cover';
-                }
-            } catch (err) {
-                console.error('Tracking Scanner start error:', err);
-                throw err;
-            }
+    try {
+        const scanConfig = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.CODABAR
+            ]
+        };
+        
+        await trackingScanner.start(
+            { facingMode: currentCameraId },
+            scanConfig,
+            handleTrackingScan,
+            () => {}
+        );
+        
+        // Ensure camera view fills container properly
+        const videoElement = document.querySelector('#tracking-reader video');
+        if (videoElement) {
+            videoElement.style.width = '100%';
+            videoElement.style.height = '100%';
+            videoElement.style.objectFit = 'cover';
         }
+    } catch (err) {
+        console.error('Tracking Scanner start error:', err);
+        throw err;
+    }
+}
 
         // Handle status change
         function handleStatusChange() {
@@ -780,62 +781,94 @@
 
         // Handle Tracking scan
         async function handleTrackingScan(decodedText) {
-            try {
-                // Pause scanner to prevent multiple scans
-                trackingScanner.pause();
-                
-                // Display the scanned value
-                document.getElementById('tracking-number').value = decodedText;
-                
-                // Stop the scanner after successful scan
-                await trackingScanner.stop();
-                document.getElementById('tracking-scanner-container').style.display = 'none';
-                document.getElementById('tracking-reader').style.display = 'none';
-                document.getElementById('tracking-camera-btn').classList.remove('active');
-                isTrackingScannerActive = false;
-                
-                // Update print button visibility
-                updatePrintButtonVisibility();
-                
-                alert(`Tracking number scanned: ${decodedText}`);
-            } catch (err) {
-                console.error('Error processing tracking scan:', err);
-                alert('Error processing scan. Please try again.');
-                trackingScanner.resume();
-            }
-        }
+    try {
+        // Pause scanner briefly to prevent multiple scans of the same code
+        trackingScanner.pause();
+        
+        // Display the scanned value
+        document.getElementById('tracking-number').value = decodedText;
+        
+        // Update print button visibility
+        updatePrintButtonVisibility();
+        
+        // Show a temporary success message instead of an alert
+        const statusMessage = document.getElementById('status-message');
+        const originalText = statusMessage.innerText;
+        statusMessage.innerText = `Tracking number scanned: ${decodedText}`;
+        statusMessage.style.display = "block";
+        statusMessage.style.color = "#28a745";
+        
+        // Reset message after a few seconds
+        setTimeout(() => {
+            statusMessage.innerText = originalText;
+            statusMessage.style.color = "#6c757d";
+            // Resume scanner after message disappears
+            trackingScanner.resume();
+        }, 3000);
+        
+    } catch (err) {
+        console.error('Error processing tracking scan:', err);
+        alert('Error processing scan. Please try again.');
+        trackingScanner.resume();
+    }
+}
 
         // Handle barcode scanner input (for physical scanners)
         let barcodeBuffer = '';
         let lastKeyTime = 0;
         
         function handleBarcodeScanner(e) {
-            // Check if we're in an input field
-            if (document.activeElement.tagName === 'INPUT') {
-                return;
-            }
+    // Get active element
+    const activeElement = document.activeElement;
+    const isInTrackingField = activeElement.id === 'tracking-number';
+    const isInSPField = activeElement.id === 'sp-number-input';
+    
+    // If we're already in an input field, handle differently
+    if (activeElement.tagName === 'INPUT') {
+        // For tracking field, don't submit on Enter
+        if (isInTrackingField && e.key === 'Enter') {
+            e.preventDefault();
+            // Just update the print button visibility
+            updatePrintButtonVisibility();
             
-            const currentTime = new Date().getTime();
-            
-            // Reset buffer if there's a long pause between keys
-            if (currentTime - lastKeyTime > 200) {
-                barcodeBuffer = '';
-            }
-            
-            lastKeyTime = currentTime;
-            
-            // Handle Enter key (end of barcode)
-            if (e.key === 'Enter') {
-                if (barcodeBuffer.length > 0) {
-                    processBarcodeInput(barcodeBuffer);
-                    barcodeBuffer = '';
-                    e.preventDefault();
-                }
-            } else if (e.key.length === 1) {
-                // Add character to buffer
-                barcodeBuffer += e.key;
-            }
+            // Maybe move focus to the next relevant input
+            document.getElementById('sp-number-input').focus();
+            return;
         }
+        
+        // For SP number field, submit normally
+        if (isInSPField && e.key === 'Enter') {
+            e.preventDefault();
+            submitSPNumber();
+            return;
+        }
+        
+        // Otherwise, let the default behavior happen
+        return;
+    }
+    
+    // For physical barcode scanners outside input fields
+    const currentTime = new Date().getTime();
+    
+    // Reset buffer if there's a long pause between keys
+    if (currentTime - lastKeyTime > 200) {
+        barcodeBuffer = '';
+    }
+    
+    lastKeyTime = currentTime;
+    
+    // Handle Enter key (end of barcode)
+    if (e.key === 'Enter') {
+        if (barcodeBuffer.length > 0) {
+            processBarcodeInput(barcodeBuffer);
+            barcodeBuffer = '';
+            e.preventDefault();
+        }
+    } else if (e.key.length === 1) {
+        // Add character to buffer
+        barcodeBuffer += e.key;
+    }
+}
         
         // The issue is in the processBarcodeInput function, where the SP number input isn't cleared after submission
 // Here's the fixed version:
@@ -857,11 +890,31 @@ function processBarcodeInput(barcode) {
         }).catch(err => {
             console.error('Error in barcode processing:', err);
         });
-    } else if (barcode.match(/^1Z[0-9A-Z]{16}$/)) {
-        // Looks like a UPS tracking number
+    } else if (
+        barcode.match(/^1Z[0-9A-Z]{16}$/) || // UPS
+        barcode.match(/^[0-9]{12,14}$/) ||   // USPS, FedEx
+        barcode.match(/^[0-9]{20,22}$/) ||   // Other common formats
+        barcode.match(/^[A-Z]{2}[0-9]{9}[A-Z]{2}$/) // Common international format
+    ) {
+        // Looks like a tracking number
         document.getElementById('tracking-number').value = barcode;
         updatePrintButtonVisibility();
-        alert(`Tracking number scanned: ${barcode}`);
+        
+        // Show temporary message instead of alert
+        const statusMessage = document.getElementById('status-message');
+        const originalText = statusMessage.innerText;
+        statusMessage.innerText = `Tracking number scanned: ${barcode}`;
+        statusMessage.style.display = "block";
+        statusMessage.style.color = "#28a745";
+        
+        // Reset after a few seconds
+        setTimeout(() => {
+            statusMessage.innerText = originalText;
+            statusMessage.style.color = "#6c757d";
+        }, 3000);
+    } else {
+        // Unknown barcode format
+        alert(`Unrecognized barcode format: ${barcode}`);
     }
 }
 
