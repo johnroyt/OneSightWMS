@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RX Check-in Scanner</title>
+    <title>Shuttle Status Scan-O-Matic 9000</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -271,6 +271,40 @@
         100% { transform: rotate(360deg); }
     }
 
+    /* Collapsible instructions */
+    .instructions-container {
+        margin-bottom: 1.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .instructions-header {
+        padding: 1rem;
+        background: #f8f9fa;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .instructions-content {
+        padding: 1rem;
+        display: none;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .instructions-content.visible {
+        display: block;
+    }
+
+    .status-message {
+        text-align: center;
+        padding: 1rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+
     /* Additional mobile-friendly styles */
     @media (max-width: 576px) {
         .container {
@@ -288,7 +322,27 @@
 </style>
 <body>
     <div class="container">
-        <h1 style="text-align: center; margin-bottom: 1.5rem;">RX Check-in Scanner</h1>
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+    <img src="Scan-O-Matic.png" alt="Scan-O-Matic Order Status Updater 9000" style="max-width: 100%; height: auto; max-height: 200px;">
+</div>
+
+        <!-- Collapsible Instructions Section -->
+        <div class="instructions-container">
+            <div class="instructions-header" onclick="toggleInstructions()">
+                <strong>How to use this scanner</strong>
+                <i class="fas fa-chevron-down" id="instructions-icon"></i>
+            </div>
+            <div class="instructions-content" id="instructions-content">
+                <ol style="padding-left: 1.5rem; margin-bottom: 1rem;">
+                    <li style="margin-bottom: 0.5rem;">Select the appropriate status from the dropdown menu.</li>
+                    <li style="margin-bottom: 0.5rem;">If the status is "Shipped to Partner", you'll need to enter a tracking number.</li>
+                    <li style="margin-bottom: 0.5rem;">Scan the SP number using the camera button or type it in manually.</li>
+                    <li style="margin-bottom: 0.5rem;">Click on the camera icon to activate your device's camera for scanning.</li>
+                    <li style="margin-bottom: 0.5rem;">Once scanned, the item will be recorded and appear in the scanned items list.</li>
+                </ol>
+                <p><strong>Note:</strong> You can also use a physical barcode scanner connected to your device.</p>
+            </div>
+        </div>
 
         <div class="tracking-section">
             <h2 style="margin-bottom: 1rem;">Shipment Details</h2>
@@ -299,6 +353,7 @@
                     <option value="Passed Inspection">Passed Inspection (Pending Shipment)</option>
                     <option value="Shipped to Partner">Shipped to Partner</option>
                 </select>
+                <div id="status-message" class="status-message">Select a status to begin</div>
                 <div id="tracking-section" style="display: none;">
                     <div class="input-with-camera">
                         <input 
@@ -343,7 +398,7 @@
         </div>
 
         <div id="sp-scanner-section" style="display: none;">
-            <h2 style="margin-bottom: 1rem;">SP Item Scanner</h2>
+            <h2 style="margin-bottom: 1rem;">SP Number</h2>
             
             <div class="input-with-camera">
                 <input 
@@ -377,8 +432,10 @@
             <div id="error-message" class="error-message">Please enter a valid SP number</div>
         </div>
 
-        <h3 style="margin: 1.5rem 0 0.5rem 0;">Scanned Items</h3>
-        <div id="scanned-list"></div>
+        <div id="scanned-items-section" style="display: none;">
+            <h3 style="margin: 1.5rem 0 0.5rem 0;">Scanned Items</h3>
+            <div id="scanned-list"></div>
+        </div>
         
         <button id="print-slip-btn" onclick="printPackingSlip()" style="margin-top: 1rem; display: none;">Print Packing Slip</button>
     </div>
@@ -396,6 +453,20 @@
         let sessionStart = new Date();
         let timerInterval = null;
         let currentCameraId = 'environment';
+
+        // Toggle instructions visibility
+        function toggleInstructions() {
+            const content = document.getElementById('instructions-content');
+            const icon = document.getElementById('instructions-icon');
+            
+            content.classList.toggle('visible');
+            
+            if (content.classList.contains('visible')) {
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+        }
 
         // Initialize scanners
         async function initScanners() {
@@ -591,6 +662,14 @@
             const status = document.getElementById('status-select').value;
             const trackingSection = document.getElementById('tracking-section');
             const spScannerSection = document.getElementById('sp-scanner-section');
+            const statusMessage = document.getElementById('status-message');
+
+            // Show/hide status message
+            if (status) {
+                statusMessage.style.display = "none";
+            } else {
+                statusMessage.style.display = "block";
+            }
 
             // Show/hide tracking number input based on status
             if (status === "Shipped to Partner") {
@@ -783,6 +862,9 @@
                 showSuccess(`${firstName} ${lastInitial}.`);
                 updateStats();
                 addToScannedList(scannedItem);
+                
+                // Show scanned items section if it was hidden
+                document.getElementById('scanned-items-section').style.display = "block";
                 
                 // Clear the input field for next scan
                 document.getElementById('sp-number-input').value = '';
