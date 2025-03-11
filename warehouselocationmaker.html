@@ -76,7 +76,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding-right: 10px;
+            padding: 0 15px; /* Increased padding for quiet zone */
         }
         
         .barcode-container svg {
@@ -105,6 +105,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding: 0 0.25in; /* Add padding as quiet zone for barcodes */
         }
         
         .full-width .barcode-container svg {
@@ -120,6 +121,7 @@
             font-size: 14px;
             text-align: center;
             margin-top: 5px;
+            font-weight: bold; /* Make text bolder for easier reading */
         }
         
         button {
@@ -187,9 +189,17 @@
             border-left: 4px solid #ffc107;
             margin-bottom: 10px;
         }
+
+        .print-warning {
+            background-color: #ffe0e0;
+            border-left: 4px solid #ff0000;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
         
         @media print {
-            .controls, button, #generation-status, .debug-info, .estimation {
+            .controls, button, #generation-status, .debug-info, .estimation, .print-warning {
                 display: none !important;
             }
             body {
@@ -235,6 +245,15 @@
                 <option value="barcode">Barcode Only</option>
                 <option value="qrcode">QR Code Only</option>
                 <option value="both">Show Both QR Code and Barcode</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="barcode-width">Barcode Line Width:</label>
+            <select id="barcode-width">
+                <option value="2">Thin (Default)</option>
+                <option value="3" selected>Medium (Recommended)</option>
+                <option value="4">Thick (Most Scannable)</option>
             </select>
         </div>
         
@@ -448,6 +467,7 @@
             
             const labelFormat = $('#label-format').val();
             const codeDisplay = $('#code-display').val();
+            const barcodeWidth = parseInt($('#barcode-width').val());
             
             // Add a status counter (hidden during print)
             const statusDiv = document.createElement('div');
@@ -641,9 +661,12 @@
                         JsBarcode('#' + barcodeId, locationCode, {
                             format: "CODE128",
                             lineColor: "#000",
-                            width: 2,
+                            width: barcodeWidth,  // Use the selected width
                             height: codeDisplay === 'barcode' ? 120 : 80,
-                            displayValue: false
+                            displayValue: true,   // Show text as fallback
+                            margin: 10,           // Add explicit margins for quiet zones
+                            fontSize: 12,
+                            font: "Arial"
                         });
                     } catch (e) {
                         console.error("Error generating barcode:", e);
