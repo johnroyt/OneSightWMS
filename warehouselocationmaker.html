@@ -183,16 +183,16 @@
             <label for="label-format">Label Format:</label>
             <select id="label-format">
                 <option value="Building-Isle-Bay-Shelf-Bin">Building-Isle-Bay-Shelf-Bin</option>
-                <option value="Building/Isle/Bay/Shelf/Bin">Building/Isle/Bay/Shelf/Bin</option>
             </select>
         </div>
         
         <div class="control-group">
             <label for="code-display">Display Options:</label>
             <select id="code-display">
-                <option value="both">Show Both QR Code and Barcode</option>
-                <option value="barcode">Barcode Only</option>
+<option value="barcode">Barcode Only</option>                
                 <option value="qrcode">QR Code Only</option>
+<option value="both">Show Both QR Code and Barcode</option>
+
             </select>
         </div>
         
@@ -202,11 +202,8 @@
             <div class="range-section">
                 <div>
                     <label for="building-select">Building:</label>
-                    <select id="building-select">
-                        <option value="ROC">ROC</option>
-                        <option value="WHS">WHS</option>
-                        <!-- Add more buildings as needed -->
-                    </select>
+                    <input type=text value="ROC" id="building-select">
+                    </input>
                 </div>
             </div>
             
