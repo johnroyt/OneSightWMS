@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warehouse Location Labels</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -93,10 +92,6 @@
             margin-top: 5px;
         }
         
-        #csv-file {
-            margin-right: 10px;
-        }
-        
         button {
             padding: 8px 15px;
             background-color: #4CAF50;
@@ -104,13 +99,14 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-right: 10px;
         }
         
         button:hover {
             background-color: #45a049;
         }
         
-        #filters {
+        .selection-ranges {
             margin-top: 15px; 
             padding: 10px; 
             background-color: #e9e9e9; 
@@ -127,8 +123,43 @@
             margin-top: 10px;
         }
         
+        .range-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .range-field {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        select, input {
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        
+        select {
+            min-width: 120px;
+        }
+        
+        input[type="number"] {
+            width: 70px;
+        }
+        
+        .estimation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 10px;
+        }
+        
         @media print {
-            .controls, button, input, #generation-status, .debug-info {
+            .controls, button, #generation-status, .debug-info, .estimation {
                 display: none !important;
             }
             body {
@@ -146,22 +177,13 @@
 <body>
     <div class="controls">
         <h1>Warehouse Location Label Generator</h1>
-        <p>Upload your CSV file with warehouse locations to generate printable labels.</p>
-        
-        <div>
-            <input type="file" id="csv-file" accept=".csv">
-            <button id="generate-labels">Generate Labels</button>
-            <button id="print-labels" style="display:none;">Print Labels</button>
-        </div>
-        
-        <div id="loading-message" style="margin-top: 10px; padding: 5px; background-color: #e7f3fe; border-left: 6px solid #2196F3; display: none;"></div>
+        <p>Select location ranges to generate labels.</p>
         
         <div class="control-group">
             <label for="label-format">Label Format:</label>
             <select id="label-format">
                 <option value="Building-Isle-Bay-Shelf-Bin">Building-Isle-Bay-Shelf-Bin</option>
                 <option value="Building/Isle/Bay/Shelf/Bin">Building/Isle/Bay/Shelf/Bin</option>
-                <option value="custom">Custom (Use Barcode Column)</option>
             </select>
         </div>
         
@@ -174,407 +196,386 @@
             </select>
         </div>
         
-        <div id="filters">
-            <h3 style="margin-top: 0;">Filters</h3>
-            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+        <div class="selection-ranges">
+            <h3 style="margin-top: 0;">Location Selection</h3>
+            
+            <div class="range-section">
                 <div>
-                    <label for="filter-building">Building:</label>
-                    <select id="filter-building">
-                        <option value="">All Buildings</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="filter-isle">Isle:</label>
-                    <select id="filter-isle">
-                        <option value="">All Isles</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="filter-bay">Bay:</label>
-                    <select id="filter-bay">
-                        <option value="">All Bays</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="filter-shelf">Shelf:</label>
-                    <select id="filter-shelf">
-                        <option value="">All Shelves</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="filter-bin">Bin:</label>
-                    <select id="filter-bin">
-                        <option value="">All Bins</option>
+                    <label for="building-select">Building:</label>
+                    <select id="building-select">
+                        <option value="ROC">ROC</option>
+                        <option value="WHS">WHS</option>
+                        <!-- Add more buildings as needed -->
                     </select>
                 </div>
             </div>
+            
+            <div class="range-section">
+                <div>
+                    <label>Isle Range:</label>
+                    <div class="range-field">
+                        <input type="number" id="isle-start" min="1" max="99" value="1">
+                        <span>to</span>
+                        <input type="number" id="isle-end" min="1" max="99" value="1">
+                    </div>
+                </div>
+                
+                <div>
+                    <label>Bay Range:</label>
+                    <div class="range-field">
+                        <select id="bay-start">
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="G">G</option>
+                            <option value="H">H</option>
+                            <option value="I">I</option>
+                            <option value="J">J</option>
+                            <option value="K">K</option>
+                            <option value="L">L</option>
+                            <option value="M">M</option>
+                            <option value="N">N</option>
+                            <option value="O">O</option>
+                            <option value="P">P</option>
+                            <option value="Q">Q</option>
+                            <option value="R">R</option>
+                            <option value="S">S</option>
+                            <option value="T">T</option>
+                            <option value="U">U</option>
+                            <option value="V">V</option>
+                            <option value="W">W</option>
+                            <option value="X">X</option>
+                            <option value="Y">Y</option>
+                            <option value="Z">Z</option>
+                        </select>
+                        <span>to</span>
+                        <select id="bay-end">
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="G">G</option>
+                            <option value="H">H</option>
+                            <option value="I">I</option>
+                            <option value="J">J</option>
+                            <option value="K">K</option>
+                            <option value="L">L</option>
+                            <option value="M">M</option>
+                            <option value="N">N</option>
+                            <option value="O">O</option>
+                            <option value="P">P</option>
+                            <option value="Q">Q</option>
+                            <option value="R">R</option>
+                            <option value="S">S</option>
+                            <option value="T">T</option>
+                            <option value="U">U</option>
+                            <option value="V">V</option>
+                            <option value="W">W</option>
+                            <option value="X">X</option>
+                            <option value="Y">Y</option>
+                            <option value="Z">Z</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="range-section">
+                <div>
+                    <label>Shelf Range:</label>
+                    <div class="range-field">
+                        <input type="number" id="shelf-start" min="1" max="99" value="1">
+                        <span>to</span>
+                        <input type="number" id="shelf-end" min="1" max="99" value="1">
+                    </div>
+                </div>
+                
+                <div>
+                    <label>Bin Range:</label>
+                    <div class="range-field">
+                        <input type="number" id="bin-start" min="1" max="99" value="1">
+                        <span>to</span>
+                        <input type="number" id="bin-end" min="1" max="99" value="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="estimation" id="label-estimate">
+            Labels to generate: 1
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <button id="generate-labels">Generate Labels</button>
+            <button id="print-labels">Print Labels</button>
+            <span id="generation-progress"></span>
         </div>
     </div>
     
     <div id="label-container" class="label-container"></div>
     
     <script>
-        let csvData = [];
-        
-        // Check if JsBarcode loaded properly
-        const jsBarcodeLoaded = typeof JsBarcode !== 'undefined';
-        console.log("JsBarcode loaded:", jsBarcodeLoaded);
-        
         $(document).ready(function() {
-            $('#csv-file').change(function() {
-                const fileInput = document.getElementById('csv-file');
-                const file = fileInput.files[0];
-                
-                if (file) {
-                    $('#loading-message').text('Loading CSV file...').show();
-                    
-                    Papa.parse(file, {
-                        header: true,
-                        complete: function(results) {
-                            console.log("CSV Parse Results:", results);
-                            csvData = results.data;
-                            $('#loading-message').text('CSV loaded successfully. Found ' + csvData.length + ' rows.').show();
-                            populateFilterOptions(csvData);
-                        },
-                        error: function(error) {
-                            console.error("Error parsing CSV:", error);
-                            $('#loading-message').text('Error parsing CSV file: ' + error.message).show();
-                        }
-                    });
-                }
+            // Update the estimation whenever any range input changes
+            $('#building-select, #isle-start, #isle-end, #bay-start, #bay-end, #shelf-start, #shelf-end, #bin-start, #bin-end').on('change input', function() {
+                updateEstimation();
             });
             
+            // Generate labels button
             $('#generate-labels').click(function() {
-                if (csvData.length === 0) {
-                    alert('Please select a CSV file');
+                const labelCount = calculateLabelCount();
+                
+                if (labelCount === 0) {
+                    alert('Invalid selection range. Please check your inputs.');
                     return;
                 }
                 
-                const filteredData = applyFilters(csvData);
-                if (filteredData.length === 0) {
-                    alert('No locations match your filter criteria');
-                    return;
-                }
-                
-                if (filteredData.length > 100) {
-                    const proceed = confirm(`You are about to generate ${filteredData.length} labels. This might take some time and use a lot of paper. Do you want to continue?`);
+                if (labelCount > 200) {
+                    const proceed = confirm(`You are about to generate ${labelCount} labels. This might take some time and use a lot of paper. Do you want to continue?`);
                     if (!proceed) return;
                 }
                 
-                generateLabels(filteredData);
-                $('#print-labels').show();
+                generateLabels();
             });
             
+            // Print labels button
             $('#print-labels').click(function() {
                 window.print();
             });
             
-            // Add event listeners for filter changes
-            $('#filter-building, #filter-isle, #filter-bay, #filter-shelf, #filter-bin').change(function() {
-                // Could add preview functionality here
-            });
+            // Initial estimation update
+            updateEstimation();
         });
         
-        function populateFilterOptions(data) {
-            console.log("Populating filter options...");
+        function updateEstimation() {
+            const labelCount = calculateLabelCount();
+            $('#label-estimate').text(`Labels to generate: ${labelCount}`);
             
-            // Get unique values for each filter
-            const buildings = new Set();
-            const isles = new Set();
-            const bays = new Set();
-            const shelves = new Set();
-            const bins = new Set();
-            
-            data.forEach(row => {
-                // Only add non-empty values
-                if (row.Building) buildings.add(String(row.Building).trim());
-                if (row.Isle !== undefined && row.Isle !== null) isles.add(String(row.Isle).trim());
-                if (row.Bay) bays.add(String(row.Bay).trim());
-                if (row.Shelf !== undefined && row.Shelf !== null) shelves.add(String(row.Shelf).trim());
-                if (row.Bin !== undefined && row.Bin !== null) bins.add(String(row.Bin).trim());
-            });
-            
-            console.log("Unique values found:", 
-                        "Buildings:", buildings.size, 
-                        "Isles:", isles.size,
-                        "Bays:", bays.size,
-                        "Shelves:", shelves.size,
-                        "Bins:", bins.size);
-            
-            // Populate filter dropdowns
-            populateSelect('#filter-building', [...buildings].sort());
-            populateSelect('#filter-isle', [...isles].sort((a, b) => Number(a) - Number(b)));
-            populateSelect('#filter-bay', [...bays].sort());
-            populateSelect('#filter-shelf', [...shelves].sort((a, b) => Number(a) - Number(b)));
-            populateSelect('#filter-bin', [...bins].sort((a, b) => Number(a) - Number(b)));
+            // Apply warning styles for large numbers
+            if (labelCount > 100) {
+                $('#label-estimate').css('background-color', '#ffe0e0').css('border-left-color', '#ff0000');
+            } else {
+                $('#label-estimate').css('background-color', '#fff3cd').css('border-left-color', '#ffc107');
+            }
         }
         
-        function populateSelect(selector, options) {
-            const select = $(selector);
-            select.find('option:not(:first)').remove();
+        function calculateLabelCount() {
+            const isleStart = parseInt($('#isle-start').val()) || 1;
+            const isleEnd = parseInt($('#isle-end').val()) || 1;
             
-            options.forEach(option => {
-                select.append(`<option value="${option}">${option}</option>`);
-            });
+            const bayStart = $('#bay-start').val().charCodeAt(0);
+            const bayEnd = $('#bay-end').val().charCodeAt(0);
+            
+            const shelfStart = parseInt($('#shelf-start').val()) || 1;
+            const shelfEnd = parseInt($('#shelf-end').val()) || 1;
+            
+            const binStart = parseInt($('#bin-start').val()) || 1;
+            const binEnd = parseInt($('#bin-end').val()) || 1;
+            
+            // Calculate the product of all ranges
+            const isleCount = Math.max(0, isleEnd - isleStart + 1);
+            const bayCount = Math.max(0, bayEnd - bayStart + 1);
+            const shelfCount = Math.max(0, shelfEnd - shelfStart + 1);
+            const binCount = Math.max(0, binEnd - binStart + 1);
+            
+            return isleCount * bayCount * shelfCount * binCount;
         }
         
-        function applyFilters(data) {
-            const buildingFilter = $('#filter-building').val();
-            const isleFilter = $('#filter-isle').val();
-            const bayFilter = $('#filter-bay').val();
-            const shelfFilter = $('#filter-shelf').val();
-            const binFilter = $('#filter-bin').val();
-            
-            return data.filter(row => {
-                if (buildingFilter && row.Building != buildingFilter) return false;
-                if (isleFilter && row.Isle != isleFilter) return false;
-                if (bayFilter && row.Bay != bayFilter) return false;
-                if (shelfFilter && row.Shelf != shelfFilter) return false;
-                if (binFilter && row.Bin != binFilter) return false;
-                return true;
-            });
-        }
-        
-        // Helper function to pad numbers with leading zeros
         function padWithZeros(value, length) {
             if (value === undefined || value === null) return '';
-            
-            // Convert to string if it's not already
-            let str = String(value);
-            
-            // Check if it's a number (or string representing a number)
-            if (!isNaN(str) && !isNaN(parseFloat(str))) {
-                // Pad with zeros
-                return str.padStart(length, '0');
-            }
-            
-            // If not a number, return as is
-            return str;
+            return String(value).padStart(length, '0');
         }
         
-        function generateLabels(data) {
+        function generateLabels() {
             const container = document.getElementById('label-container');
             container.innerHTML = '';
-            const labelFormat = document.getElementById('label-format').value;
-            const codeDisplay = document.getElementById('code-display').value;
+            
+            const building = $('#building-select').val();
+            const isleStart = parseInt($('#isle-start').val());
+            const isleEnd = parseInt($('#isle-end').val());
+            const bayStart = $('#bay-start').val().charCodeAt(0);
+            const bayEnd = $('#bay-end').val().charCodeAt(0);
+            const shelfStart = parseInt($('#shelf-start').val());
+            const shelfEnd = parseInt($('#shelf-end').val());
+            const binStart = parseInt($('#bin-start').val());
+            const binEnd = parseInt($('#bin-end').val());
+            
+            const labelFormat = $('#label-format').val();
+            const codeDisplay = $('#code-display').val();
             
             // Add a status counter (hidden during print)
             const statusDiv = document.createElement('div');
             statusDiv.id = 'generation-status';
             statusDiv.style.cssText = 'padding: 10px; margin-bottom: 10px; background-color: #f0f0f0; border-radius: 4px; page-break-after: avoid; display: block;';
-            statusDiv.textContent = `Generating labels: 0/${data.length}`;
+            statusDiv.textContent = 'Generating labels...';
             container.appendChild(statusDiv);
             
             // Use batch processing for better performance
-            const batchSize = 10; // Reduced batch size for better rendering
-            let currentIndex = 0;
+            const batchSize = 20;
+            const totalLabels = calculateLabelCount();
+            let processedLabels = 0;
+            
+            // Create a generator function to yield label data
+            function* labelGenerator() {
+                for (let isle = isleStart; isle <= isleEnd; isle++) {
+                    for (let bayCode = bayStart; bayCode <= bayEnd; bayCode++) {
+                        const bay = String.fromCharCode(bayCode);
+                        for (let shelf = shelfStart; shelf <= shelfEnd; shelf++) {
+                            for (let bin = binStart; bin <= binEnd; bin++) {
+                                yield {
+                                    building,
+                                    isle,
+                                    bay,
+                                    shelf,
+                                    bin
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            
+            const labelIter = labelGenerator();
             
             function processBatch() {
-                if (currentIndex >= data.length) {
-                    // All done
-                    statusDiv.textContent = `Generated ${data.length} labels`;
-                    return;
+                let count = 0;
+                
+                while (count < batchSize) {
+                    const nextLabel = labelIter.next();
+                    
+                    if (nextLabel.done) {
+                        // All done
+                        statusDiv.textContent = `Generated ${processedLabels} labels`;
+                        return;
+                    }
+                    
+                    const row = nextLabel.value;
+                    createLabel(row);
+                    
+                    count++;
+                    processedLabels++;
                 }
                 
-                const endIndex = Math.min(currentIndex + batchSize, data.length);
-                
-                for (let i = currentIndex; i < endIndex; i++) {
-                    const row = data[i];
-                    // Skip rows with empty building (likely header or empty rows)
-                    if (!row.Building) continue;
-                    
-                    let locationCode;
-                    let formattedLocationName;
-                    
-                    // First, check if "Barcode Data" column exists and has data
-                    if (row["Barcode Data"] && row["Barcode Data"].trim()) {
-                        // Use Barcode Data directly for the barcode/QR code
-                        locationCode = row["Barcode Data"].trim();
-                        
-                        // For custom format, use Barcode Data as location name too
-                        if (labelFormat === 'custom') {
-                            formattedLocationName = locationCode;
-                        } else {
-                            // Format with padded zeros for display name
-                            const building = row.Building || '';
-                            const isle = padWithZeros(row.Isle, 2) || '';
-                            const bay = row.Bay || '';
-                            const shelf = padWithZeros(row.Shelf, 2) || '';
-                            const bin = padWithZeros(row.Bin, 2) || '';
-                            
-                            if (labelFormat === 'Building-Isle-Bay-Shelf-Bin') {
-                                formattedLocationName = `${building}-${isle}-${bay}-${shelf}-${bin}`;
-                            } else {
-                                formattedLocationName = `${building}/${isle}/${bay}/${shelf}/${bin}`;
-                            }
-                        }
-                    } else {
-                        // Format with padded zeros for both code and display
-                        const building = row.Building || '';
-                        const isle = padWithZeros(row.Isle, 2) || '';
-                        const bay = row.Bay || '';
-                        const shelf = padWithZeros(row.Shelf, 2) || '';
-                        const bin = padWithZeros(row.Bin, 2) || '';
-                        
-                        if (labelFormat === 'Building-Isle-Bay-Shelf-Bin') {
-                            formattedLocationName = `${building}-${isle}-${bay}-${shelf}-${bin}`;
-                        } else {
-                            formattedLocationName = `${building}/${isle}/${bay}/${shelf}/${bin}`;
-                        }
-                        
-                        locationCode = formattedLocationName;
-                    }
-                    
-                    // Create label element with grid layout
-                    const label = document.createElement('div');
-                    label.className = 'label';
-                    
-                    // Create location name element
-                    const locationNameElement = document.createElement('div');
-                    locationNameElement.className = 'location-name';
-                    locationNameElement.textContent = formattedLocationName;
-                    label.appendChild(locationNameElement);
-                    
-                    // Create barcode container
-                    const barcodeContainer = document.createElement('div');
-                    barcodeContainer.className = 'barcode-container';
-                    
-                    // Create barcode SVG with a unique ID
-                    const barcodeId = 'barcode-' + Math.random().toString(36).substring(2, 15);
-                    const barcodeSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                    barcodeSvg.id = barcodeId;
-                    barcodeSvg.setAttribute('width', '100%');
-                    barcodeSvg.setAttribute('height', '80');
-                    barcodeSvg.setAttribute('class', 'barcode-svg');
-                    
-                    barcodeContainer.appendChild(barcodeSvg);
-                    
-                    // Create barcode description
-                    const barcodeDesc = document.createElement('div');
-                    barcodeDesc.className = 'description';
-                    barcodeDesc.textContent = locationCode;
-                    barcodeContainer.appendChild(barcodeDesc);
-                    
-                    // Add debug info (will be hidden in print)
-                    const debugInfo = document.createElement('div');
-                    debugInfo.className = 'debug-info';
-                    barcodeContainer.appendChild(debugInfo);
-                    
-                    // Create QR code container
-                    const qrContainer = document.createElement('div');
-                    qrContainer.className = 'qrcode-container';
-                    qrContainer.id = 'qr-' + Math.random().toString(36).substring(2, 15);
-                    
-                    // Handle different display options
-                    if (codeDisplay === 'both') {
-                        // Add both containers
-                        label.appendChild(barcodeContainer);
-                        label.appendChild(qrContainer);
-                    } else if (codeDisplay === 'barcode') {
-                        // Barcode only - make it full width
-                        barcodeContainer.classList.add('full-width');
-                        label.appendChild(barcodeContainer);
-                    } else if (codeDisplay === 'qrcode') {
-                        // QR code only - make it full width
-                        qrContainer.classList.add('full-width');
-                        label.appendChild(qrContainer);
-                    }
-                    
-                    // Add the label to the container
-                    container.appendChild(label);
-                    
-                    // Generate the QR code if needed
-                    if (codeDisplay === 'both' || codeDisplay === 'qrcode') {
-                        const qrSize = codeDisplay === 'qrcode' ? 150 : 80;
-                        new QRCode(qrContainer, {
-                            text: locationCode,
-                            width: qrSize,
-                            height: qrSize,
-                            colorDark: "#000000",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.H
-                        });
-                    }
-                    
-                    // Generate the barcode if needed
-                    if (codeDisplay === 'both' || codeDisplay === 'barcode') {
-                        // Function to generate the barcode with proper error handling
-                        function generateBarcode() {
-                            try {
-                                // Make sure we're using valid CODE128 data by sanitizing
-                                const validLocationCode = locationCode.replace(/[^\x20-\x7E]/g, '');
-                                
-                                JsBarcode('#' + barcodeId, validLocationCode, {
-                                    format: "CODE128",
-                                    lineColor: "#000",
-                                    width: 2,
-                                    height: codeDisplay === 'barcode' ? 120 : 80,
-                                    displayValue: false,
-                                    valid: function(valid) {
-                                        if (!valid) {
-                                            debugInfo.textContent = "Invalid barcode data: " + validLocationCode;
-                                            debugInfo.style.color = "red";
-                                        }
-                                    }
-                                });
-                                
-                                // Check if barcode was actually rendered
-                                const svgContent = document.getElementById(barcodeId).innerHTML;
-                                if (!svgContent || svgContent.trim() === '') {
-                                    debugInfo.textContent = "Barcode not rendered properly";
-                                    debugInfo.style.color = "red";
-                                    
-                                    // Try alternate format as fallback
-                                    JsBarcode('#' + barcodeId, validLocationCode, {
-                                        format: "CODE39",
-                                        lineColor: "#000",
-                                        width: 1.5,
-                                        height: codeDisplay === 'barcode' ? 120 : 80,
-                                        displayValue: false
-                                    });
-                                }
-                            } catch (e) {
-                                console.error("Error generating barcode:", e);
-                                debugInfo.textContent = "Error: " + e.message;
-                                debugInfo.style.color = "red";
-                                
-                                // Try a more basic fallback
-                                try {
-                                    JsBarcode('#' + barcodeId, "FALLBACK", {
-                                        format: "CODE128",
-                                        lineColor: "#000",
-                                        width: 2,
-                                        height: codeDisplay === 'barcode' ? 120 : 80,
-                                        displayValue: false
-                                    });
-                                    
-                                    barcodeDesc.textContent = locationCode + " (Fallback barcode)";
-                                } catch (err) {
-                                    // Last resort: create a visual indicator that something went wrong
-                                    const errorText = document.createElement('div');
-                                    errorText.textContent = "Barcode Error";
-                                    errorText.style.color = "red";
-                                    errorText.style.border = "1px solid red";
-                                    errorText.style.padding = "5px";
-                                    barcodeContainer.appendChild(errorText);
-                                }
-                            }
-                        }
-                        
-                        // Delay barcode generation slightly to ensure the DOM is ready
-                        setTimeout(generateBarcode, 50);
-                    }
-                }
-                
-                currentIndex = endIndex;
-                statusDiv.textContent = `Generating labels: ${currentIndex}/${data.length}`;
+                // Update progress
+                const progress = Math.round((processedLabels / totalLabels) * 100);
+                statusDiv.textContent = `Generating labels: ${processedLabels}/${totalLabels} (${progress}%)`;
+                $('#generation-progress').text(`${progress}% complete`);
                 
                 // Process next batch after a delay to allow UI to update
-                setTimeout(processBatch, 100);
+                setTimeout(processBatch, 10);
             }
             
             // Start batch processing
             processBatch();
+            
+            function createLabel(row) {
+                const paddedIsle = padWithZeros(row.isle, 2);
+                const paddedShelf = padWithZeros(row.shelf, 2);
+                const paddedBin = padWithZeros(row.bin, 2);
+                
+                let locationCode;
+                let formattedLocationName;
+                
+                if (labelFormat === 'Building-Isle-Bay-Shelf-Bin') {
+                    formattedLocationName = `${row.building}-${paddedIsle}-${row.bay}-${paddedShelf}-${paddedBin}`;
+                } else {
+                    formattedLocationName = `${row.building}/${paddedIsle}/${row.bay}/${paddedShelf}/${paddedBin}`;
+                }
+                
+                locationCode = formattedLocationName;
+                
+                // Create label element with grid layout
+                const label = document.createElement('div');
+                label.className = 'label';
+                
+                // Create location name element
+                const locationNameElement = document.createElement('div');
+                locationNameElement.className = 'location-name';
+                locationNameElement.textContent = formattedLocationName;
+                label.appendChild(locationNameElement);
+                
+                // Create barcode container
+                const barcodeContainer = document.createElement('div');
+                barcodeContainer.className = 'barcode-container';
+                
+                // Create barcode SVG with a unique ID
+                const barcodeId = 'barcode-' + Math.random().toString(36).substring(2, 15);
+                const barcodeSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                barcodeSvg.id = barcodeId;
+                barcodeSvg.setAttribute('width', '100%');
+                barcodeSvg.setAttribute('height', '80');
+                barcodeSvg.setAttribute('class', 'barcode-svg');
+                
+                barcodeContainer.appendChild(barcodeSvg);
+                
+                // Create barcode description
+                const barcodeDesc = document.createElement('div');
+                barcodeDesc.className = 'description';
+                barcodeDesc.textContent = locationCode;
+                barcodeContainer.appendChild(barcodeDesc);
+                
+                // Add debug info (will be hidden in print)
+                const debugInfo = document.createElement('div');
+                debugInfo.className = 'debug-info';
+                barcodeContainer.appendChild(debugInfo);
+                
+                // Create QR code container
+                const qrContainer = document.createElement('div');
+                qrContainer.className = 'qrcode-container';
+                qrContainer.id = 'qr-' + Math.random().toString(36).substring(2, 15);
+                
+                // Handle different display options
+                if (codeDisplay === 'both') {
+                    // Add both containers
+                    label.appendChild(barcodeContainer);
+                    label.appendChild(qrContainer);
+                } else if (codeDisplay === 'barcode') {
+                    // Barcode only - make it full width
+                    barcodeContainer.classList.add('full-width');
+                    label.appendChild(barcodeContainer);
+                } else if (codeDisplay === 'qrcode') {
+                    // QR code only - make it full width
+                    qrContainer.classList.add('full-width');
+                    label.appendChild(qrContainer);
+                }
+                
+                // Add the label to the container
+                container.appendChild(label);
+                
+                // Generate the QR code if needed
+                if (codeDisplay === 'both' || codeDisplay === 'qrcode') {
+                    const qrSize = codeDisplay === 'qrcode' ? 150 : 80;
+                    new QRCode(qrContainer, {
+                        text: locationCode,
+                        width: qrSize,
+                        height: qrSize,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+                
+                // Generate the barcode if needed
+                if (codeDisplay === 'both' || codeDisplay === 'barcode') {
+                    try {
+                        JsBarcode('#' + barcodeId, locationCode, {
+                            format: "CODE128",
+                            lineColor: "#000",
+                            width: 2,
+                            height: codeDisplay === 'barcode' ? 120 : 80,
+                            displayValue: false
+                        });
+                    } catch (e) {
+                        console.error("Error generating barcode:", e);
+                        debugInfo.textContent = "Error: " + e.message;
+                        debugInfo.style.color = "red";
+                    }
+                }
+            }
         }
     </script>
 </body>
