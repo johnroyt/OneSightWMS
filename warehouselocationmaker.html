@@ -25,12 +25,13 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.1in;
+            justify-content: flex-start;
         }
         
         .label {
             border: 1px dashed #ccc;
             padding: 0.1in;
-            width: 3.5in;
+            width: 4in;
             height: 2in;
             margin-bottom: 0.1in;
             page-break-inside: avoid;
@@ -38,14 +39,32 @@
             grid-template-columns: 1fr 1fr;
             grid-template-rows: auto 1fr;
             gap: 10px;
+            overflow: hidden; /* Prevent content overflow */
         }
         
-        .location-name {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
+        .location-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
             grid-column: 1 / span 2;
             grid-row: 1;
+        }
+        
+        .location-table th, .location-table td {
+            border: 1px solid #000;
+            padding: 2px 2px; /* Reduced horizontal padding from 4px to 2px */
+            text-align: center;
+        }
+        
+        .location-table th {
+            font-size: 10px;
+            font-weight: bold;
+            background-color: #f5f5f5;
+        }
+        
+        .location-table td {
+            font-size: 20px;
+            font-weight: bold;
         }
         
         .barcode-container {
@@ -53,11 +72,11 @@
             grid-column: 1;
             grid-row: 2;
             align-self: center;
-            padding-right: 10px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding-right: 10px;
         }
         
         .barcode-container svg {
@@ -70,11 +89,22 @@
             grid-column: 2;
             grid-row: 2;
             align-self: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            max-width: 100%;
+            max-height: 100%;
+            overflow: hidden;
         }
         
         /* Full width styles for single code display */
         .full-width {
             grid-column: 1 / span 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         .full-width .barcode-container svg {
@@ -82,8 +112,8 @@
         }
         
         .full-width .qrcode-container canvas {
-            width: 150px !important;
-            height: 150px !important;
+            width: 110px !important;
+            height: 110px !important;
         }
         
         .description {
@@ -169,7 +199,20 @@
             .label {
                 margin: 0;
                 page-break-inside: avoid;
-                border: none;
+                border: 1px solid #000;
+                width: 3.9in; /* Slightly smaller than 4in to prevent overlap */
+                height: 1.9in; /* Slightly smaller than 2in to prevent overlap */
+                box-sizing: border-box;
+            }
+            /* Avery 5163 has 2 labels across and 5 down on a letter page */
+            .label-container {
+                width: 8.5in;
+                padding: 0.5in 0.25in; /* Standard Avery margins */
+                box-sizing: border-box;
+                display: grid;
+                grid-template-columns: 4in 4in;
+                grid-template-rows: repeat(5, 2in);
+                gap: 0;
             }
         }
     </style>
@@ -189,10 +232,9 @@
         <div class="control-group">
             <label for="code-display">Display Options:</label>
             <select id="code-display">
-<option value="barcode">Barcode Only</option>                
+                <option value="barcode">Barcode Only</option>
                 <option value="qrcode">QR Code Only</option>
-<option value="both">Show Both QR Code and Barcode</option>
-
+                <option value="both">Show Both QR Code and Barcode</option>
             </select>
         </div>
         
@@ -201,9 +243,12 @@
             
             <div class="range-section">
                 <div>
-                    <label for="building-select">Building:</label>
-                    <input type=text value="ROC" id="building-select">
-                    </input>
+                    <label for="building-select">Building/Vehicle:</label>
+                    <select id="building-select">
+                        <option value="ROC">ROC</option>
+                        <option value="Thunderdome">Thunderdome</option>
+                        <!-- Add more buildings as needed -->
+                    </select>
                 </div>
             </div>
             
@@ -490,10 +535,37 @@
                 label.className = 'label';
                 
                 // Create location name element
-                const locationNameElement = document.createElement('div');
-                locationNameElement.className = 'location-name';
-                locationNameElement.textContent = formattedLocationName;
-                label.appendChild(locationNameElement);
+                // Create a table element for the location
+                const locationTable = document.createElement('table');
+                locationTable.className = 'location-table';
+                
+                // Create header row
+                const headerRow = document.createElement('tr');
+                const headers = ['Bldg.', 'Isle', 'Bay', 'Shelf', 'Bin'];
+                
+                headers.forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    headerRow.appendChild(th);
+                });
+                
+                locationTable.appendChild(headerRow);
+                
+                // Create data row
+                const dataRow = document.createElement('tr');
+                
+                // Add each segment value
+                const values = [row.building, paddedIsle, row.bay, paddedShelf, paddedBin];
+                values.forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    dataRow.appendChild(td);
+                });
+                
+                locationTable.appendChild(dataRow);
+                
+                // Add the table to the label
+                label.appendChild(locationTable);
                 
                 // Create barcode container
                 const barcodeContainer = document.createElement('div');
@@ -545,7 +617,7 @@
                 
                 // Generate the QR code if needed
                 if (codeDisplay === 'both' || codeDisplay === 'qrcode') {
-                    const qrSize = codeDisplay === 'qrcode' ? 150 : 80;
+                    const qrSize = codeDisplay === 'qrcode' ? 150 : 100;
                     new QRCode(qrContainer, {
                         text: locationCode,
                         width: qrSize,
@@ -554,6 +626,13 @@
                         colorLight: "#ffffff",
                         correctLevel: QRCode.CorrectLevel.H
                     });
+                    
+                    // Ensure QR code is centered after it's generated
+                    setTimeout(() => {
+                        if (qrContainer.querySelector('canvas')) {
+                            qrContainer.querySelector('canvas').style.margin = '0 auto';
+                        }
+                    }, 10);
                 }
                 
                 // Generate the barcode if needed
