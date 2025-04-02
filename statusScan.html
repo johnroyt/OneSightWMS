@@ -330,7 +330,7 @@
             <div class="instructions-content" id="instructions-content">
                 <ol style="padding-left: 1.5rem; margin-bottom: 1rem;">
                     <li style="margin-bottom: 0.5rem;">Select the appropriate status from the dropdown menu.</li>
-                    <li style="margin-bottom: 0.5rem;">If the status is "Shipped to Partner", you'll need to enter a tracking number.</li>
+                    <li style="margin-bottom: 0.5rem;">If the status is "Shipped to Partner", you can optionally enter a tracking number.</li>
                     <li style="margin-bottom: 0.5rem;">Scan the SP number using the camera button or type it in manually.</li>
                     <li style="margin-bottom: 0.5rem;">Click on the camera icon to activate your device's camera for scanning.</li>
                     <li style="margin-bottom: 0.5rem;">Once scanned, the item will be recorded and appear in the scanned items list.</li>
@@ -354,7 +354,7 @@
                         <input 
                             type="text" 
                             id="tracking-number" 
-                            placeholder="Enter tracking number" 
+                            placeholder="Enter tracking number (optional)" 
                         >
                         <button type="button" class="camera-button" id="tracking-camera-btn" onclick="toggleTrackingScanner()">
                             <i class="fas fa-camera"></i>
@@ -938,10 +938,7 @@ function processBarcodeInput(barcode) {
                 
                 const trackingNumber = document.getElementById('tracking-number').value || '';
                 
-                if (status === "Shipped to Partner" && !trackingNumber) {
-                    alert('Please enter a tracking number.');
-                    return;
-                }
+                // Removed validation requiring tracking number for "Shipped to Partner" status
 
                 // Check for duplicate SP number with the same status
                 const isDuplicate = scannedItems.some(item => 
