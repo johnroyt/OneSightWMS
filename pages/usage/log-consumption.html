@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Consumption - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Log Clinic Consumption</h2>
+                    </div>
+                    
+                    <div class="datapage-container">
+                        <p>Consumption Form DataPage will be embedded here</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Usage');
+        document.getElementById('header-container').innerHTML = generateHeader('Log Consumption');
+        initializeNavigation();
+    </script>
+</body>
+</html>

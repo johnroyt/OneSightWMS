@@ -36,20 +36,25 @@ function logConsumption() {
 
 function navigateTo(page) {
     const pageMap = {
-        'Dashboard': 'index.html',
-        'Purchase Orders': 'pages/purchase-orders/index.html',
-        'Inventory': 'pages/inventory/index.html',
-        'Transfers': 'pages/transfers/index.html',
-        'Usage': 'pages/usage/index.html',
-        'Clinics & Events': 'pages/clinics/index.html',
+        'Dashboard': '../../index.html',  // Go up two directories
+        'Purchase Orders': '../purchase-orders/index.html',  // Go up one, then into purchase-orders
+        'Inventory': '../inventory/index.html',
+        'Transfers': '../transfers/index.html',
+        'Usage': '../usage/index.html',
+        'Clinics & Events': '../clinics/index.html',
         'Suppliers': '#',
         'Warehouses': '#',
         'Reports': '#',
         'Settings': '#'
     };
     
+    // Check if we're on the root or in a subdirectory
+    const isRoot = window.location.pathname.endsWith('index.html') && 
+                   !window.location.pathname.includes('/pages/');
+    
     if (pageMap[page] && pageMap[page] !== '#') {
-        window.location.href = pageMap[page];
+        const path = isRoot ? pageMap[page].replace('../../', '') : pageMap[page];
+        window.location.href = path;
     }
 }
 
