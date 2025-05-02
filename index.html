@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <span class="logo-text">WMS</span>
+            </div>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="#" class="nav-item active">
+                    <div class="nav-icon">📊</div>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">📝</div>
+                    Purchase Orders
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">📦</div>
+                    Inventory
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">🔄</div>
+                    Transfers
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">💊</div>
+                    Usage
+                </a>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">🏥</div>
+                    Clinics & Events
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">👥</div>
+                    Suppliers
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">🏢</div>
+                    Warehouses
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">📈</div>
+                    Reports
+                </a>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">System</div>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">⚙️</div>
+                    Settings
+                </a>
+            </nav>
+            
+            <div class="user-profile">
+                <div class="user-avatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name">John Doe</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="notification-bell">
+                        <span>🔔</span>
+                        <span class="notification-badge">3</span>
+                    </div>
+                    <button class="create-po-btn" onclick="createNewPO()">+ Create New PO</button>
+                </div>
+            </header>
+            
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Dashboard Stats -->
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Active POs</div>
+                        <div class="stat-change positive">+3 this week</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Pending Transfers</div>
+                        <div class="stat-change negative">-2 from yesterday</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Upcoming Clinics</div>
+                        <div class="stat-change">Next: March 15</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">96%</div>
+                        <div class="stat-label">Stock Accuracy</div>
+                        <div class="stat-change positive">+3% this quarter</div>
+                    </div>
+                </div>
+                
+                <!-- Inventory Snapshot & Reorder Alerts Row -->
+                <div class="dashboard-grid">
+                    <!-- Inventory Snapshot -->
+                    <div class="inventory-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Inventory Snapshot</h2>
+                            <a href="#" style="color: #4c6ef5; font-size: 0.875rem;">View Details →</a>
+                        </div>
+                        <div class="location-inventory">
+                            <span class="location-name">ROC Main Warehouse</span>
+                            <span class="location-qty">12,450 units</span>
+                        </div>
+                        <div class="location-inventory">
+                            <span class="location-name">Pod - Downtown Clinic</span>
+                            <span class="location-qty">850 units</span>
+                        </div>
+                        <div class="location-inventory">
+                            <span class="location-name">Pod - Westside Clinic</span>
+                            <span class="location-qty">625 units</span>
+                        </div>
+                        <div class="location-inventory">
+                            <span class="location-name">Sale-for-Sight Events</span>
+                            <span class="location-qty">320 units</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Reorder Alerts -->
+                    <div class="alert-card">
+                        <div class="card-header">
+                            <h2 class="card-title">SKUs Below Reorder Point</h2>
+                            <button class="reorder-btn">Create PO for All</button>
+                        </div>
+                        <ul class="alert-list">
+                            <li class="alert-item">
+                                <span>SKU-1234: Lens Solution</span>
+                                <button class="reorder-btn">Create PO</button>
+                            </li>
+                            <li class="alert-item">
+                                <span>SKU-5678: Contact Lenses A</span>
+                                <button class="reorder-btn">Create PO</button>
+                            </li>
+                            <li class="alert-item">
+                                <span>SKU-9012: Eye Drops</span>
+                                <button class="reorder-btn">Create PO</button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Transfer Orders Section -->
+                <div class="full-width-section">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab(event, 'pending-transfers')">Pending Transfers</div>
+                        <div class="tab" onclick="switchTab(event, 'incoming-returns')">Incoming Returns</div>
+                    </div>
+                    
+                    <div id="pending-transfers" class="tab-content active">
+                        <div class="datapage-container">
+                            <!-- Pending Transfers (ROC → Pod) DataPage -->
+                            <p>Pending Transfers DataPage will be embedded here</p>
+                        </div>
+                    </div>
+                    
+                    <div id="incoming-returns" class="tab-content">
+                        <div class="datapage-container">
+                            <!-- Incoming Returns (Pod → ROC) DataPage -->
+                            <p>Incoming Returns DataPage will be embedded here</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Clinic Usage</h2>
+                        <button class="create-po-btn" style="background: #38a169;">+ Log Usage</button>
+                    </div>
+                    
+                    <div class="datapage-container">
+                        <!-- Clinic Consumption DataPage -->
+                        <p>Recent Clinic Usage DataPage will be embedded here</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html>

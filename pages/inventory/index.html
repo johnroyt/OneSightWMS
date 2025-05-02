@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="dashboard-grid">
+                    <!-- Inventory Stats -->
+                    <div class="stat-card">
+                        <div class="stat-value">14,245</div>
+                        <div class="stat-label">Total Items</div>
+                        <div class="stat-change positive">+156 this week</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">423</div>
+                        <div class="stat-label">Active SKUs</div>
+                        <div class="stat-change">98% stocked</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Low Stock Items</div>
+                        <div class="stat-change negative">Needs attention</div>
+                    </div>
+                </div>
+                
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Inventory by Location</h2>
+                    </div>
+                    
+                    <div class="datapage-container">
+                        <p>Inventory DataPage will be embedded here</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Inventory');
+        document.getElementById('header-container').innerHTML = generateHeader('Inventory Management');
+        initializeNavigation();
+    </script>
+</body>
+</html>

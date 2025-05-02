@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinics & Events - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Upcoming Clinics & Events</h2>
+                        <button class="create-po-btn">+ Add New Event</button>
+                    </div>
+                    
+                    <div class="datapage-container">
+                        <p>Clinics & Events DataPage will be embedded here</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Clinics & Events');
+        document.getElementById('header-container').innerHTML = generateHeader('Clinics & Events');
+        initializeNavigation();
+    </script>
+</body>
+</html>
