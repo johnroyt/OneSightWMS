@@ -34,27 +34,39 @@ function logConsumption() {
     window.location.href = 'pages/usage/log-consumption.html';
 }
 
+// Fixed navigation function
 function navigateTo(page) {
-    const pageMap = {
-        'Dashboard': '../../index.html',  // Go up two directories
-        'Purchase Orders': '../purchase-orders/index.html',  // Go up one, then into purchase-orders
-        'Inventory': '../inventory/index.html',
-        'Transfers': '../transfers/index.html',
-        'Usage': '../usage/index.html',
-        'Clinics & Events': '../clinics/index.html',
-        'Suppliers': '#',
-        'Warehouses': '#',
-        'Reports': '#',
-        'Settings': '#'
+    console.log('Navigation function called');
+    console.log('Trying to navigate to:', page);
+    console.log('Current URL:', window.location.href);
+    
+    const routes = {
+        'Dashboard': 'index.html',
+        'Purchase Orders': 'pages/purchase-orders/index.html',
+        'Inventory': 'pages/inventory/index.html',
+        'Transfers': 'pages/transfers/index.html',
+        'Usage': 'pages/usage/index.html',
+        'Clinics & Events': 'pages/clinics/index.html'
     };
     
-    // Check if we're on the root or in a subdirectory
-    const isRoot = window.location.pathname.endsWith('index.html') && 
-                   !window.location.pathname.includes('/pages/');
+    console.log('Available routes:', routes);
+    console.log('Route exists?', routes.hasOwnProperty(page));
     
-    if (pageMap[page] && pageMap[page] !== '#') {
-        const path = isRoot ? pageMap[page].replace('../../', '') : pageMap[page];
-        window.location.href = path;
+    if (routes[page]) {
+        const targetUrl = routes[page];
+        console.log('Found route:', targetUrl);
+        console.log('About to navigate to:', targetUrl);
+        
+        // Force navigation even if on same page
+        if (window.location.href.includes('index.html') && targetUrl === 'index.html') {
+            console.log('Already on dashboard, forcing reload');
+            window.location.reload();
+        } else {
+            console.log('Navigating to new page');
+            window.location.href = targetUrl;
+        }
+    } else {
+        console.error('No route found for:', page);
     }
 }
 
@@ -69,23 +81,23 @@ function generateSidebar(activePage) {
             
             <nav class="nav-section">
                 <div class="nav-section-title">Main</div>
-                <a href="#" class="nav-item ${activePage === 'Dashboard' ? 'active' : ''}">
+                <a href="javascript:void(0)" class="nav-item ${activePage === 'Dashboard' ? 'active' : ''}">
                     <div class="nav-icon">📊</div>
                     Dashboard
                 </a>
-                <a href="#" class="nav-item ${activePage === 'Purchase Orders' ? 'active' : ''}">
+                <a href="javascript:void(0)" class="nav-item ${activePage === 'Purchase Orders' ? 'active' : ''}">
                     <div class="nav-icon">📝</div>
                     Purchase Orders
                 </a>
-                <a href="#" class="nav-item ${activePage === 'Inventory' ? 'active' : ''}">
+                <a href="javascript:void(0)" class="nav-item ${activePage === 'Inventory' ? 'active' : ''}">
                     <div class="nav-icon">📦</div>
                     Inventory
                 </a>
-                <a href="#" class="nav-item ${activePage === 'Transfers' ? 'active' : ''}">
+                <a href="javascript:void(0)" class="nav-item ${activePage === 'Transfers' ? 'active' : ''}">
                     <div class="nav-icon">🔄</div>
                     Transfers
                 </a>
-                <a href="#" class="nav-item ${activePage === 'Usage' ? 'active' : ''}">
+                <a href="javascript:void(0)" class="nav-item ${activePage === 'Usage' ? 'active' : ''}">
                     <div class="nav-icon">💊</div>
                     Usage
                 </a>
@@ -93,19 +105,19 @@ function generateSidebar(activePage) {
             
             <nav class="nav-section">
                 <div class="nav-section-title">Management</div>
-                <a href="#" class="nav-item ${activePage === 'Clinics & Events' ? 'active' : ''}">
+                <a href="javascript:void(0)" class="nav-item ${activePage === 'Clinics & Events' ? 'active' : ''}">
                     <div class="nav-icon">🏥</div>
                     Clinics & Events
                 </a>
-                <a href="#" class="nav-item">
+                <a href="javascript:void(0)" class="nav-item">
                     <div class="nav-icon">👥</div>
                     Suppliers
                 </a>
-                <a href="#" class="nav-item">
+                <a href="javascript:void(0)" class="nav-item">
                     <div class="nav-icon">🏢</div>
                     Warehouses
                 </a>
-                <a href="#" class="nav-item">
+                <a href="javascript:void(0)" class="nav-item">
                     <div class="nav-icon">📈</div>
                     Reports
                 </a>
@@ -113,7 +125,7 @@ function generateSidebar(activePage) {
             
             <nav class="nav-section">
                 <div class="nav-section-title">System</div>
-                <a href="#" class="nav-item">
+                <a href="javascript:void(0)" class="nav-item">
                     <div class="nav-icon">⚙️</div>
                     Settings
                 </a>
@@ -148,27 +160,35 @@ function generateHeader(pageTitle, additionalButtons = '') {
     `;
 }
 
-// Function to handle nav links after page load
 function initializeNavigation() {
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', function(e) {
+    console.log('Initializing navigation...');
+    
+    // Use event delegation on document
+    document.addEventListener('click', function(e) {
+        console.log('Click detected on:', e.target);
+        
+        // Check if clicked element or parent is a nav item
+        const navItem = e.target.closest('.nav-item');
+        
+        if (navItem) {
+            console.log('Nav item clicked:', navItem);
             e.preventDefault();
-            const pageName = this.textContent.trim();
+            e.stopPropagation();
+            
+            // Get page name from text content
+            const pageName = navItem.textContent.trim();
+            console.log('Extracted page name:', pageName);
+            
             navigateTo(pageName);
-        });
+            return false;
+        }
     });
     
-    // Handle notification clicks if bell exists
-    const notificationBell = document.querySelector('.notification-bell');
-    if (notificationBell) {
-        notificationBell.addEventListener('click', function() {
-            alert('Opening notifications...');
-        });
-    }
+    console.log('Navigation initialization complete');
 }
 
-// Initialize page
+// Make sure initialization runs after DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing...');
     initializeNavigation();
 });
