@@ -17,11 +17,41 @@ function switchTab(event, tabId) {
     event.currentTarget.classList.add('active');
 }
 
-// Function to create a new PO
+// Function to create a new PO - updated to use modal
 function createNewPO() {
-    // This will open your Caspio Create PO form
-    window.location.href = 'pages/purchase-orders/create.html';
+    // Show the modal
+    showModal();
+    
+    // Embed the Caspio DataPage for creating a new PO
+    const createPOContainer = document.getElementById('create-po-form');
+    createPOContainer.innerHTML = '';
+    
+    // Create script element for the Caspio DataPage
+    const createPOScript = document.createElement('script');
+    createPOScript.type = 'text/javascript';
+    createPOScript.src = 'https://c2ect483.caspio.com/dp/YOUR_CREATE_PO_APP_KEY/emb';
+    createPOContainer.appendChild(createPOScript);
 }
+
+// Function to show the modal
+function showModal() {
+    document.getElementById('create-po-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+}
+
+// Function to close the modal
+function closeModal() {
+    document.getElementById('create-po-modal').style.display = 'none';
+    document.body.style.overflow = 'auto'; // Restore scrolling
+}
+
+// Close modal when clicking outside of it
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('create-po-modal');
+    if (event.target === modal) {
+        closeModal();
+    }
+});
 
 // Function to create a new transfer
 function createNewTransfer() {

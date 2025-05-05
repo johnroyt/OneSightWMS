@@ -44,27 +44,52 @@
     
     <script src="../../js/main.js"></script>
     <script>
+        // First generate the sidebar and header
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Purchase Orders');
+        document.getElementById('header-container').innerHTML = generateHeader('Purchase Order Details');
+        initializeNavigation();
+        
         // Get PurchaseOrderID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const purchaseOrderId = urlParams.get('PurchaseOrderID');
         
         if (purchaseOrderId) {
-            // Embed Caspio DataPages with the PurchaseOrderID parameter
+            // For Caspio embedding, create script elements programmatically instead
             const detailsContainer = document.getElementById('po-details-container');
-            detailsContainer.innerHTML = `
-                <script type="text/javascript" src="https://c2ect483.caspio.com/dp/YOUR_DETAILS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}"></script>
-            `;
+            const detailsScript = document.createElement('script');
+            detailsScript.type = 'text/javascript';
+            detailsScript.src = `https://c2ect483.caspio.com/dp/YOUR_DETAILS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}`;
+            detailsContainer.innerHTML = ''; // Clear the loading message
+            detailsContainer.appendChild(detailsScript);
             
             // PO Items DataPage
             const itemsContainer = document.getElementById('po-items-container');
-            itemsContainer.innerHTML = `
-                <script type="text/javascript" src="https://c2ect483.caspio.com/dp/YOUR_ITEMS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}"></script>
-            `;
+            const itemsScript = document.createElement('script');
+            itemsScript.type = 'text/javascript';
+            itemsScript.src = `https://c2ect483.caspio.com/dp/YOUR_ITEMS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}`;
+            itemsContainer.innerHTML = ''; // Clear the loading message
+            itemsContainer.appendChild(itemsScript);
         } else {
             // Handle case where no PurchaseOrderID is provided
             document.getElementById('po-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
             document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
         }
     </script>
+
+    <!-- Add this modal HTML code right before the closing </body> tag -->
+<div id="create-po-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="card-title">Create New Purchase Order</h2>
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="create-po-form" class="datapage-container">
+          <!-- Your Caspio DataPage will be embedded here -->
+          <p>Loading Create PO form...</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
