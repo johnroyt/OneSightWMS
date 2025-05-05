@@ -303,8 +303,6 @@
         .datapage-container {
             min-height: 400px;
             display: flex;
-            align-items: center;
-            justify-content: center;
             color: #718096;
             font-style: italic;
             border: 2px dashed #e2e8f0;

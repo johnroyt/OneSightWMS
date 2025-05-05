@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order Details - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <!-- Purchase Order Details Section -->
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Purchase Order Details</h2>
+                        <div id="po-number" style="color: #4c6ef5; font-weight: 600;"></div>
+                    </div>
+                    
+                    <div id="po-details-container" class="datapage-container">
+                        <!-- Caspio PO Details DataPage will be embedded here -->
+                        <p>Loading Purchase Order Details...</p>
+                    </div>
+                </div>
+                
+                <!-- Purchase Order Items Section -->
+                <div class="full-width-section" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Purchase Order Items</h2>
+                    </div>
+                    
+                    <div id="po-items-container" class="datapage-container">
+                        <!-- Caspio PO Items DataPage will be embedded here -->
+                        <p>Loading Purchase Order Items...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        // Get PurchaseOrderID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const purchaseOrderId = urlParams.get('PurchaseOrderID');
+        
+        if (purchaseOrderId) {
+            // Embed Caspio DataPages with the PurchaseOrderID parameter
+            const detailsContainer = document.getElementById('po-details-container');
+            detailsContainer.innerHTML = `
+                <script type="text/javascript" src="https://c2ect483.caspio.com/dp/YOUR_DETAILS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}"></script>
+            `;
+            
+            // PO Items DataPage
+            const itemsContainer = document.getElementById('po-items-container');
+            itemsContainer.innerHTML = `
+                <script type="text/javascript" src="https://c2ect483.caspio.com/dp/YOUR_ITEMS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}"></script>
+            `;
+        } else {
+            // Handle case where no PurchaseOrderID is provided
+            document.getElementById('po-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
+            document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
+        }
+    </script>
+</body>
+</html>
