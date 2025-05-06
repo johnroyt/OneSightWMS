@@ -113,23 +113,10 @@ function logConsumption() {
     window.location.href = 'pages/usage/log-consumption.html';
 }
 
-// Flexible navigation function that works both locally and on GitHub Pages
+// Updated navigateTo function that works both locally and on GitHub Pages
 function navigateTo(page) {
-    // Determine if we're on GitHub Pages
-    const isGitHubPages = window.location.hostname.includes('github.io');
-    
-    // Get the repository name if on GitHub Pages
-    let repoName = '';
-    if (isGitHubPages) {
-        // Extract the repository name from the pathname
-        const pathParts = window.location.pathname.split('/');
-        if (pathParts.length > 1) {
-            repoName = pathParts[1]; // The first segment after the domain
-        }
-    }
-    
-    // Define routes without leading slashes
-    const routes = {
+    // Define your paths relative to the repo root
+    const paths = {
         'Dashboard': 'index.html',
         'Purchase Orders': 'pages/purchase-orders/index.html',
         'Orders': 'pages/orders/index.html',
@@ -145,18 +132,29 @@ function navigateTo(page) {
         page = 'Orders';
     }
     
-    if (routes[page]) {
-        // Build the URL based on environment
-        let url;
-        if (isGitHubPages) {
-            // For GitHub Pages: /repo-name/route
-            url = '/' + repoName + '/' + routes[page];
-        } else {
-            // For local development: /route
-            url = '/' + routes[page];
+    if (paths[page]) {
+        // Get the current URL
+        const currentUrl = window.location.href;
+        
+        // Extract the base URL (everything up to the repository root)
+        // This handles both local and GitHub Pages deployments
+        const baseUrl = currentUrl.split('/').slice(0, 3).join('/');
+        
+        // For GitHub Pages, we need to add the repository name
+        let repoPath = '';
+        if (window.location.hostname.includes('github.io')) {
+            // Extract the repository name from the URL
+            const pathParts = window.location.pathname.split('/');
+            if (pathParts.length > 1) {
+                repoPath = '/' + pathParts[1];
+            }
         }
         
-        window.location.href = url;
+        // Construct the full URL
+        const newUrl = baseUrl + repoPath + '/' + paths[page];
+        
+        // Navigate to the new URL
+        window.location.href = newUrl;
     } else {
         console.error('No route found for:', page);
     }
