@@ -17,27 +17,10 @@
             app.innerHTML = `
                 ${generateSidebar('Dashboard')}
                 <div class="main-wrapper">
-                    ${generateHeader('Dashboard', '<button class="create-po-btn" onclick="createNewPO()">+ Create New PO</button>')}
+                    ${generateHeader('Dashboard')}
                     <main class="main-content">
-                        <!-- Dashboard Stats -->
-                        <div class="dashboard-grid">
-                            <div class="stat-card">
-                                <div class="stat-value">24</div>
-                                <div class="stat-label">Active POs</div>
-                                <div class="stat-change positive">+3 this week</div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-value">12</div>
-                                <div class="stat-label">Pending Transfers</div>
-                                <div class="stat-change negative">-2 from yesterday</div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-value">8</div>
-                                <div class="stat-label">Upcoming Clinics</div>
-                                <div class="stat-change">Next: March 15</div>
-                            </div>
+                        <!-- Dashboard Stats - Caspio DataPage -->
+                        <div class="datapage-container" id="dashboard-stats-datapage">
                             
                         </div>
                         

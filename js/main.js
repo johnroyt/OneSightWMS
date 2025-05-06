@@ -17,46 +17,95 @@ function switchTab(event, tabId) {
     event.currentTarget.classList.add('active');
 }
 
-// Function to create a new PO - updated to use modal
-function createNewPO() {
+// Function to create a new order (replaces createNewPO and createNewTransfer)
+function createNewOrder() {
     // Show the modal
-    showModal();
+    document.getElementById('new-order-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
     
-    // Embed the Caspio DataPage for creating a new PO
-    const createPOContainer = document.getElementById('create-po-form');
-    createPOContainer.innerHTML = '';
+    // Set up event listeners for order type selection
+    const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
+    orderTypeRadios.forEach(radio => {
+        radio.addEventListener('change', updateOrderForm);
+    });
     
-    // Create script element for the Caspio DataPage
-    const createPOScript = document.createElement('script');
-    createPOScript.type = 'text/javascript';
-    createPOScript.src = 'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb';
-    createPOContainer.appendChild(createPOScript);
+    // Load initial form (Customer Order is default)
+    updateOrderForm();
 }
 
-// Function to show the modal
+// Function to update the order form based on selected type
+function updateOrderForm() {
+    const selectedType = document.querySelector('input[name="orderType"]:checked').value;
+    const formContainer = document.getElementById('order-form-container');
+    
+    // Clear current form
+    formContainer.innerHTML = '<p>Loading form for ' + selectedType + ' order...</p>';
+    
+    // Load the appropriate Caspio DataPage based on order type
+    const createOrderScript = document.createElement('script');
+    createOrderScript.type = 'text/javascript';
+    
+    // Set the appropriate DataPage URL based on order type
+    if (selectedType === 'customer') {
+        createOrderScript.src = 'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb';
+    } else if (selectedType === 'transfer') {
+        createOrderScript.src = 'https://c2ect483.caspio.com/dp/9759400transfer_form/emb'; // Replace with actual transfer form URL
+    } else if (selectedType === 'return') {
+        createOrderScript.src = 'https://c2ect483.caspio.com/dp/9759400return_form/emb'; // Replace with actual return form URL
+    }
+    
+    formContainer.appendChild(createOrderScript);
+}
+
+// Function to close the order modal
+function closeOrderModal() {
+    document.getElementById('new-order-modal').style.display = 'none';
+    document.body.style.overflow = 'auto'; // Restore scrolling
+}
+
+// Filter orders by type
+function filterOrderType(type) {
+    // Remove active class from all tabs
+    const tabs = document.getElementsByClassName('order-type-tab');
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
+    }
+    
+    // Add active class to clicked tab
+    event.currentTarget.classList.add('active');
+    
+    // Here you would update the DataPage with the filtered content
+    console.log(`Filtering orders by type: ${type}`);
+    
+    // In a real implementation, you would update the DataPage parameters to filter by order type
+}
+
+// Function to show the modal (kept for backward compatibility)
 function showModal() {
     document.getElementById('create-po-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
 }
 
-// Function to close the modal
+// Function to close the modal (kept for backward compatibility)
 function closeModal() {
     document.getElementById('create-po-modal').style.display = 'none';
     document.body.style.overflow = 'auto'; // Restore scrolling
 }
 
-// Close modal when clicking outside of it
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('create-po-modal');
-    if (event.target === modal) {
-        closeModal();
-    }
-});
+// Legacy function - now redirects to the new createNewOrder
+function createNewPO() {
+    createNewOrder();
+}
 
-// Function to create a new transfer
+// Legacy function - now redirects to the new createNewOrder with pre-selected transfer type
 function createNewTransfer() {
-    // This will open your Caspio Create Transfer form
-    alert('Opening Create Transfer form...');
+    createNewOrder();
+    // Pre-select the transfer radio button
+    const transferRadio = document.querySelector('input[name="orderType"][value="transfer"]');
+    if (transferRadio) {
+        transferRadio.checked = true;
+        updateOrderForm();
+    }
 }
 
 // Function to log consumption
@@ -68,14 +117,18 @@ function logConsumption() {
 function navigateTo(page) {
     const routes = {
         'Dashboard': '/index.html',
-        'Purchase Orders': '/pages/purchase-orders/index.html',
+        'Orders': '/pages/orders/index.html',           // Updated to combined Orders page
         'Inventory': '/pages/inventory/index.html',
-        'Transfers': '/pages/transfers/index.html',
-        'Shipments': '/pages/shipments/index.html', // Added Shipments route
+        'Shipments': '/pages/shipments/index.html',
         'Usage': '/pages/usage/index.html',
         'Special Project Requests': '/pages/usage/index.html',
         'Clinics & Events': '/pages/clinics/index.html'
     };
+    
+    // For backward compatibility
+    if (page === 'Purchase Orders' || page === 'Transfers') {
+        page = 'Orders';
+    }
     
     if (routes[page]) {
         // Using absolute path with leading slash
@@ -87,6 +140,11 @@ function navigateTo(page) {
 
 // Function to generate sidebar HTML
 function generateSidebar(activePage) {
+    // Map old active pages to new ones for backward compatibility
+    if (activePage === 'Purchase Orders' || activePage === 'Transfers') {
+        activePage = 'Orders';
+    }
+    
     return `
         <aside class="sidebar">
             <div class="logo">
@@ -100,17 +158,13 @@ function generateSidebar(activePage) {
                     <div class="nav-icon">📊</div>
                     Dashboard
                 </a>
-                <a href="javascript:void(0)" data-page="Purchase Orders" class="nav-item ${activePage === 'Purchase Orders' ? 'active' : ''}">
+                <a href="javascript:void(0)" data-page="Orders" class="nav-item ${activePage === 'Orders' ? 'active' : ''}">
                     <div class="nav-icon">📝</div>
-                    Purchase Orders
+                    Orders & Transfers
                 </a>
                 <a href="javascript:void(0)" data-page="Inventory" class="nav-item ${activePage === 'Inventory' ? 'active' : ''}">
                     <div class="nav-icon">📦</div>
                     Inventory
-                </a>
-                <a href="javascript:void(0)" data-page="Transfers" class="nav-item ${activePage === 'Transfers' ? 'active' : ''}">
-                    <div class="nav-icon">🔄</div>
-                    Transfers
                 </a>
                 <a href="javascript:void(0)" data-page="Shipments" class="nav-item ${activePage === 'Shipments' ? 'active' : ''}">
                     <div class="nav-icon">🚚</div>
@@ -139,6 +193,7 @@ function generateSidebar(activePage) {
         </aside>
     `;
 }
+
 // Function to generate header HTML
 function generateHeader(pageTitle, additionalButtons = '') {
     return `
@@ -156,6 +211,21 @@ function generateHeader(pageTitle, additionalButtons = '') {
         </header>
     `;
 }
+
+// Close modal when clicking outside of it
+window.addEventListener('click', function(event) {
+    // Handle Order modal
+    const orderModal = document.getElementById('new-order-modal');
+    if (orderModal && event.target === orderModal) {
+        closeOrderModal();
+    }
+    
+    // Handle legacy PO modal for backward compatibility
+    const poModal = document.getElementById('create-po-modal');
+    if (poModal && event.target === poModal) {
+        closeModal();
+    }
+});
 
 function initializeNavigation() {
     document.addEventListener('click', function(e) {
