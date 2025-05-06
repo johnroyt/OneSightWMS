@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Requests - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Special Requests</h2>
+                        <button class="create-po-btn" style="background: #805ad5;">+ New Request</button>
+                    </div>
+                    
+                    <div class="datapage-container">
+                        <!-- Embed your Caspio datapage here -->
+                        <script type="text/javascript" src="https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb"></script>
+                        <!-- Adjust the Caspio URL to your actual datapage ID -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('SpecialRequests');
+        document.getElementById('header-container').innerHTML = generateHeader('Special Requests');
+        initializeNavigation();
+
+        // Function to create a new special request
+        function createNewRequest() {
+            // You can implement this to show a modal or navigate to a form page
+            alert('Create new request functionality will be implemented here');
+            // Uncomment if you have a create page: window.location.href = 'create-request.html';
+        }
+
+        // Add event listener to the button
+        document.addEventListener('DOMContentLoaded', function() {
+            const createButton = document.querySelector('.create-po-btn');
+            if (createButton) {
+                createButton.addEventListener('click', createNewRequest);
+            }
+        });
+    </script>
+</body>
+</html>

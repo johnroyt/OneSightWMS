@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders & Transfers - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        /* Additional styles for the orders page */
+        .order-type-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            padding: 0.5rem;
+            margin-bottom: -1px;
+        }
+        .order-type-tab {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            color: #4a5568;
+            transition: all 0.2s ease;
+        }
+        .order-type-tab.active {
+            background-color: #ebf4ff;
+            color: #4c6ef5;
+        }
+        .order-type-tab:hover:not(.active) {
+            background-color: #f7fafc;
+        }
+        .order-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .badge-customer { background-color: #e6fffa; color: #38a169; }
+        .badge-transfer { background-color: #ebf4ff; color: #4c6ef5; }
+        .badge-return   { background-color: #fff5f5; color: #e53e3e; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div id="sidebar-container"></div>
+    <div class="main-wrapper">
+        <div id="header-container"></div>
+        <main class="main-content">
+            <!-- Order Type Filter -->
+            <div class="order-type-tabs">
+                <div class="order-type-tab active" onclick="filterOrderType('all')">All Orders</div>
+                <div class="order-type-tab" onclick="filterOrderType('customer')">Customer Orders</div>
+                <div class="order-type-tab" onclick="filterOrderType('transfer')">Transfers</div>
+                <div class="order-type-tab" onclick="filterOrderType('return')">Returns</div>
+            </div>
+
+            <!-- Order Status Tabs -->
+            <div class="full-width-section">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab(event, 'pending')">Pending Orders</div>
+                    <div class="tab" onclick="switchTab(event, 'in-progress')">In Progress</div>
+                    <div class="tab" onclick="switchTab(event, 'completed')">Completed</div>
+                </div>
+
+                <div id="pending" class="tab-content active">
+                    <div class="datapage-container"></div>
+                </div>
+                <div id="in-progress" class="tab-content">
+                    <div class="datapage-container"></div>
+                </div>
+                <div id="completed" class="tab-content">
+                    <div class="datapage-container"></div>
+                </div>
+            </div>
+
+            <!-- Order Details Section -->
+            <div id="order-details-section" class="full-width-section" style="margin-top:2rem;display:none;">
+                <div class="card-header">
+                    <h2 class="card-title">Order Details</h2>
+                    <div id="order-id" style="color:#4c6ef5;font-weight:600;"></div>
+                </div>
+                <div class="order-info">
+                    <div class="order-status-banner">
+                        <span id="order-status"></span>
+                        <span id="order-type-badge" class="order-badge"></span>
+                    </div>
+                    <div class="datapage-container">
+                        <div id="order-details-datapage"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- New Order Modal -->
+<div id="new-order-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="card-title">Create New Order</h2>
+            <span class="close-modal" onclick="closeOrderModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="order-type-selection" style="margin-bottom:1rem;">
+                <div class="nav-section-title">Order Type</div>
+                <div class="order-type-options" style="display:flex;gap:1rem;margin-top:0.5rem;">
+                    <label style="flex:1;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;">
+                        <input type="radio" name="orderType" value="customer" checked>
+                        <span style="font-weight:500;margin-left:0.5rem;">Customer Order</span>
+                    </label>
+                    <label style="flex:1;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;">
+                        <input type="radio" name="orderType" value="transfer">
+                        <span style="font-weight:500;margin-left:0.5rem;">Transfer</span>
+                    </label>
+                    <label style="flex:1;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;">
+                        <input type="radio" name="orderType" value="return">
+                        <span style="font-weight:500;margin-left:0.5rem;">Return</span>
+                    </label>
+                </div>
+            </div>
+            <div id="order-form-container" class="datapage-container"><p>Loading order form...</p></div>
+        </div>
+    </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script>
+// ============== GLOBAL STATE ==============
+let currentOrderType = "";      // "", "customer", "transfer", "return"
+let currentStatus    = "pending"; // "pending", "in-progress", "completed"
+let lastDatapageUrl  = "";       // cache to avoid duplicate reloads
+
+// ============== UTILITY FUNCTIONS ==============
+function getUrlParameters() {
+    const p = new URLSearchParams(window.location.search);
+    return {
+        orderType: p.get("orderType") || "",
+        status:    p.get("status")    || "pending"
+    };
+}
+
+function updateUrlParameters(orderType, status) {
+    const url    = new URL(window.location.href);
+    const params = url.searchParams; // live reference
+
+    if (orderType !== undefined) {
+        if (!orderType || orderType === "all") {
+            params.delete("orderType");
+            currentOrderType = "";
+        } else {
+            params.set("orderType", orderType);
+            currentOrderType = orderType;
+        }
+    }
+
+    if (status !== undefined) {
+        params.set("status", status);
+        currentStatus = status;
+    }
+
+    history.replaceState(null, "", url);
+    loadDataPage();
+}
+
+function buildCaspioUrl() {
+    const base = "https://c2ect483.caspio.com/dp/97594000b7fe2efcda5c49a6a3c7/emb";
+    const q = [];
+    if (currentOrderType) q.push(`orderType=${currentOrderType}`);
+    if (currentStatus)    q.push(`status=${currentStatus}`);
+    return q.length ? `${base}?${q.join("&")}` : base;
+}
+
+// ============== DYNAMIC DATAPAGE LOADER ==============
+function loadDataPage() {
+    const pane = document.querySelector('.tab-content.active');
+    let container = pane.querySelector('.datapage-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'datapage-container';
+        pane.appendChild(container);
+    }
+
+    const url = buildCaspioUrl();
+    if (url === lastDatapageUrl) return; // already loaded
+    lastDatapageUrl = url;
+
+    container.innerHTML = '';
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+    container.appendChild(script);
+
+    console.log('Loading DataPage:', url);
+}
+
+// ============== UI HANDLERS ==============
+function filterOrderType(type) {
+    [...document.getElementsByClassName('order-type-tab')].forEach(t => t.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    updateUrlParameters(type, currentStatus);
+}
+
+function switchTab(event, statusId) {
+    [...document.getElementsByClassName('tab')].forEach(t => t.classList.remove('active'));
+    [...document.getElementsByClassName('tab-content')].forEach(c => c.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById(statusId).classList.add('active');
+    updateUrlParameters(undefined, statusId);
+}
+
+// ============== NEW‑ORDER MODAL ==============
+function createNewOrder() {
+    document.getElementById('new-order-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.querySelectorAll('input[name="orderType"]').forEach(r => r.addEventListener('change', updateOrderForm));
+    updateOrderForm();
+}
+
+function updateOrderForm() {
+    const type = document.querySelector('input[name="orderType"]:checked').value;
+    const box  = document.getElementById('order-form-container');
+    box.innerHTML = `<p>Loading form for ${type} order...</p>`;
+    const s = document.createElement('script');
+    s.src = `https://c2ect483.caspio.com/dp/97594000b7fe2efcda5c49a6a3c7/emb?formType=${type}`;
+    box.innerHTML = '';
+    box.appendChild(s);
+}
+
+function closeOrderModal() {
+    document.getElementById('new-order-modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+window.addEventListener('click', e => {
+    if (e.target === document.getElementById('new-order-modal')) closeOrderModal();
+});
+
+// ============== INITIALISATION ==============
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('sidebar-container').innerHTML = generateSidebar('Orders');
+    document.getElementById('header-container').innerHTML  = generateHeader('Orders & Transfers', '<button class="create-po-btn" onclick="createNewOrder()">+ Create Order</button>');
+    initializeNavigation();
+
+    const { orderType, status } = getUrlParameters();
+    currentOrderType = orderType;
+    currentStatus    = status;
+
+    // Apply active state to orderType tabs
+    [...document.getElementsByClassName('order-type-tab')].forEach(tab => {
+        const text = tab.textContent.toLowerCase();
+        const matchAll = !orderType && text.includes('all');
+        const matchType = orderType && text.includes(orderType.toLowerCase());
+        if (matchAll || matchType) tab.classList.add('active');
+    });
+
+    // Apply active state to status tabs
+    [...document.getElementsByClassName('tab')].forEach(tab => {
+        const paneId = tab.textContent.toLowerCase().includes('pending') ? 'pending' : tab.textContent.toLowerCase().includes('progress') ? 'in-progress' : 'completed';
+        if (paneId === status) tab.classList.add('active');
+    });
+    document.getElementById(status).classList.add('active');
+
+    loadDataPage();
+});
+</script>
+</body>
+</html>

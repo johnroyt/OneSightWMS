@@ -113,26 +113,50 @@ function logConsumption() {
     window.location.href = 'pages/usage/log-consumption.html';
 }
 
-// Fixed navigation function
+// Flexible navigation function that works both locally and on GitHub Pages
 function navigateTo(page) {
+    // Determine if we're on GitHub Pages
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    // Get the repository name if on GitHub Pages
+    let repoName = '';
+    if (isGitHubPages) {
+        // Extract the repository name from the pathname
+        const pathParts = window.location.pathname.split('/');
+        if (pathParts.length > 1) {
+            repoName = pathParts[1]; // The first segment after the domain
+        }
+    }
+    
+    // Define routes without leading slashes
     const routes = {
-        'Dashboard': '/index.html',
-        'Orders': '/pages/orders/index.html',           // Updated to combined Orders page
-        'Inventory': '/pages/inventory/index.html',
-        'Shipments': '/pages/shipments/index.html',
-        'Usage': '/pages/usage/index.html',
-        'Special Project Requests': '/pages/usage/index.html',
-        'Clinics & Events': '/pages/clinics/index.html'
+        'Dashboard': 'index.html',
+        'Purchase Orders': 'pages/purchase-orders/index.html',
+        'Orders': 'pages/orders/index.html',
+        'Inventory': 'pages/inventory/index.html',
+        'Shipments': 'pages/shipments/index.html',
+        'Usage': 'pages/usage/index.html',
+        'SpecialRequests': 'pages/specialrequests/index.html',
+        'Clinics & Events': 'pages/clinics/index.html'
     };
     
     // For backward compatibility
-    if (page === 'Purchase Orders' || page === 'Transfers') {
+    if (page === 'Transfers') {
         page = 'Orders';
     }
     
     if (routes[page]) {
-        // Using absolute path with leading slash
-        window.location.href = routes[page];
+        // Build the URL based on environment
+        let url;
+        if (isGitHubPages) {
+            // For GitHub Pages: /repo-name/route
+            url = '/' + repoName + '/' + routes[page];
+        } else {
+            // For local development: /route
+            url = '/' + routes[page];
+        }
+        
+        window.location.href = url;
     } else {
         console.error('No route found for:', page);
     }
@@ -141,7 +165,7 @@ function navigateTo(page) {
 // Function to generate sidebar HTML
 function generateSidebar(activePage) {
     // Map old active pages to new ones for backward compatibility
-    if (activePage === 'Purchase Orders' || activePage === 'Transfers') {
+    if (activePage === 'Transfers') {
         activePage = 'Orders';
     }
     
@@ -157,6 +181,10 @@ function generateSidebar(activePage) {
                 <a href="javascript:void(0)" data-page="Dashboard" class="nav-item ${activePage === 'Dashboard' ? 'active' : ''}">
                     <div class="nav-icon">📊</div>
                     Dashboard
+                </a>
+                <a href="javascript:void(0)" data-page="Purchase Orders" class="nav-item ${activePage === 'Purchase Orders' ? 'active' : ''}">
+                    <div class="nav-icon">📋</div>
+                    Purchase Orders
                 </a>
                 <a href="javascript:void(0)" data-page="Orders" class="nav-item ${activePage === 'Orders' ? 'active' : ''}">
                     <div class="nav-icon">📝</div>
@@ -174,7 +202,7 @@ function generateSidebar(activePage) {
                     <div class="nav-icon">👓</div>
                     Usage
                 </a>
-                <a href="javascript:void(0)" data-page="Usage" class="nav-item ${activePage === 'Special Project Requests' ? 'active' : ''}">
+                <a href="javascript:void(0)" data-page="SpecialRequests" class="nav-item ${activePage === 'Special Project Requests' ? 'active' : ''}">
                     <div class="nav-icon">🛠️</div>
                     Special Requests
                 </a>
@@ -189,7 +217,13 @@ function generateSidebar(activePage) {
                 <!-- Add data-page to other nav items too -->
             </nav>
             
-            <!-- ... rest of sidebar ... -->
+            <div class="user-profile">
+                <div class="user-avatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name">John Doe</div>
+                    <div class="user-role">Warehouse Manager</div>
+                </div>
+            </div>
         </aside>
     `;
 }

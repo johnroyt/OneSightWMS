@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipments - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+<div class="app-container">
+    <div id="sidebar-container"></div>
+    <div class="main-wrapper">
+        <div id="header-container"></div>
+        <main class="main-content">
+            <!-- Simple container for Caspio datapage -->
+            <div class="full-width-section">
+                <div class="card-header">
+                    <h2 class="card-title">Shipments</h2>
+                </div>
+                <div id="datapage-container" class="datapage-container">
+                    <!-- Caspio datapage will be embedded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script>
+// Initialize the page
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('sidebar-container').innerHTML = generateSidebar('Shipments');
+    document.getElementById('header-container').innerHTML = generateHeader('Shipments', '<button class="create-po-btn" onclick="createNewShipment()">+ Create Shipment</button>');
+    initializeNavigation();
+    
+    // Load the Caspio datapage
+    loadShipmentsDataPage();
+});
+
+function loadShipmentsDataPage() {
+    const container = document.getElementById('datapage-container');
+    
+    // Insert your Caspio datapage embed script here
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://c2ect483.caspio.com/dp/9759400020270d4c4dbb4f508ce2/emb'; // Replace with your actual datapage key
+    container.appendChild(script);
+}
+
+// Create new shipment function (implement modal if needed)
+function createNewShipment() {
+    // You can redirect to a creation page or implement a modal similar to orders
+    // For now, this will just alert the user
+    alert('Create shipment functionality not implemented yet');
+}
+</script>
+</body>
+</html>

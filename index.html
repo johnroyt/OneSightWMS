@@ -11,11 +11,98 @@
     
     <script src="js/main.js"></script>
     <script>
+        // Custom sidebar generator that includes Purchase Orders
+        function generateCustomSidebar(activePage) {
+            // Map old active pages to new ones for backward compatibility
+            if (activePage === 'Transfers') {
+                activePage = 'Orders';
+            }
+            
+            return `
+                <aside class="sidebar">
+                    <div class="logo">
+                        <div class="logo-icon"></div>
+                        <span class="logo-text">WMS</span>
+                    </div>
+                    
+                    <nav class="nav-section">
+                        <div class="nav-section-title">Main</div>
+                        <a href="javascript:void(0)" data-page="Dashboard" class="nav-item ${activePage === 'Dashboard' ? 'active' : ''}">
+                            <div class="nav-icon">📊</div>
+                            Dashboard
+                        </a>
+                        <a href="javascript:void(0)" data-page="Purchase Orders" class="nav-item ${activePage === 'Purchase Orders' ? 'active' : ''}">
+                            <div class="nav-icon">📋</div>
+                            Purchase Orders
+                        </a>
+                        <a href="javascript:void(0)" data-page="Orders" class="nav-item ${activePage === 'Orders' ? 'active' : ''}">
+                            <div class="nav-icon">📝</div>
+                            Orders & Transfers
+                        </a>
+                        <a href="javascript:void(0)" data-page="Inventory" class="nav-item ${activePage === 'Inventory' ? 'active' : ''}">
+                            <div class="nav-icon">📦</div>
+                            Inventory
+                        </a>
+                        <a href="javascript:void(0)" data-page="Shipments" class="nav-item ${activePage === 'Shipments' ? 'active' : ''}">
+                            <div class="nav-icon">🚚</div>
+                            Shipments
+                        </a>
+                        <a href="javascript:void(0)" data-page="Usage" class="nav-item ${activePage === 'Usage' ? 'active' : ''}">
+                            <div class="nav-icon">👓</div>
+                            Usage
+                        </a>
+                        <a href="javascript:void(0)" data-page="Usage" class="nav-item ${activePage === 'Special Project Requests' ? 'active' : ''}">
+                            <div class="nav-icon">🛠️</div>
+                            Special Requests
+                        </a>
+                    </nav>
+                    
+                    <nav class="nav-section">
+                        <div class="nav-section-title">Management</div>
+                        <a href="javascript:void(0)" data-page="Clinics & Events" class="nav-item ${activePage === 'Clinics & Events' ? 'active' : ''}">
+                            <div class="nav-icon">🏥</div>
+                            Clinics & Events
+                        </a>
+                        <!-- Add data-page to other nav items too -->
+                    </nav>
+                    
+                    <div class="user-profile">
+                        <div class="user-avatar">JD</div>
+                        <div class="user-info">
+                            <div class="user-name">John Doe</div>
+                            <div class="user-role">Warehouse Manager</div>
+                        </div>
+                    </div>
+                </aside>
+            `;
+        }
+
+        // Override the navigateTo function to handle Purchase Orders
+        function customNavigateTo(page) {
+            const routes = {
+                'Dashboard': '/index.html',
+                'Purchase Orders': '/pages/purchase-orders/index.html',
+                'Orders': '/pages/orders/index.html',
+                'Inventory': '/pages/inventory/index.html',
+                'Shipments': '/pages/shipments/index.html',
+                'Usage': '/pages/usage/index.html',
+                'Special Project Requests': '/pages/usage/index.html',
+                'Clinics & Events': '/pages/clinics/index.html'
+            };
+            
+            if (routes[page]) {
+                // Using absolute path with leading slash
+                window.location.href = routes[page];
+            } else {
+                console.error('No route found for:', page);
+            }
+        }
+
         // Generate the page structure
         document.addEventListener('DOMContentLoaded', function() {
             const app = document.getElementById('app');
             app.innerHTML = `
-                ${generateSidebar('Dashboard')}
+                ${generateCustomSidebar('Dashboard')}
                 <div class="main-wrapper">
                     ${generateHeader('Dashboard')}
                     <main class="main-content">
@@ -110,6 +197,28 @@
                     </main>
                 </div>
             `;
+
+            // Override the default navigation function
+            window.navigateTo = customNavigateTo;
+
+            // Setup click handlers for new navigation
+            document.addEventListener('click', function(e) {
+                const navItem = e.target.closest('.nav-item');
+                
+                if (navItem) {
+                    e.preventDefault();
+                    
+                    // Always use data-page attribute
+                    const pageName = navItem.getAttribute('data-page');
+                    
+                    if (pageName) {
+                        console.log('Page name from data attribute:', pageName);
+                        customNavigateTo(pageName);
+                    } else {
+                        console.error('No data-page attribute found');
+                    }
+                }
+            });
         });
     </script>
 </body>
