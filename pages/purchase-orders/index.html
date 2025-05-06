@@ -18,7 +18,6 @@
             <main class="main-content">
                 <div class="full-width-section">
                     <div class="card-header">
-                        <h2 class="card-title">Active Purchase Orders</h2>
                     </div>
                     
                     <div class="datapage-container">
@@ -40,5 +39,21 @@
         // Initialize navigation after generating elements
         initializeNavigation();
     </script>
+
+<!-- Add this modal HTML code right before the closing </body> tag -->
+<div id="create-po-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="card-title">Create New Purchase Order</h2>
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="create-po-form" class="datapage-container">
+            <script type="text/javascript" src="https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb"></script>
+          <p>Loading Create PO form...</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

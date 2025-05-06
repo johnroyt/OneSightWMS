@@ -58,7 +58,7 @@
             const detailsContainer = document.getElementById('po-details-container');
             const detailsScript = document.createElement('script');
             detailsScript.type = 'text/javascript';
-            detailsScript.src = `https://c2ect483.caspio.com/dp/YOUR_DETAILS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}`;
+            detailsScript.src = `https://c2ect483.caspio.com/dp/97594000e98e324644c14ec3991f/emb?PurchaseOrderID=${purchaseOrderId}`;
             detailsContainer.innerHTML = ''; // Clear the loading message
             detailsContainer.appendChild(detailsScript);
             
@@ -66,7 +66,7 @@
             const itemsContainer = document.getElementById('po-items-container');
             const itemsScript = document.createElement('script');
             itemsScript.type = 'text/javascript';
-            itemsScript.src = `https://c2ect483.caspio.com/dp/YOUR_ITEMS_APP_KEY/emb?PurchaseOrderID=${purchaseOrderId}`;
+            itemsScript.src = `https://c2ect483.caspio.com/dp/9759400078819e1302ad47aa9c7f/emb?PurchaseOrderID=${purchaseOrderId}`;
             itemsContainer.innerHTML = ''; // Clear the loading message
             itemsContainer.appendChild(itemsScript);
         } else {
@@ -75,21 +75,6 @@
             document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
         }
     </script>
-
-    <!-- Add this modal HTML code right before the closing </body> tag -->
-<div id="create-po-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="card-title">Create New Purchase Order</h2>
-        <span class="close-modal" onclick="closeModal()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div id="create-po-form" class="datapage-container">
-          <!-- Your Caspio DataPage will be embedded here -->
-          <p>Loading Create PO form...</p>
-        </div>
-      </div>
-    </div>
-  </div>
+    
 </body>
 </html>

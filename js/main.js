@@ -29,7 +29,7 @@ function createNewPO() {
     // Create script element for the Caspio DataPage
     const createPOScript = document.createElement('script');
     createPOScript.type = 'text/javascript';
-    createPOScript.src = 'https://c2ect483.caspio.com/dp/YOUR_CREATE_PO_APP_KEY/emb';
+    createPOScript.src = 'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb';
     createPOContainer.appendChild(createPOScript);
 }
 
@@ -71,7 +71,9 @@ function navigateTo(page) {
         'Purchase Orders': '/pages/purchase-orders/index.html',
         'Inventory': '/pages/inventory/index.html',
         'Transfers': '/pages/transfers/index.html',
+        'Shipments': '/pages/shipments/index.html', // Added Shipments route
         'Usage': '/pages/usage/index.html',
+        'Special Project Requests': '/pages/usage/index.html',
         'Clinics & Events': '/pages/clinics/index.html'
     };
     
@@ -110,9 +112,17 @@ function generateSidebar(activePage) {
                     <div class="nav-icon">🔄</div>
                     Transfers
                 </a>
+                <a href="javascript:void(0)" data-page="Shipments" class="nav-item ${activePage === 'Shipments' ? 'active' : ''}">
+                    <div class="nav-icon">🚚</div>
+                    Shipments
+                </a>
                 <a href="javascript:void(0)" data-page="Usage" class="nav-item ${activePage === 'Usage' ? 'active' : ''}">
-                    <div class="nav-icon">💊</div>
+                    <div class="nav-icon">👓</div>
                     Usage
+                </a>
+                <a href="javascript:void(0)" data-page="Usage" class="nav-item ${activePage === 'Special Project Requests' ? 'active' : ''}">
+                    <div class="nav-icon">🛠️</div>
+                    Special Requests
                 </a>
             </nav>
             

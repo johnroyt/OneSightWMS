@@ -301,7 +301,7 @@
         }
 
         .datapage-container {
-            min-height: 400px;
+            min-height: 200px;
             display: flex;
             color: #718096;
             font-style: italic;
