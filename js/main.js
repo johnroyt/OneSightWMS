@@ -284,3 +284,20 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing...');
     initializeNavigation();
 });
+
+/**
+ * Initialize page with standard sidebar, header, and navigation
+ * @param {string} activePage - Current page name for highlighting in sidebar
+ * @param {string} pageTitle - Title to display in the header
+ * @param {string} additionalButtons - Optional HTML for additional header buttons
+ */
+function initializePage(activePage, pageTitle, additionalButtons = '') {
+    // Generate sidebar and header
+    document.getElementById('sidebar-container').innerHTML = generateSidebar(activePage);
+    document.getElementById('header-container').innerHTML = generateHeader(pageTitle, additionalButtons);
+    
+    // Set up navigation event listeners
+    initializeNavigation();
+    
+    console.log(`Page initialized: ${activePage}`);
+}
