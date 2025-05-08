@@ -32,7 +32,9 @@
     <script>
         // Generate sidebar and header
         document.getElementById('sidebar-container').innerHTML = generateSidebar('Orders');
-        document.getElementById('header-container').innerHTML = generateHeader('Orders'        );
+        document.getElementById('header-container').innerHTML = generateHeader('Orders', 
+            '<button class="create-po-btn" onclick="createNewOrder()">+ Create Order</button>'
+        );
         
         // Initialize navigation after generating elements
         initializeNavigation();
@@ -53,5 +55,35 @@
       </div>
     </div>
   </div>
+
+<!-- New Order Modal -->
+<div id="new-order-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="card-title">Create New Order</h2>
+            <span class="close-modal" onclick="closeOrderModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="order-type-selection" style="margin-bottom:1rem;">
+                <div class="nav-section-title">Order Type</div>
+                <div class="order-type-options" style="display:flex;gap:1rem;margin-top:0.5rem;">
+                    <label style="flex:1;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;">
+                        <input type="radio" name="orderType" value="customer" checked>
+                        <span style="font-weight:500;margin-left:0.5rem;">Customer Order</span>
+                    </label>
+                    <label style="flex:1;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;">
+                        <input type="radio" name="orderType" value="transfer">
+                        <span style="font-weight:500;margin-left:0.5rem;">Transfer</span>
+                    </label>
+                    <label style="flex:1;padding:1rem;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;">
+                        <input type="radio" name="orderType" value="return">
+                        <span style="font-weight:500;margin-left:0.5rem;">Return</span>
+                    </label>
+                </div>
+            </div>
+            <div id="order-form-container" class="datapage-container"><p>Loading order form...</p></div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
