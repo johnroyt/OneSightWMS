@@ -49,31 +49,39 @@
         document.getElementById('header-container').innerHTML = generateHeader('Order Details');
         initializeNavigation();
         
-        // Get OrderID from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const OrderId = urlParams.get('OrderID');
-        
-        if (OrderId) {
-            // For Caspio embedding, create script elements programmatically instead
-            const detailsContainer = document.getElementById('po-details-container');
-            const detailsScript = document.createElement('script');
-            detailsScript.type = 'text/javascript';
-            detailsScript.src = `https://c2ect483.caspio.com/dp/97594000e98e324644c14ec3991f/emb?OrderID=${OrderId}`;
-            detailsContainer.innerHTML = ''; // Clear the loading message
-            detailsContainer.appendChild(detailsScript);
-            
-            // PO Items DataPage
-            const itemsContainer = document.getElementById('po-items-container');
-            const itemsScript = document.createElement('script');
-            itemsScript.type = 'text/javascript';
-            itemsScript.src = `https://c2ect483.caspio.com/dp/9759400078819e1302ad47aa9c7f/emb?OrderID=${OrderId}`;
-            itemsContainer.innerHTML = ''; // Clear the loading message
-            itemsContainer.appendChild(itemsScript);
-        } else {
-            // Handle case where no OrderID is provided
-            document.getElementById('po-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
-            document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
-        }
+        // Get OrderID from URL parameters - case insensitive approach
+const urlParams = new URLSearchParams(window.location.search);
+let orderId = null;
+
+// Case-insensitive parameter lookup
+for (const [key, value] of urlParams.entries()) {
+    if (key.toLowerCase() === 'orderid') {
+        orderId = value;
+        break;
+    }
+}
+
+if (orderId) {
+    // For Caspio embedding, create script elements programmatically instead
+    const detailsContainer = document.getElementById('po-details-container');
+    const detailsScript = document.createElement('script');
+    detailsScript.type = 'text/javascript';
+    detailsScript.src = `https://c2ect483.caspio.com/dp/975940004ecc3253df0a438092c9/emb?OrderID=${orderId}`;
+    detailsContainer.innerHTML = ''; // Clear the loading message
+    detailsContainer.appendChild(detailsScript);
+    
+    // PO Items DataPage
+    const itemsContainer = document.getElementById('po-items-container');
+    const itemsScript = document.createElement('script');
+    itemsScript.type = 'text/javascript';
+    itemsScript.src = `https://c2ect483.caspio.com/dp/97594000b4652b30419345b5ac30/emb?OrderID=${orderId}`;
+    itemsContainer.innerHTML = ''; // Clear the loading message
+    itemsContainer.appendChild(itemsScript);
+} else {
+    // Handle case where no OrderID is provided
+    document.getElementById('po-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
+    document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
+}
     </script>
     
 </body>
