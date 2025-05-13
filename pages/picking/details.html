@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pick Order Details - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <!-- Pick Order Details Section -->
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Pick Order Details</h2>
+                        <div id="pick-id" style="color: #4c6ef5; font-weight: 600;"></div>
+                    </div>
+                    
+                    <div id="pick-details-container" class="datapage-container">
+                        <!-- Caspio Pick Details DataPage will be embedded here -->
+                        <p>Loading Pick Order Details...</p>
+                    </div>
+                </div>
+                
+                <!-- Pick Items Section -->
+                <div class="full-width-section" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Pick Items</h2>
+                    </div>
+                    
+                    <div id="pick-items-container" class="datapage-container">
+                        <!-- Caspio Pick Items DataPage will be embedded here -->
+                        <p>Loading Pick Items...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        // First generate the sidebar and header
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Picking');
+        document.getElementById('header-container').innerHTML = generateHeader('Pick Order Details');
+        initializeNavigation();
+        
+        // Get PickID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const pickId = urlParams.get('PickID');
+        
+        if (pickId) {
+            // Set the Pick ID in the header
+            document.getElementById('pick-id').textContent = `Pick ID: ${pickId}`;
+            
+            // For Caspio embedding, create script elements programmatically
+            const detailsContainer = document.getElementById('pick-details-container');
+            const detailsScript = document.createElement('script');
+            detailsScript.type = 'text/javascript';
+            detailsScript.src = `https://c2ect483.caspio.com/dp/9759400060fa48adba254f48801b/emb?PickID=${pickId}`;
+            detailsContainer.innerHTML = ''; // Clear the loading message
+            detailsContainer.appendChild(detailsScript);
+            
+            // Pick Items DataPage
+            const itemsContainer = document.getElementById('pick-items-container');
+            const itemsScript = document.createElement('script');
+            itemsScript.type = 'text/javascript';
+            itemsScript.src = `https://c2ect483.caspio.com/dp/9759400041ff86ec478a4adaa786/emb?PickID=${pickId}`;
+            itemsContainer.innerHTML = ''; // Clear the loading message
+            itemsContainer.appendChild(itemsScript);
+        } else {
+            // Handle case where no PickID is provided
+            document.getElementById('pick-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Pick ID provided.</p>';
+            document.getElementById('pick-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Pick ID provided.</p>';
+        }
+    </script>
+    
+</body>
+</html>

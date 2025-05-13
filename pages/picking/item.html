@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Pick Item - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        /* Additional styles for the pick item form */
+        .pick-form-container {
+            background: white;
+            border-radius: 1px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f2f2f2;
+        }
+        
+        .form-field {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-field label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-field input, .form-field select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 1px;
+            font-size: 1rem;
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: #e53e3e;
+        }
+        
+        .product-image {
+            max-width: 200px;
+            margin: 1rem 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        
+        .scan-field {
+            background-color: #fffde7;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Process Pick Item</h2>
+                        <div id="pick-item-info" style="color: #4c6ef5; font-weight: 600;"></div>
+                    </div>
+                    
+                    <div id="pick-item-container" class="datapage-container">
+                        <!-- Caspio Pick Item Form DataPage will be embedded here -->
+                        <script type="text/javascript" src="https://c2ect483.caspio.com/dp/YOUR_PICK_ITEM_FORM_DATAPAGE_ID/emb"></script>
+                    </div>
+                </div>
+                
+                <!-- Navigation buttons for going to next item -->
+                <div class="action-buttons" style="margin-top: 2rem;">
+                    <button class="create-po-btn" onclick="goBackToPickList()" style="background: #718096;">Back to Pick List</button>
+                    <button class="create-po-btn" onclick="goToNextItem()" style="background: #38a169;">Next Item</button>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        // First generate the sidebar and header
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Picking');
+        document.getElementById('header-container').innerHTML = generateHeader('Process Pick Item');
+        initializeNavigation();
+        
+        // Get PickID and PickItemID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const pickId = urlParams.get('PickID');
+        const pickItemId = urlParams.get('PickItemID');
+        
+        if (pickId && pickItemId) {
+            // Set the info in the header
+            document.getElementById('pick-item-info').textContent = `Pick ID: ${pickId} | Item ID: ${pickItemId}`;
+            
+            // For Caspio embedding, create script elements programmatically
+            const itemContainer = document.getElementById('pick-item-container');
+            itemContainer.innerHTML = ''; // Clear any existing content
+            
+            const itemScript = document.createElement('script');
+            itemScript.type = 'text/javascript';
+            itemScript.src = `https://c2ect483.caspio.com/dp/YOUR_PICK_ITEM_FORM_DATAPAGE_ID/emb?PickID=${pickId}&PickItemID=${pickItemId}`;
+            itemContainer.appendChild(itemScript);
+        } else {
+            // Handle case where parameters are missing
+            document.getElementById('pick-item-container').innerHTML = '<p style="color: #e53e3e;">Error: Missing Pick ID or Pick Item ID.</p>';
+        }
+        
+        // Function to go back to the pick list
+        function goBackToPickList() {
+            if (pickId) {
+                window.location.href = `details.html?PickID=${pickId}`;
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Function to go to the next item (you'll need to implement the logic to determine the next item)
+        function goToNextItem() {
+            // This is a placeholder - you'll need to implement the logic to get the next item ID
+            // This could be done via an API call or by storing the list of items in session storage
+            alert('Navigate to next item - functionality to be implemented');
+            
+            // Example of how it might work
+            // window.location.href = `item.html?PickID=${pickId}&PickItemID=${nextItemId}`;
+        }
+    </script>
+</body>
+</html>

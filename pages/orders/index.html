@@ -33,28 +33,12 @@
         // Generate sidebar and header
         document.getElementById('sidebar-container').innerHTML = generateSidebar('Orders');
         document.getElementById('header-container').innerHTML = generateHeader('Orders', 
-            '<button class="create-po-btn" onclick="createNewOrder()">+ Create Order</button>'
-        );
+    '<button class="create-po-btn modal-trigger" data-modal-title="Create New Order" data-modal-options="orderTypes">+ Create Order</button>'
+);
         
         // Initialize navigation after generating elements
         initializeNavigation();
     </script>
-
-<!-- Add this modal HTML code right before the closing </body> tag -->
-<div id="create-po-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="card-title">Create New Purchase Order</h2>
-        <span class="close-modal" onclick="closeModal()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div id="create-po-form" class="datapage-container">
-            <script type="text/javascript" src="https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb"></script>
-          <p>Loading Create PO form...</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
 <!-- New Order Modal -->
 <div id="new-order-modal" class="modal" style="display:none;">

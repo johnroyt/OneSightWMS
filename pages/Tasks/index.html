@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Tasks - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        /* Additional styles specific to the tasks page */
+        .task-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .task-filters select, .task-filters button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .task-filters button {
+            background-color: #4c6ef5;
+            color: white;
+            cursor: pointer;
+        }
+        .task-filters button:hover {
+            background-color: #3652cc;
+        }
+
+        .task-list-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .task-list-container th, .task-list-container td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .task-list-container th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .task-list-container .action-button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #10b981; /* Green for claim/start */
+            color: white;
+        }
+        .task-list-container .action-button.view {
+            background-color: #6366f1; /* Indigo for view */
+        }
+         .task-list-container .action-button:hover {
+            opacity: 0.8;
+        }
+        .priority-high { color: #ef4444; font-weight: bold; }
+        .priority-medium { color: #f59e0b; }
+        .priority-low { color: #84cc16; }
+
+        .status-open { background-color: #dbeafe; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;}
+        .status-in-progress { background-color: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;}
+        .status-completed { background-color: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;}
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="task-filters">
+                        <div>
+                            <label for="task-type-filter" style="display:block; margin-bottom: 0.25rem; font-size: 0.8rem;">Task Type:</label>
+                            <select id="task-type-filter">
+                                <option value="">All Types</option>
+                                <option value="Picking">Picking</option>
+                                <option value="Putaway">Putaway</option>
+                                <option value="Replenishment">Replenishment</option>
+                                <option value="Count">Inventory Count</option>
+                                <option value="Packing">Packing</option>
+                                </select>
+                        </div>
+                        <div>
+                            <label for="assignment-filter" style="display:block; margin-bottom: 0.25rem; font-size: 0.8rem;">Assignment:</label>
+                            <select id="assignment-filter">
+                                <option value="all_open">All Open</option>
+                                <option value="unassigned">Unassigned</option>
+                                <option value="assigned_to_me">Assigned to Me</option>
+                                </select>
+                        </div>
+                        <div>
+                            <label for="priority-filter" style="display:block; margin-bottom: 0.25rem; font-size: 0.8rem;">Priority:</label>
+                            <select id="priority-filter">
+                                <option value="">All Priorities</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div style="align-self: flex-end;">
+                            <button id="apply-filters-button">Apply Filters</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Active Warehouse Tasks</h2>
+                        </div>
+                        <div id="tasks-list-container" class="datapage-container task-list-container">
+                            <p>Loading tasks...</p>
+                            
+                            </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        // Initialize the page elements
+        initializePage('Warehouse Tasks', 'Warehouse Tasks Overview');
+        
+        // Function to load the Caspio DataPage for tasks
+        function loadTasksDataPage(params = {}) {
+            const tasksContainer = document.getElementById('tasks-list-container');
+            tasksContainer.innerHTML = '<p>Loading tasks...</p>'; // Clear previous content / show loading
+
+            const dataPageKey = 'warehouseTasksList'; // Defined in main.js
+            const dataPageUrl = CASPIO_DATAPAGES[dataPageKey];
+
+            if (!dataPageUrl) {
+                tasksContainer.innerHTML = `<p>Error: DataPage URL for key '${dataPageKey}' not found.</p>`;
+                console.error(`DataPage URL for key '${dataPageKey}' not found.`);
+                return;
+            }
+
+            let fullUrl = dataPageUrl;
+            const urlParams = new URLSearchParams();
+
+            // Append filter parameters
+            // These names (e.g., 'cbParamTaskType') would need to match what Caspio expects
+            if (params.taskType) urlParams.append('cbParamTaskType', params.taskType);
+            if (params.assignment) urlParams.append('cbParamAssignment', params.assignment);
+            if (params.priority) urlParams.append('cbParamPriority', params.priority);
+            // For 'Assigned to Me', you might need to pass the current user's ID (if available)
+            // if (params.assignment === 'assigned_to_me' && currentUserId) urlParams.append('cbParamUserID', currentUserId);
+
+
+            if (urlParams.toString()) {
+                fullUrl += (dataPageUrl.includes('?') ? '&' : '?') + urlParams.toString();
+            }
+
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = fullUrl;
+            
+            tasksContainer.appendChild(script);
+        }
+
+        // Load tasks initially (without filters or with default filters)
+        loadTasksDataPage({ assignment: 'all_open' }); // Default to 'All Open' tasks
+
+        // Event listener for the filter button
+        document.getElementById('apply-filters-button').addEventListener('click', () => {
+            const taskType = document.getElementById('task-type-filter').value;
+            const assignment = document.getElementById('assignment-filter').value;
+            const priority = document.getElementById('priority-filter').value;
+
+            loadTasksDataPage({ taskType, assignment, priority });
+        });
+
+        // Placeholder functions for task actions (Caspio might handle these directly within the DataPage)
+        function claimTask(taskId) {
+            console.log(`Attempting to claim task: ${taskId}`);
+            // In a real scenario:
+            // 1. Make an API call or use Caspio's mechanisms to assign the task to the current user.
+            // 2. On success, refresh the tasks list: loadTasksDataPage(); 
+            //    (or Caspio DataPage might refresh itself if the action is internal to it).
+            alert(`Task ${taskId} claimed! (This is a placeholder - list would refresh)`);
+            // For demo, you could manually update the item in the list if it wasn't a Caspio DP.
+        }
+
+        function viewTask(taskId) {
+            console.log(`Viewing details for task: ${taskId}`);
+            // This could navigate to a detailed task page or open a modal
+            // For example: window.location.href = `task-details.html?taskId=${taskId}`;
+            // Or use your genericModal system if the detail view is a Caspio form in a modal
+            alert(`Viewing task ${taskId} details. (Placeholder)`);
+        }
+
+    </script>
+</body>
+</html>

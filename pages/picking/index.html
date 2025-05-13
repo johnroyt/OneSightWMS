@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picking - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Pick Orders</h2>
+                        <button class="create-po-btn" onclick="createNewPick()">+ Create Pick</button>
+                    </div>
+                    
+                    <div class="datapage-container">
+                        <!-- Embed your Pick Orders Caspio datapage here -->
+                        <script type="text/javascript" src="https://c2ect483.caspio.com/dp/YOUR_PICK_ORDERS_DATAPAGE_ID/emb"></script>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        // Initialize page elements
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Picking');
+        document.getElementById('header-container').innerHTML = generateHeader('Picking', 
+            '<button class="create-po-btn" onclick="createNewPick()">+ Create Pick</button>'
+        );
+        initializeNavigation();
+
+        // Function to create a new pick
+        function createNewPick() {
+            // You can implement this to show a modal or navigate to a form page
+            window.location.href = 'create.html';
+        }
+    </script>
+</body>
+</html>
