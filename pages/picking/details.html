@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pick Order Details - WMS</title>
+    <title>Order Details - WMS</title>
     <link rel="stylesheet" href="../../css/styles.css">
 </head>
 <body>
@@ -14,28 +14,28 @@
             <div id="header-container"></div>
             
             <main class="main-content">
-                <!-- Pick Order Details Section -->
+                <!-- Order Details Section -->
                 <div class="full-width-section">
                     <div class="card-header">
-                        <h2 class="card-title">Pick Order Details</h2>
-                        <div id="pick-id" style="color: #4c6ef5; font-weight: 600;"></div>
+                        <h2 class="card-title">Order Details</h2>
+                        <div id="order-id" style="color: #4c6ef5; font-weight: 600;"></div>
                     </div>
                     
-                    <div id="pick-details-container" class="datapage-container">
-                        <!-- Caspio Pick Details DataPage will be embedded here -->
-                        <p>Loading Pick Order Details...</p>
+                    <div id="order-details-container" class="datapage-container">
+                        <!-- Caspio order Details DataPage will be embedded here -->
+                        <p>Loading Order Details...</p>
                     </div>
                 </div>
                 
-                <!-- Pick Items Section -->
+                <!-- Order Items Section -->
                 <div class="full-width-section" style="margin-top: 2rem;">
                     <div class="card-header">
-                        <h2 class="card-title">Pick Items</h2>
+                        <h2 class="card-title">Order Items</h2>
                     </div>
                     
-                    <div id="pick-items-container" class="datapage-container">
-                        <!-- Caspio Pick Items DataPage will be embedded here -->
-                        <p>Loading Pick Items...</p>
+                    <div id="order-items-container" class="datapage-container">
+                        <!-- Caspio order Items DataPage will be embedded here -->
+                        <p>Loading Order Items...</p>
                     </div>
                 </div>
             </main>
@@ -45,37 +45,38 @@
     <script src="../../js/main.js"></script>
     <script>
         // First generate the sidebar and header
-        document.getElementById('sidebar-container').innerHTML = generateSidebar('Picking');
-        document.getElementById('header-container').innerHTML = generateHeader('Pick Order Details');
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Orders');
+        document.getElementById('header-container').innerHTML = generateHeader('Order Details');
         initializeNavigation();
         
-        // Get PickID from URL parameters
+        // Get OrderID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const pickId = urlParams.get('PickID');
+        const orderId = urlParams.get('OrderID');
         
-        if (pickId) {
-            // Set the Pick ID in the header
-            document.getElementById('pick-id').textContent = `Pick ID: ${pickId}`;
+        if (orderId) {
+            // Set the order ID in the header (fixed variable name)
+            document.getElementById('order-id').textContent = `Order ID: ${orderId}`;
             
             // For Caspio embedding, create script elements programmatically
-            const detailsContainer = document.getElementById('pick-details-container');
+            const detailsContainer = document.getElementById('order-details-container');
             const detailsScript = document.createElement('script');
             detailsScript.type = 'text/javascript';
-            detailsScript.src = `https://c2ect483.caspio.com/dp/9759400060fa48adba254f48801b/emb?PickID=${pickId}`;
+            // Fixed variable name here too
+            detailsScript.src = `https://c2ect483.caspio.com/dp/97594000149e2008ffef41dfb71a/emb?OrderID=${orderId}`;
             detailsContainer.innerHTML = ''; // Clear the loading message
             detailsContainer.appendChild(detailsScript);
             
-            // Pick Items DataPage
-            const itemsContainer = document.getElementById('pick-items-container');
+            // order Items DataPage
+            const itemsContainer = document.getElementById('order-items-container');
             const itemsScript = document.createElement('script');
             itemsScript.type = 'text/javascript';
-            itemsScript.src = `https://c2ect483.caspio.com/dp/9759400041ff86ec478a4adaa786/emb?PickID=${pickId}`;
+            itemsScript.src = `https://c2ect483.caspio.com/dp/97594000eea55a158592432e9144/emb?OrderID=${orderId}`;
             itemsContainer.innerHTML = ''; // Clear the loading message
             itemsContainer.appendChild(itemsScript);
         } else {
-            // Handle case where no PickID is provided
-            document.getElementById('pick-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Pick ID provided.</p>';
-            document.getElementById('pick-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Pick ID provided.</p>';
+            // Handle case where no OrderID is provided
+            document.getElementById('order-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
+            document.getElementById('order-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
         }
     </script>
     
