@@ -3,34 +3,690 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory - WMS</title>
-    <link rel="stylesheet" href="../../css/styles.css">
+    <title>Audio Transcription with Speaker Attribution</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 0;
+            min-height: 500px;
+        }
+
+        .sidebar {
+            background: #f7f9fc;
+            padding: 30px;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .transcript-area {
+            padding: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+        }
+
+        .record-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .record-btn.start {
+            background: #48bb78;
+            color: white;
+        }
+
+        .record-btn.start:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .record-btn.stop {
+            background: #f56565;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .record-btn.stop:hover {
+            background: #e53e3e;
+        }
+
+        .record-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .speaker-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .add-speaker {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .add-speaker input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .add-speaker input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-speaker button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .add-speaker button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .speakers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .speaker-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .speaker-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .speaker-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .speaker-name {
+            font-weight: 500;
+        }
+
+        .remove-speaker {
+            padding: 5px 10px;
+            background: #feb2b2;
+            color: #c53030;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .speaker-item.active .remove-speaker {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .remove-speaker:hover {
+            background: #fc8181;
+        }
+
+        .transcript-segment {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f7f9fc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .segment-speaker {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .segment-text {
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .current-segment {
+            padding: 15px;
+            background: #fef5e7;
+            border-radius: 10px;
+            border-left: 4px solid #f39c12;
+            margin-bottom: 20px;
+        }
+
+        .current-segment .label {
+            font-weight: 600;
+            color: #f39c12;
+            margin-bottom: 8px;
+        }
+
+        .export-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .export-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .export-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .status.recording {
+            background: #fef5e7;
+            color: #f39c12;
+        }
+
+        .status.idle {
+            background: #e6fffa;
+            color: #319795;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #fc8181;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <div id="sidebar-container"></div>
-        
-        <div class="main-wrapper">
-            <div id="header-container"></div>
-            
-            <main class="main-content">
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Audio Transcription Studio</h1>
+            <p>Record, transcribe, and assign speakers in real-time</p>
+        </div>
 
-                <div class="full-width-section">
-                    <div class="card-header">
-                        <h2 class="card-title">Inventory by Location</h2>
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="controls">
+                    <button id="recordBtn" class="record-btn start">
+                        <span class="icon">🎤</span>
+                        <span>Start Recording</span>
+                    </button>
+                    <div id="status" class="status idle" style="margin-top: 15px;">
+                        Ready to record
                     </div>
-                    
-                    <div class="datapage-container">
-<script type="text/javascript" src="https://c2ect483.caspio.com/dp/9759400026a1609f48634555a3a1/emb"></script>                </div>
-            </main>
+                </div>
+
+                <div class="speaker-section">
+                    <h3 class="section-title">Speakers</h3>
+                    <div class="add-speaker">
+                        <input type="text" id="speakerInput" placeholder="Enter speaker name" />
+                        <button onclick="addSpeaker()">Add</button>
+                    </div>
+                    <div id="speakersList" class="speakers-list"></div>
+                </div>
+
+                <div class="export-section">
+                    <button id="exportBtn" class="export-btn" onclick="exportTranscript()" disabled>
+                        📄 Export Transcript
+                    </button>
+                </div>
+            </div>
+
+            <div class="transcript-area">
+                <div id="alertContainer"></div>
+                <div id="currentSegment" class="current-segment" style="display: none;">
+                    <div class="label">Currently Speaking:</div>
+                    <div id="currentText"></div>
+                </div>
+                <div id="transcript">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                        <h3>No transcript yet</h3>
+                        <p>Start recording to begin transcribing</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <script src="../../js/main.js"></script>
+
     <script>
-        document.getElementById('sidebar-container').innerHTML = generateSidebar('Inventory');
-        document.getElementById('header-container').innerHTML = generateHeader('Inventory Management');
-        initializeNavigation();
+        let mediaRecorder;
+        let recognition;
+        let isRecording = false;
+        let speakers = [];
+        let currentSpeaker = null;
+        let currentSegmentText = '';
+        let transcriptData = [];
+        let audioChunks = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('speakerInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addSpeaker();
+            });
+
+            // Check for browser support
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showAlert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+            }
+        });
+
+        function showAlert(message) {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `<div class="alert">${message}</div>`;
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function addSpeaker() {
+            const input = document.getElementById('speakerInput');
+            const name = input.value.trim();
+            
+            if (!name) return;
+            
+            if (speakers.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+                showAlert('Speaker already exists!');
+                return;
+            }
+            
+            const speaker = {
+                id: Date.now(),
+                name: name
+            };
+            
+            speakers.push(speaker);
+            input.value = '';
+            renderSpeakers();
+        }
+
+        function removeSpeaker(id) {
+            speakers = speakers.filter(s => s.id !== id);
+            if (currentSpeaker?.id === id) {
+                currentSpeaker = null;
+            }
+            renderSpeakers();
+        }
+
+        function selectSpeaker(id) {
+            // If we have current text, save it with the previous speaker
+            if (currentSegmentText && currentSpeaker) {
+                saveSegment();
+            }
+            
+            currentSpeaker = speakers.find(s => s.id === id);
+            renderSpeakers();
+        }
+
+        function renderSpeakers() {
+            const list = document.getElementById('speakersList');
+            
+            if (speakers.length === 0) {
+                list.innerHTML = '<p style="color: #a0aec0; text-align: center;">No speakers added yet</p>';
+                return;
+            }
+            
+            list.innerHTML = speakers.map(speaker => `
+                <div class="speaker-item ${currentSpeaker?.id === speaker.id ? 'active' : ''}" 
+                     onclick="selectSpeaker(${speaker.id})">
+                    <span class="speaker-name">${speaker.name}</span>
+                    <button class="remove-speaker" onclick="event.stopPropagation(); removeSpeaker(${speaker.id})">
+                        Remove
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function saveSegment() {
+            if (!currentSegmentText || !currentSpeaker) return;
+            
+            transcriptData.push({
+                speaker: currentSpeaker.name,
+                text: currentSegmentText,
+                timestamp: new Date().toISOString()
+            });
+            
+            currentSegmentText = '';
+            renderTranscript();
+        }
+
+        function renderTranscript() {
+            const transcriptDiv = document.getElementById('transcript');
+            
+            if (transcriptData.length === 0) {
+                transcriptDiv.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                        <h3>No transcript yet</h3>
+                        <p>Start recording to begin transcribing</p>
+                    </div>
+                `;
+                document.getElementById('exportBtn').disabled = true;
+                return;
+            }
+            
+            transcriptDiv.innerHTML = transcriptData.map(segment => `
+                <div class="transcript-segment">
+                    <div class="segment-speaker">
+                        <span>👤</span>
+                        <span>${segment.speaker}</span>
+                    </div>
+                    <div class="segment-text">${segment.text}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('exportBtn').disabled = false;
+            
+            // Auto-scroll to bottom
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+        }
+
+        async function toggleRecording() {
+            const btn = document.getElementById('recordBtn');
+            const status = document.getElementById('status');
+            
+            if (!isRecording) {
+                try {
+                    await startRecording();
+                    isRecording = true;
+                    btn.className = 'record-btn stop';
+                    btn.innerHTML = '<span class="icon">⏹️</span><span>Stop Recording</span>';
+                    status.className = 'status recording';
+                    status.textContent = '🔴 Recording in progress...';
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    showAlert('Failed to start recording. Please check microphone permissions.');
+                }
+            } else {
+                stopRecording();
+                isRecording = false;
+                btn.className = 'record-btn start';
+                btn.innerHTML = '<span class="icon">🎤</span><span>Start Recording</span>';
+                status.className = 'status idle';
+                status.textContent = 'Ready to record';
+            }
+        }
+
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            // Setup media recorder for audio
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+            
+            mediaRecorder.start();
+            
+            // Setup speech recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    currentSegmentText += finalTranscript;
+                }
+                
+                // Update current segment display
+                const currentDiv = document.getElementById('currentSegment');
+                const currentTextDiv = document.getElementById('currentText');
+                
+                if (currentSegmentText || interimTranscript) {
+                    currentDiv.style.display = 'block';
+                    currentTextDiv.innerHTML = `
+                        <strong>${currentSpeaker ? currentSpeaker.name : 'Unassigned'}:</strong> 
+                        ${currentSegmentText + interimTranscript}
+                    `;
+                } else {
+                    currentDiv.style.display = 'none';
+                }
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    // Restart recognition if no speech detected
+                    recognition.stop();
+                    setTimeout(() => {
+                        if (isRecording) recognition.start();
+                    }, 100);
+                }
+            };
+            
+            recognition.onend = () => {
+                if (isRecording) {
+                    recognition.start();
+                }
+            };
+            
+            recognition.start();
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            if (recognition) {
+                recognition.stop();
+            }
+            
+            // Save any remaining text
+            if (currentSegmentText) {
+                if (!currentSpeaker) {
+                    currentSpeaker = { name: 'Unassigned' };
+                }
+                saveSegment();
+            }
+            
+            // Hide current segment
+            document.getElementById('currentSegment').style.display = 'none';
+            
+            // Clean up
+            currentSegmentText = '';
+        }
+
+        function exportTranscript() {
+            if (transcriptData.length === 0) {
+                showAlert('No transcript to export!');
+                return;
+            }
+            
+            let content = 'Audio Transcript\n';
+            content += '================\n\n';
+            content += `Date: ${new Date().toLocaleString()}\n\n`;
+            content += 'Speakers: ' + speakers.map(s => s.name).join(', ') + '\n\n';
+            content += '---\n\n';
+            
+            transcriptData.forEach(segment => {
+                content += `${segment.speaker}:\n${segment.text}\n\n`;
+            });
+            
+            // Create and download file
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcript_${new Date().getTime()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showAlert('Transcript exported successfully!');
+        }
+
+        // Attach record button event
+        document.getElementById('recordBtn').onclick = toggleRecording;
     </script>
 </body>
 </html>
