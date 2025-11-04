@@ -239,7 +239,7 @@ function initializeModalTriggers() {
 }
 
 // Filter orders by type
-function filterOrderType(type) {
+function filterOrderType(event, type) {
     // Remove active class from all tabs
     const tabs = document.getElementsByClassName('order-type-tab');
     for (let i = 0; i < tabs.length; i++) {
@@ -272,7 +272,8 @@ function navigateTo(page) {
         'Shipments': 'pages/shipments/index.html',
         'Usage': 'pages/usage/index.html',
         'SpecialRequests': 'pages/specialrequests/index.html',
-        'Clinics & Events': 'pages/clinics/index.html'
+        'Clinics & Events': 'pages/clinics/index.html',
+        'Location Labels': 'pages/management/barcodeLocationGen.html'
     };
     
     if (paths[page]) {
@@ -352,6 +353,10 @@ function generateSidebar(activePage) {
                 <a href="javascript:void(0)" data-page="Clinics & Events" class="nav-item ${activePage === 'Clinics & Events' ? 'active' : ''}">
                     <div class="nav-icon">🏥</div>
                     Clinics & Events
+                </a>
+                <a href="javascript:void(0)" data-page="Location Labels" class="nav-item ${activePage === 'Location Labels' ? 'active' : ''}">
+                    <div class="nav-icon">🏷️</div>
+                    Location Labels
                 </a>
                 <!-- Add data-page to other nav items too -->
             </nav>
