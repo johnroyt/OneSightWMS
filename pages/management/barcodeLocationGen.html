@@ -24,18 +24,18 @@
         }
         
         .label {
-    border: 1px dashed #ccc;
-    padding: 0.1in;
-    width: 3.5in;  /* Changed from 4in */
-    height: 2in;
-    margin-bottom: 0.1in;
-    page-break-inside: avoid;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 10px;
-    overflow: hidden;
-}
+            border: 1px dashed #ccc;
+            padding: 0.1in;
+            width: 3.5in;  /* Avery 5871 */
+            height: 2in;
+            margin-bottom: 0.1in;
+            page-break-inside: avoid;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 10px;
+            overflow: hidden;
+        }
         
         .location-table {
             width: 100%;
@@ -193,32 +193,72 @@
         }
         
         @media print {
-    .controls, button, #generation-status, .debug-info, .estimation, .print-warning {
-        display: none !important;
-    }
-    body {
-        padding: 0;
-        margin: 0;
-    }
-    .label {
-        margin: 0;
-        page-break-inside: avoid;
-        border: 1px solid #000;
-        width: 3.4in; /* Changed from 3.9in */
-        height: 1.9in;
-        box-sizing: border-box;
-    }
-    /* Avery 5871 has 2 labels across and 5 down on a letter page */
-    .label-container {
-        width: 8.5in;
-        padding: 0.5in 0.75in; /* Changed from 0.5in 0.25in to match Avery 5871 margins */
-        box-sizing: border-box;
-        display: grid;
-        grid-template-columns: 3.5in 3.5in; /* Changed from 4in 4in */
-        grid-template-rows: repeat(5, 2in);
-        gap: 0;
-    }
-}
+            /* Hide WMS structure and all non-label elements */
+            #sidebar-container,
+            #header-container,
+            .app-container > div:not(.main-wrapper),
+            .main-wrapper > div:not(main):not(.main-content),
+            main > div:not(.label-gen-content),
+            .label-gen-content > div:not(#label-container) {
+                display: none !important;
+            }
+            
+            /* Hide all controls and non-label elements */
+            .controls, 
+            button, 
+            #generation-status, 
+            #generation-progress,
+            .debug-info, 
+            .estimation, 
+            .print-warning {
+                display: none !important;
+            }
+            
+            /* Reset all containers to remove any spacing/styling and hide scrollbars */
+            html,
+            body,
+            .app-container,
+            .main-wrapper,
+            main,
+            .main-content,
+            .label-gen-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+                width: 100% !important;
+                max-width: none !important;
+                height: auto !important;
+                overflow: hidden !important;
+            }
+            
+            /* Ensure label container is visible and properly formatted for Avery 5871 */
+            #label-container,
+            .label-container {
+                display: grid !important;
+                width: 8.5in !important;
+                height: auto !important;
+                padding: 0.5in 0.75in !important;
+                box-sizing: border-box !important;
+                grid-template-columns: 3.5in 3.5in !important;
+                grid-template-rows: repeat(5, 2in) !important;
+                gap: 0 !important;
+                column-gap: 0 !important;
+                row-gap: 0 !important;
+                background: white !important;
+                margin: 0 !important;
+            }
+            
+            /* Format individual labels for Avery 5871 */
+            .label {
+                margin: 0 !important;
+                page-break-inside: avoid !important;
+                border: 1px solid #000 !important;
+                width: 3.4in !important;
+                height: 1.9in !important;
+                box-sizing: border-box !important;
+                padding: 0.1in !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -232,7 +272,7 @@
                 <div class="label-gen-content">
                     <div class="controls">
                         <h2>Generate Location Labels</h2>
-                        <p>Select location ranges to generate labels for Avery 5163 (4" x 2" labels).</p>
+                        <p>Select location ranges to generate labels for Avery 5871 (3.5" x 2" labels).</p>
                         
                         <div class="control-group">
                             <label for="label-format">Label Format:</label>
