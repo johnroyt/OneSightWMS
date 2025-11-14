@@ -27,6 +27,7 @@ const CASPIO_DATAPAGES = {
     shipmentCreate: 'https://c2ect483.caspio.com/dp/9759400020270d4c4dbb4f508ce2/emb',
     usageCreate: 'https://c2ect483.caspio.com/dp/97594000usage_form/emb',          // Replace with actual
     specialRequestCreate: 'https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb', // Replace with actual
+    productCreate: 'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
     // Add other DataPage identifiers and URLs as needed
 };
 
@@ -269,6 +270,7 @@ function navigateTo(page) {
         'Orders': 'pages/orders/index.html',
         'Warehouse Tasks': 'pages/tasks/index.html',
         'Inventory': 'pages/inventory/index.html',
+        'Products': 'pages/products/index.html',
         'Shipments': 'pages/shipments/index.html',
         'Usage': 'pages/usage/index.html',
         'SpecialRequests': 'pages/specialrequests/index.html',
@@ -333,6 +335,10 @@ function generateSidebar(activePage) {
                 <a href="javascript:void(0)" data-page="Inventory" class="nav-item ${activePage === 'Inventory' ? 'active' : ''}">
                     <div class="nav-icon">📦</div>
                     Inventory
+                </a>
+                <a href="javascript:void(0)" data-page="Products" class="nav-item ${activePage === 'Products' ? 'active' : ''}">
+                    <div class="nav-icon">🏷️</div>
+                    Products
                 </a>
                 <a href="javascript:void(0)" data-page="Shipments" class="nav-item ${activePage === 'Shipments' ? 'active' : ''}">
                     <div class="nav-icon">🚚</div>
