@@ -192,6 +192,14 @@
             margin-bottom: 10px;
         }
         
+        .page-wrapper {
+            display: grid;
+            width: 100%;
+            grid-template-columns: repeat(auto-fill, minmax(3.5in, 1fr));
+            gap: 0.1in;
+            margin-bottom: 20px;
+        }
+        
         @media print {
             /* Hide WMS structure and all non-label elements */
             #sidebar-container,
@@ -214,9 +222,20 @@
                 display: none !important;
             }
             
-            /* Reset all containers to remove any spacing/styling and hide scrollbars */
-            html,
-            body,
+            /* Reset html and body */
+            html {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            
+            /* Reset all containers */
             .app-container,
             .main-wrapper,
             main,
@@ -228,24 +247,26 @@
                 width: 100% !important;
                 max-width: none !important;
                 height: auto !important;
-                overflow: hidden !important;
+                overflow: visible !important;
             }
             
-            /* Ensure label container is visible and properly formatted for Avery 5871 */
-            #label-container,
-            .label-container {
+            /* Show page wrappers for printing */
+            .page-wrapper {
                 display: grid !important;
-                width: 8.5in !important;
-                height: auto !important;
+                width: 7in !important;
+                height: 10in !important;
                 padding: 0.5in 0.75in !important;
+                margin: 0 !important;
                 box-sizing: border-box !important;
                 grid-template-columns: 3.5in 3.5in !important;
                 grid-template-rows: repeat(5, 2in) !important;
                 gap: 0 !important;
-                column-gap: 0 !important;
-                row-gap: 0 !important;
                 background: white !important;
-                margin: 0 !important;
+                page-break-after: always !important;
+            }
+            
+            .page-wrapper:last-child {
+                page-break-after: avoid !important;
             }
             
             /* Format individual labels for Avery 5871 */
@@ -253,8 +274,8 @@
                 margin: 0 !important;
                 page-break-inside: avoid !important;
                 border: 1px solid #000 !important;
-                width: 3.4in !important;
-                height: 1.9in !important;
+                width: 3.5in !important;
+                height: 2in !important;
                 box-sizing: border-box !important;
                 padding: 0.1in !important;
             }
@@ -527,6 +548,11 @@
             statusDiv.textContent = 'Generating labels...';
             container.appendChild(statusDiv);
             
+            // Track page wrappers for printing
+            let currentPageWrapper = null;
+            let labelsInCurrentPage = 0;
+            const labelsPerPage = 10;
+            
             // Use batch processing for better performance
             const batchSize = 20;
             const totalLabels = calculateLabelCount();
@@ -567,7 +593,17 @@
                     }
                     
                     const row = nextLabel.value;
-                    createLabel(row);
+                    
+                    // Create new page wrapper if needed
+                    if (labelsInCurrentPage === 0 || labelsInCurrentPage >= labelsPerPage) {
+                        currentPageWrapper = document.createElement('div');
+                        currentPageWrapper.className = 'page-wrapper';
+                        container.appendChild(currentPageWrapper);
+                        labelsInCurrentPage = 0;
+                    }
+                    
+                    createLabel(row, currentPageWrapper);
+                    labelsInCurrentPage++;
                     
                     count++;
                     processedLabels++;
@@ -585,7 +621,7 @@
             // Start batch processing
             processBatch();
             
-            function createLabel(row) {
+            function createLabel(row, pageWrapper) {
                 const paddedIsle = padWithZeros(row.isle, 2);
                 const paddedShelf = padWithZeros(row.shelf, 2);
                 const paddedBin = padWithZeros(row.bin, 2);
@@ -676,8 +712,10 @@
                     label.appendChild(qrContainer);
                 }
                 
-                // Add the label to the container
-                container.appendChild(label);
+                // Add the label to the page wrapper
+                pageWrapper.appendChild(label);
+                
+                // Generate the QR code if needed
                 
                 // Generate the QR code if needed
                 if (codeDisplay === 'both' || codeDisplay === 'qrcode') {
