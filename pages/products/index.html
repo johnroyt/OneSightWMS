@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - OneSight WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Products</h2>
+                        <button class="create-po-btn modal-trigger"
+                                data-modal-title="Create New Product"
+                                data-modal-key="productCreate"
+                                data-modal-form-name="Product">
+                            + Create New Product
+                        </button>
+                    </div>
+                    <div class="datapage-container">
+                        <script type="text/javascript" src="https://c2ect483.caspio.com/dp/97594000df1ff6d1544b418e9320/emb"></script>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Generic Modal (will be created by JS if needed) -->
+
+    <script src="../../js/main.js"></script>
+    <script>
+        // Initialize page
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Products');
+        document.getElementById('header-container').innerHTML = generateHeader('Products');
+        initializeNavigation();
+    </script>
+</body>
+</html>
