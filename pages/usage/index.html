@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usage - WMS</title>
+    <title>Transactions - WMS</title>
     <link rel="stylesheet" href="../../css/styles.css">
 </head>
 <body>
@@ -16,12 +16,19 @@
             <main class="main-content">
                 <div class="full-width-section">
                     <div class="card-header">
-                        <h2 class="card-title">Clinic Consumption History</h2>
-                        <button class="create-po-btn" style="background: #38a169;" onclick="logConsumption()">+ Log Usage</button>
+                        <h2 class="card-title">Transaction History</h2>
+                        
+                        <button class="create-po-btn modal-trigger" 
+                                style="background: #38a169;" 
+                                data-modal-title="Log New Transaction" 
+                                data-modal-key="transactionCreate" 
+                                data-modal-form-name="Transaction">
+                            + Log Transaction
+                        </button>
                     </div>
                     
                     <div class="datapage-container">
-                        <p>Consumption History DataPage will be embedded here</p>
+                        <script type="text/javascript" src="https://c2ect483.caspio.com/dp/9759400032dd1fff382448c2afed/emb"></script>
                     </div>
                 </div>
             </main>
@@ -30,8 +37,9 @@
     
     <script src="../../js/main.js"></script>
     <script>
-        document.getElementById('sidebar-container').innerHTML = generateSidebar('Usage');
-        document.getElementById('header-container').innerHTML = generateHeader('Usage & Consumption');
+        // Initialize with the new "Transactions" branding
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Transactions');
+        document.getElementById('header-container').innerHTML = generateHeader('Inventory Transactions');
         initializeNavigation();
     </script>
 </body>

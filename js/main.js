@@ -18,20 +18,19 @@ function switchTab(event, tabId) {
 }
 
 // Store Caspio DataPage URLs in a configuration object
+// Store Caspio DataPage URLs in a configuration object
 const CASPIO_DATAPAGES = {
     customerOrderCreate: 'https://c2ect483.caspio.com/dp/975940000c138cee4729441Q0a15e/emb',
-    transferOrderCreate: 'https://c2ect483.caspio.com/dp/975940000c138cee47294410a15e/emb?OrderType=Transfer', // Replace with actual
-    returnOrderCreate: 'https://c2ect483.caspio.com/dp/9759400return_form/emb',     // Replace with actual
-    purchaseOrderCreate: 'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb', // Update with actual PO Create DataPage URL
-    purchaseOrderCreates: 'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb', // Update with actual PO Create DataPage URL
+    transferOrderCreate: 'https://c2ect483.caspio.com/dp/975940000c138cee47294410a15e/emb?OrderType=Transfer',
+    returnOrderCreate: 'https://c2ect483.caspio.com/dp/9759400return_form/emb',
+    purchaseOrderCreate: 'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb',
+    purchaseOrderCreates: 'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb',
     shipmentCreate: 'https://c2ect483.caspio.com/dp/9759400020270d4c4dbb4f508ce2/emb',
-    usageCreate: 'https://c2ect483.caspio.com/dp/97594000usage_form/emb',          // Replace with actual
-    specialRequestCreate: 'https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb', // Replace with actual
+    specialRequestCreate: 'https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb',
     productCreate: 'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
-    // Add other DataPage identifiers and URLs as needed
+    transactionCreate: 'https://c2ect483.caspio.com/dp/97594000588934525a27433b83a7/emb'
 };
 
-// Define standard modal option configurations
 const MODAL_OPTIONS = {
     orderTypes: {
         title: 'Order Type',
@@ -265,18 +264,18 @@ function logConsumption() {
 function navigateTo(page) {
     // Define your paths relative to the repo root
     const paths = {
-        'Dashboard': 'index.html',
-        'Purchase Orders': 'pages/purchase-orders/index.html',
-        'Orders': 'pages/orders/index.html',
-        'Warehouse Tasks': 'pages/tasks/index.html',
-        'Inventory': 'pages/inventory/index.html',
-        'Products': 'pages/products/index.html',
-        'Shipments': 'pages/shipments/index.html',
-        'Usage': 'pages/usage/index.html',
-        'SpecialRequests': 'pages/specialrequests/index.html',
-        'Clinics & Events': 'pages/clinics/index.html',
-        'Location Labels': 'pages/management/barcodeLocationGen.html'
-    };
+    'Dashboard': 'index.html',
+    'Purchase Orders': 'pages/purchase-orders/index.html',
+    'Orders': 'pages/orders/index.html',
+    'Warehouse Tasks': 'pages/tasks/index.html',
+    'Inventory': 'pages/inventory/index.html',
+    'Products': 'pages/products/index.html',
+    'Shipments': 'pages/shipments/index.html',
+    'Transactions': 'pages/usage/index.html', // Rebranded from Usage
+    'SpecialRequests': 'pages/specialrequests/index.html',
+    'Clinics & Events': 'pages/clinics/index.html',
+    'Location Labels': 'pages/management/barcodeLocationGen.html'
+};
     
     if (paths[page]) {
         // Get the current URL
@@ -344,10 +343,10 @@ function generateSidebar(activePage) {
                     <div class="nav-icon">🚚</div>
                     Shipments
                 </a>
-                <a href="javascript:void(0)" data-page="Usage" class="nav-item ${activePage === 'Usage' ? 'active' : ''}">
-                    <div class="nav-icon">👓</div>
-                    Usage
-                </a>
+                <a href="javascript:void(0)" data-page="Transactions" class="nav-item ${activePage === 'Transactions' ? 'active' : ''}">
+    <div class="nav-icon">🔄</div>
+    Transactions
+</a>
                 <a href="javascript:void(0)" data-page="SpecialRequests" class="nav-item ${activePage === 'Special Project Requests' ? 'active' : ''}">
                     <div class="nav-icon">🛠️</div>
                     Special Requests
