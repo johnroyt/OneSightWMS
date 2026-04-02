@@ -18,7 +18,6 @@ function switchTab(event, tabId) {
 }
 
 // Store Caspio DataPage URLs in a configuration object
-// Store Caspio DataPage URLs in a configuration object
 const CASPIO_DATAPAGES = {
     customerOrderCreate: 'https://c2ect483.caspio.com/dp/975940000c138cee4729441Q0a15e/emb',
     transferOrderCreate: 'https://c2ect483.caspio.com/dp/975940000c138cee47294410a15e/emb?OrderType=Transfer',
@@ -37,23 +36,20 @@ const MODAL_OPTIONS = {
         name: 'orderType',
         items: [
             { label: 'Transfer', value: 'transfer', dataPageKey: 'transferOrderCreate', formName: 'Transfer' },
-            { label: 'Customer Order', value: 'customer', dataPageKey: 'customerOrderCreate', formName: 'Customer Order' }        ]
+            { label: 'Customer Order', value: 'customer', dataPageKey: 'customerOrderCreate', formName: 'Customer Order' }
+        ]
     },
-    // Add more option sets as needed
 };
 
 // Generic modal system
 function openGenericModal(config) {
-    // Check if the generic modal exists, otherwise create it
     let modal = document.getElementById('generic-modal');
     if (!modal) {
-        // Create the modal element
         modal = document.createElement('div');
         modal.id = 'generic-modal';
         modal.className = 'modal';
         modal.style.display = 'none';
         
-        // Create the modal HTML structure
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
@@ -81,14 +77,11 @@ function openGenericModal(config) {
         return;
     }
 
-    // Set modal title
     titleEl.textContent = config.title || 'Create New Item';
 
-    // Clear previous content
     optionsContainer.innerHTML = '';
     optionsContainer.style.display = 'none';
 
-    // Handle options (like order type selection)
     if (config.options) {
         optionsContainer.style.display = 'block';
         const optionsTitle = document.createElement('div');
@@ -97,7 +90,7 @@ function openGenericModal(config) {
         optionsContainer.appendChild(optionsTitle);
 
         const optionsRadioGroup = document.createElement('div');
-        optionsRadioGroup.className = 'order-type-options'; // Or a more generic class
+        optionsRadioGroup.className = 'order-type-options';
         optionsRadioGroup.style.display = 'flex';
         optionsRadioGroup.style.gap = '1rem';
         optionsRadioGroup.style.marginTop = '0.5rem';
@@ -114,11 +107,10 @@ function openGenericModal(config) {
             radio.type = 'radio';
             radio.name = config.options.name || 'modalItemType';
             radio.value = item.value;
-            if (index === 0 || item.checked) { // Default check the first or specified item
+            if (index === 0 || item.checked) {
                 radio.checked = true;
             }
 
-            // Event listener to load the specific DataPage when an option changes
             radio.addEventListener('change', () => {
                 loadDataPageIntoModal(item.dataPageKey, config.params, formContainer, item.formName);
             });
@@ -134,13 +126,11 @@ function openGenericModal(config) {
         });
         optionsContainer.appendChild(optionsRadioGroup);
 
-        // Load initial DataPage based on the default checked option
         const initiallyCheckedOption = config.options.items.find((item, index) => index === 0 || item.checked) || config.options.items[0];
         if (initiallyCheckedOption) {
             loadDataPageIntoModal(initiallyCheckedOption.dataPageKey, config.params, formContainer, initiallyCheckedOption.formName);
         }
     } else if (config.dataPageKey) {
-        // If no options, load the specified DataPage directly
         loadDataPageIntoModal(config.dataPageKey, config.params, formContainer, config.formName);
     }
 
@@ -149,7 +139,6 @@ function openGenericModal(config) {
 }
 
 function loadDataPageIntoModal(dataPageKey, params, container, formName) {
-    // Clear the container
     container.innerHTML = '';
     
     const dataPageUrl = CASPIO_DATAPAGES[dataPageKey];
@@ -171,12 +160,9 @@ function loadDataPageIntoModal(dataPageKey, params, container, formName) {
         }
     }
 
-    // Create the script that will load the Caspio form
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.src = fullUrl;
-    
-    // Append the script to load the form
     container.appendChild(script);
 }
 
@@ -187,7 +173,6 @@ function closeGenericModal() {
     }
     document.body.style.overflow = 'auto';
     
-    // Clean up containers
     const formContainer = document.getElementById('generic-modal-form-container');
     if (formContainer) {
         formContainer.innerHTML = '';
@@ -201,29 +186,23 @@ function closeGenericModal() {
 
 // Data-attribute based modal system
 function initializeModalTriggers() {
-    // Find all elements with the modal-trigger class
     const modalTriggers = document.querySelectorAll('.modal-trigger');
     
-    // Add click event listener to each trigger
     modalTriggers.forEach(trigger => {
         trigger.addEventListener('click', function() {
-            // Get configuration from data attributes
             const config = {
                 title: this.getAttribute('data-modal-title') || 'Create New Item',
                 formName: this.getAttribute('data-modal-form-name'),
                 dataPageKey: this.getAttribute('data-modal-key')
             };
             
-            // Check if this modal has options
             if (this.hasAttribute('data-modal-options')) {
-                // Get the options configuration from the MODAL_OPTIONS object
                 const optionsKey = this.getAttribute('data-modal-options');
                 if (MODAL_OPTIONS[optionsKey]) {
                     config.options = MODAL_OPTIONS[optionsKey];
                 }
             }
             
-            // Check for additional parameters
             if (this.hasAttribute('data-modal-params')) {
                 try {
                     config.params = JSON.parse(this.getAttribute('data-modal-params'));
@@ -232,7 +211,6 @@ function initializeModalTriggers() {
                 }
             }
             
-            // Open the modal with the configuration
             openGenericModal(config);
         });
     });
@@ -240,19 +218,13 @@ function initializeModalTriggers() {
 
 // Filter orders by type
 function filterOrderType(event, type) {
-    // Remove active class from all tabs
     const tabs = document.getElementsByClassName('order-type-tab');
     for (let i = 0; i < tabs.length; i++) {
         tabs[i].classList.remove('active');
     }
     
-    // Add active class to clicked tab
     event.currentTarget.classList.add('active');
-    
-    // Here you would update the DataPage with the filtered content
     console.log(`Filtering orders by type: ${type}`);
-    
-    // In a real implementation, you would update the DataPage parameters to filter by order type
 }
 
 // Function to log consumption
@@ -260,45 +232,36 @@ function logConsumption() {
     window.location.href = 'pages/usage/log-consumption.html';
 }
 
-// Updated navigateTo function that works both locally and on GitHub Pages
+// Navigation function
 function navigateTo(page) {
-    // Define your paths relative to the repo root
     const paths = {
-    'Dashboard': 'index.html',
-    'Purchase Orders': 'pages/purchase-orders/index.html',
-    'Orders': 'pages/orders/index.html',
-    'Warehouse Tasks': 'pages/tasks/index.html',
-    'Inventory': 'pages/inventory/index.html',
-    'Products': 'pages/products/index.html',
-    'Shipments': 'pages/shipments/index.html',
-    'Transactions': 'pages/usage/index.html', // Rebranded from Usage
-    'SpecialRequests': 'pages/specialrequests/index.html',
-    'Clinics & Events': 'pages/clinics/index.html',
-    'Location Labels': 'pages/management/barcodeLocationGen.html'
-};
+        'Dashboard': 'index.html',
+        'Purchase Orders': 'pages/purchase-orders/index.html',
+        'Orders': 'pages/orders/index.html',
+        'Warehouse Tasks': 'pages/tasks/index.html',
+        'Inventory': 'pages/inventory/index.html',
+        'Products': 'pages/products/index.html',
+        'Shipments': 'pages/shipments/index.html',
+        'Transactions': 'pages/usage/index.html',
+        'SpecialRequests': 'pages/specialrequests/index.html',
+        'Clinics & Events': 'pages/clinics/index.html',
+        'Location Labels': 'pages/management/barcodeLocationGen.html',
+        'ROC Request': 'rocrequest/index.html'   // ← NEW
+    };
     
     if (paths[page]) {
-        // Get the current URL
         const currentUrl = window.location.href;
-        
-        // Extract the base URL (everything up to the repository root)
-        // This handles both local and GitHub Pages deployments
         const baseUrl = currentUrl.split('/').slice(0, 3).join('/');
         
-        // For GitHub Pages, we need to add the repository name
         let repoPath = '';
         if (window.location.hostname.includes('github.io')) {
-            // Extract the repository name from the URL
             const pathParts = window.location.pathname.split('/');
             if (pathParts.length > 1) {
                 repoPath = '/' + pathParts[1];
             }
         }
         
-        // Construct the full URL
         const newUrl = baseUrl + repoPath + '/' + paths[page];
-        
-        // Navigate to the new URL
         window.location.href = newUrl;
     } else {
         console.error('No route found for:', page);
@@ -329,7 +292,8 @@ function generateSidebar(activePage) {
                     Orders & Transfers
                 </a>
                 <a href="javascript:void(0)" data-page="Warehouse Tasks" class="nav-item ${activePage === 'Warehouse Tasks' ? 'active' : ''}">
-                    <div class="nav-icon">⚙️</div>Warehouse Tasks
+                    <div class="nav-icon">⚙️</div>
+                    Warehouse Tasks
                 </a>
                 <a href="javascript:void(0)" data-page="Inventory" class="nav-item ${activePage === 'Inventory' ? 'active' : ''}">
                     <div class="nav-icon">📦</div>
@@ -344,10 +308,10 @@ function generateSidebar(activePage) {
                     Shipments
                 </a>
                 <a href="javascript:void(0)" data-page="Transactions" class="nav-item ${activePage === 'Transactions' ? 'active' : ''}">
-    <div class="nav-icon">🔄</div>
-    Transactions
-</a>
-                <a href="javascript:void(0)" data-page="SpecialRequests" class="nav-item ${activePage === 'Special Project Requests' ? 'active' : ''}">
+                    <div class="nav-icon">🔄</div>
+                    Transactions
+                </a>
+                <a href="javascript:void(0)" data-page="SpecialRequests" class="nav-item ${activePage === 'SpecialRequests' ? 'active' : ''}">
                     <div class="nav-icon">🛠️</div>
                     Special Requests
                 </a>
@@ -363,16 +327,20 @@ function generateSidebar(activePage) {
                     <div class="nav-icon">🏷️</div>
                     Location Labels
                 </a>
-                <!-- Add data-page to other nav items too -->
+                <a href="javascript:void(0)" data-page="ROC Request" class="nav-item ${activePage === 'ROC Request' ? 'active' : ''}">
+                    <div class="nav-icon">📥</div>
+                    ROC Request
+                </a>
             </nav>
             
-            <div class="user-profile">
-                <div class="user-avatar">JD</div>
-                <div class="user-info">
-                    <div class="user-name">John Doe</div>
-                    <div class="user-role">Warehouse Manager</div>
-                </div>
-            </div>
+            <div class="user-profile" id="wms-user-profile" style="visibility:hidden;">
+    <div class="user-avatar" id="wms-user-avatar">?</div>
+    <div class="user-info">
+        <div class="user-name" id="wms-user-name">Loading...</div>
+        <div class="user-role" id="wms-user-role"></div>
+    </div>
+</div>
+<div id="wms-user-script" style="display:none;"></div>
         </aside>
     `;
 }
@@ -397,12 +365,26 @@ function generateHeader(pageTitle, additionalButtons = '') {
 
 // Close modal when clicking outside of it
 window.addEventListener('click', function(event) {
-    // Handle generic modal
     const genericModal = document.getElementById('generic-modal');
     if (genericModal && event.target === genericModal) {
         closeGenericModal();
     }
 });
+
+function setWMSUser(fullName, jobTitle) {
+    const nameEl = document.getElementById('wms-user-name');
+    const roleEl = document.getElementById('wms-user-role');
+    const avatarEl = document.getElementById('wms-user-avatar');
+    const profileEl = document.getElementById('wms-user-profile');
+
+    if (nameEl) nameEl.textContent = fullName;
+    if (roleEl) roleEl.textContent = jobTitle;
+    if (avatarEl) {
+        const parts = fullName.trim().split(' ');
+        avatarEl.textContent = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+    if (profileEl) profileEl.style.visibility = 'visible';
+}
 
 function initializeNavigation() {
     document.addEventListener('click', function(e) {
@@ -410,8 +392,6 @@ function initializeNavigation() {
         
         if (navItem) {
             e.preventDefault();
-            
-            // Always use data-page attribute
             const pageName = navItem.getAttribute('data-page');
             
             if (pageName) {
@@ -424,7 +404,6 @@ function initializeNavigation() {
     });
 }
 
-// Make sure initialization runs after DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing...');
     initializeNavigation();
@@ -438,14 +417,19 @@ document.addEventListener('DOMContentLoaded', function() {
  * @param {string} additionalButtons - Optional HTML for additional header buttons
  */
 function initializePage(activePage, pageTitle, additionalButtons = '') {
-    // Generate sidebar and header
     document.getElementById('sidebar-container').innerHTML = generateSidebar(activePage);
     document.getElementById('header-container').innerHTML = generateHeader(pageTitle, additionalButtons);
     
-    // Set up navigation event listeners
+    // Dynamically inject Caspio user info script so it actually executes
+    const userScriptContainer = document.getElementById('wms-user-script');
+    if (userScriptContainer) {
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://c2ect483.caspio.com/dp/97594000b114afb38f244fcbb64f/emb';
+        userScriptContainer.appendChild(script);
+    }
+
     initializeNavigation();
-    
-    // Initialize modal triggers
     initializeModalTriggers();
     
     console.log(`Page initialized: ${activePage}`);
