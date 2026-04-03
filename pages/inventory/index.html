@@ -29,8 +29,16 @@
 
     <script src="../../js/main.js"></script>
     <script>
+        // Set up the sidebar
         document.getElementById('sidebar-container').innerHTML = generateSidebar('Inventory');
-        document.getElementById('header-container').innerHTML = generateHeader('Inventory Management');
+        
+        // Create the button HTML
+        const startCountBtn = `<button class="create-po-btn" onclick="window.location.href='count-session.html'">Start Count Session</button>`;
+        
+        // Pass the button into the header
+        document.getElementById('header-container').innerHTML = generateHeader('Inventory Management', startCountBtn);
+        
+        // Initialize navigation once
         initializeNavigation();
     </script>
     

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Count Session - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title" style="color: #3186ad;">Scanner Input</h2>
+                        <div id="session-info" style="font-size: 0.875rem; color: #718096; font-weight: 500;"></div>
+                    </div>
+                    
+                    <div id="scanner-container" class="datapage-container">
+                        <p>Loading Scanner...</p>
+                    </div>
+                </div>
+                
+                <div class="full-width-section" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Session Tally</h2>
+                    </div>
+                    
+                    <div id="tally-container" class="datapage-container">
+                        <p>Loading Tally...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="../../js/main.js"></script>
+    <script>
+        // Initialize page layout
+        initializePage('Inventory', 'Active Count Session');
+        
+        // Grab parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('SessionID');
+        const locationId = urlParams.get('LocationID');
+
+        if (sessionId) {
+            // Display Session Info in the header
+            document.getElementById('session-info').textContent = `Session: ${sessionId} | Location: ${locationId || 'Unknown'}`;
+
+            // 1. Embed the Scanner DataPage
+            const scannerContainer = document.getElementById('scanner-container');
+            const scannerScript = document.createElement('script');
+            scannerScript.type = 'text/javascript';
+            // Passing parameters into the Caspio embed URL
+            let scannerUrl = `https://c2ect483.caspio.com/dp/975940002b78ad4c59304b8aa6b2/emb?SessionID=${sessionId}`;
+            if (locationId) scannerUrl += `&LocationID=${locationId}`;
+            scannerScript.src = scannerUrl;
+            
+            scannerContainer.innerHTML = ''; 
+            scannerContainer.appendChild(scannerScript);
+            
+            // 2. Embed the Tally Report DataPage
+            const tallyContainer = document.getElementById('tally-container');
+            const tallyScript = document.createElement('script');
+            tallyScript.type = 'text/javascript';
+            // Passing SessionID so the report only shows current session counts
+            tallyScript.src = `https://c2ect483.caspio.com/dp/975940000a9a8e803dfb4c8895db/emb?SessionID=${sessionId}`;
+            
+            tallyContainer.innerHTML = ''; 
+            tallyContainer.appendChild(tallyScript);
+
+        } else {
+            // Error handling if URL params are missing
+            document.getElementById('scanner-container').innerHTML = '<p style="color: #e53e3e; padding: 1rem;">Error: No Session ID provided. Please return to the Start page to begin a session.</p>';
+            document.getElementById('tally-container').innerHTML = '<p style="color: #e53e3e; padding: 1rem;">Error: Cannot load tally without an active Session ID.</p>';
+        }
+    </script>
+</body>
+</html>
