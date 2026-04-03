@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -292,6 +292,17 @@
             <main class="main-content">
                 <div class="label-gen-content">
                     <div class="controls">
+                        <h2>Simple Location Label</h2>
+                        <p>For single locations like pods just type the name and generate one label. Be sure the text exactly matches a Location Name in WMS.</p>
+                        <div style="display:flex; gap:1rem; align-items:flex-end; margin-bottom:1.5rem;">
+                            <div>
+                                <label for="simple-label-text">Location Name:</label><br>
+                                <input type="text" id="simple-label-text" placeholder="e.g. 6 Lane Pod A" style="width:300px; padding:6px; border:1px solid #ccc; border-radius:4px; margin-top:4px;">
+                            </div>
+                            <button id="generate-simple-label">Generate Label</button>
+                        </div>
+                        <hr style="margin-bottom:1.5rem; border:none; border-top:1px solid #e2e8f0;">
+
                         <h2>Generate Location Labels</h2>
                         <p>Select location ranges to generate labels for Avery 5871 (3.5" x 2" labels).</p>
                         
@@ -759,5 +770,56 @@
             }
         }
     </script>
+<script>
+    document.getElementById("generate-simple-label").addEventListener("click", function() {
+        var text = document.getElementById("simple-label-text").value.trim();
+        if (!text) {
+            alert("Please enter a location name.");
+            return;
+        }
+
+        var container = document.getElementById("label-container");
+        container.innerHTML = "";
+
+        var barcodeWidth = parseInt($("#barcode-width").val()) || 3;
+
+        var pageWrapper = document.createElement("div");
+        pageWrapper.className = "page-wrapper";
+        container.appendChild(pageWrapper);
+
+        var label = document.createElement("div");
+        label.className = "label";
+        label.style.cssText = "display:flex; flex-direction:column; align-items:center; justify-content:center;";
+        pageWrapper.appendChild(label);
+
+        var nameDiv = document.createElement("div");
+        nameDiv.textContent = text;
+        nameDiv.style.cssText = "font-size:20px; font-weight:bold; text-align:center; margin-bottom:10px;";
+        label.appendChild(nameDiv);
+
+        var barcodeId = "simple-barcode-" + Math.random().toString(36).substring(2, 10);
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = barcodeId;
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "100");
+        label.appendChild(svg);
+
+        try {
+            JsBarcode("#" + barcodeId, text, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: barcodeWidth,
+                height: 100,
+                displayValue: true,
+                margin: 10,
+                fontSize: 12,
+                font: "Arial"
+            });
+        } catch(e) {
+            label.innerHTML += "<p style='color:red;'>Error: " + e.message + "</p>";
+        }
+    });
+</script>
 </body>
 </html>
+
