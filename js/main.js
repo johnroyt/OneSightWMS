@@ -27,7 +27,9 @@ const CASPIO_DATAPAGES = {
     shipmentCreate: 'https://c2ect483.caspio.com/dp/9759400020270d4c4dbb4f508ce2/emb',
     specialRequestCreate: 'https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb',
     productCreate: 'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
+    modelStockCreate: 'https://c2ect483.caspio.com/dp/9759400006122dd8bc2842fa9cb0/emb',
     transactionCreate: 'https://c2ect483.caspio.com/dp/97594000588934525a27433b83a7/emb'
+
 };
 
 const MODAL_OPTIONS = {
@@ -36,7 +38,7 @@ const MODAL_OPTIONS = {
         name: 'orderType',
         items: [
             { label: 'Transfer', value: 'transfer', dataPageKey: 'transferOrderCreate', formName: 'Transfer' },
-            { label: 'Customer Order', value: 'customer', dataPageKey: 'customerOrderCreate', formName: 'Customer Order' }
+            { label: 'Model Stock Replenishment', value: 'modelstock', dataPageKey: 'modelStockCreate', formName: 'Model Stock Replenishment' }
         ]
     },
 };
