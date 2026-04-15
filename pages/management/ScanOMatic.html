@@ -369,6 +369,7 @@
                                             type="text"
                                             id="tracking-number"
                                             placeholder="Enter tracking number (optional)"
+                                            oninput="updatePrintButtonVisibility()"
                                         >
                                         <button type="button" class="camera-button" id="tracking-camera-btn" onclick="toggleTrackingScanner()">
                                             <i class="fas fa-camera"></i>
