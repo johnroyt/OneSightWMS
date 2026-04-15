@@ -926,87 +926,29 @@ function processBarcodeInput(barcode) {
                 submitToWebhook(spNumber);
             }
         }
-
-        // Submit to webhook
-// Submit to webhook (Now using Cloudflare Worker!)
-        async function submitToWebhook(spNumber) {
-            try {
-                const status = document.getElementById('status-select').value;
-
-                if (!status) {
-                    alert('Please select a status.');
-                    return;
-                }
-                
-                const trackingNumber = document.getElementById('tracking-number').value || '';
-
-                // Check for duplicate SP number with the same status
-                const isDuplicate = scannedItems.some(item => 
-                    item.spNumber === spNumber && item.status === status
-                );
-                
-                if (isDuplicate) {
-                    document.getElementById('error-message').textContent = "This item has already been scanned with this status";
-                    document.getElementById('error-message').style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('error-message').style.display = 'none';
-                        document.getElementById('error-message').textContent = "Please enter a valid SP number";
-                    }, 3000);
-                    return;
-                }
-
-                // Format the SP number (uppercase)
-                spNumber = spNumber.toUpperCase();
-
-               // --- 1. SECURE API KEY HANDLING ---
-                // Hardcoded for frictionless employee UX. 
-                // Security is handled via CORS, Worker Action Mapping, and Caspio Profile restrictions.
-                const appAccessKey = "fQ$V6iIAVDh318F#"; // Paste your actual Cloudflare APP_ACCESS_KEY here
-
-                const workerUrl = "https://holy-glitter-ebc0.operations-78f.workers.dev/";
-                // --- 2. SEARCH CASPIO FOR THE SP NUMBER ---
+// --- 2. SEARCH CASPIO FOR THE SP NUMBER ---
                 const searchRes = await fetch(workerUrl, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-App-Access-Key": appAccessKey
-                    },
-                    body: JSON.stringify({
-                        action: "search_sp",
-                        spNumber: spNumber
-                    })
+                    headers: { "Content-Type": "application/json", "X-App-Access-Key": appAccessKey },
+                    body: JSON.stringify({ action: "search_sp", spNumber: spNumber })
                 });
-
-                if (searchRes.status === 401) {
-                    // If the password was wrong, delete it so they can try again next time
-                    localStorage.removeItem("scanner_api_key");
-                    throw new Error("Invalid Access Key. Please refresh the page and try again.");
-                }
 
                 const searchData = await searchRes.json();
 
                 if (!searchData.Result || searchData.Result.length === 0) {
-                    document.getElementById('error-message').textContent = "No order found with this SP number";
-                    document.getElementById('error-message').style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('error-message').style.display = 'none';
-                        document.getElementById('error-message').textContent = "Please enter a valid SP number";
-                    }, 3000);
-                    return;
+                    throw new Error("No order found with this SP number");
                 }
 
                 const record = searchData.Result[0];
                 
-                // IMPORTANT: Change 'ID' below to whatever your actual AutoNumber/Primary Key column is named in Caspio!
-                const recordId = record.ID; 
+                // IMPORTANT: In your Caspio Table Design, look for the column with the 'ID' or 'AutoNumber' icon.
+                // If that field is named 'Frame_Scan', keep it as record.Frame_Scan.
+                const recordId = record.Frame_Scan; 
 
                 // --- 3. UPDATE THE RECORD ---
                 const updateRes = await fetch(workerUrl, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-App-Access-Key": appAccessKey
-                    },
+                    headers: { "Content-Type": "application/json", "X-App-Access-Key": appAccessKey },
                     body: JSON.stringify({
                         action: "update_order",
                         recordId: recordId,
@@ -1015,43 +957,12 @@ function processBarcodeInput(barcode) {
                     })
                 });
 
+                const updateData = await updateRes.json();
+
                 if (!updateRes.ok) {
-                    throw new Error("Failed to update record in Caspio");
+                    // This will now show the EXACT reason from Caspio (e.g. "Field Job_Status not found")
+                    throw new Error(updateData.details || "Update failed");
                 }
-
-                // --- 4. ADD TO UI AND PLAY SOUND ---
-                // NOTE: Check that these names exactly match your Caspio column names!
-                const scannedItem = {
-                    spNumber,
-                    trackingNumber,
-                    status,
-                    location: record.Location || "Unknown",
-                    organization: record.Organization || "Unknown",
-                    name: `${record.First_Name || ""} ${record.Last_Initial || ""}`.trim() || "Unknown",
-                    timestamp: new Date()
-                };
-                
-                scannedItems.push(scannedItem);
-                updateStats();
-                addToScannedList(scannedItem, true);
-                
-                // Play success sound
-                const audio = new Audio('data:audio/wav;base64,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');
-                audio.play().catch(e => console.log("Audio play prevented:", e));
-                
-                // Clear the input field for next scan
-                document.getElementById('sp-number-input').value = '';
-
-            } catch (err) {
-                console.error('Webhook submission error:', err);
-                document.getElementById('error-message').textContent = err.message || "Connection Error";
-                document.getElementById('error-message').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('error-message').style.display = 'none';
-                    document.getElementById('error-message').textContent = "Please enter a valid SP number";
-                }, 4000);
-            }
-        }
 
        // Add to scanned list
         function addToScannedList({ spNumber, trackingNumber, status, location, organization, name, timestamp }, highlight = false) {
