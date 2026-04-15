@@ -930,19 +930,18 @@
 
                 const record = searchData.Result[0];
 
-                // DIAGNOSTIC: log what the search returned so we can identify the PK field
+                // DIAGNOSTIC: log what the view returned so we can identify field names
                 console.log("=== Caspio search result ===");
                 console.log("Full response:", searchData);
                 console.log("First record:", record);
                 console.log("Available fields:", Object.keys(record));
 
-                // Try common PK field names — Caspio tables vary in what they expose
-                const recordId = record.PK_ID ?? record.Frame_Scan ?? record.ID ?? record.PatientOrderID;
+                // PK comes from the view with the Patient_Orders_ prefix
+                const recordId = record.Patient_Orders_PK_ID;
                 if (recordId === undefined || recordId === null || recordId === "") {
                     const fields = Object.keys(record).join(", ");
                     throw new Error(
-                        `No PK field found in search result. Available fields: ${fields}. ` +
-                        `Tell me which one is the primary key.`
+                        `No Patient_Orders_PK_ID in search result. Available fields: ${fields}`
                     );
                 }
                 console.log("Using recordId:", recordId, "(type:", typeof recordId, ")");
@@ -974,9 +973,9 @@
                     spNumber,
                     trackingNumber,
                     status,
-                    location: record.Clinic || "Unknown",
-                    organization: record.School_Group || "Unknown",
-                    name: record.FullName || "Unknown",
+                    location: record.Clinic_Setup_and_Results_Clinic || "Unknown",
+                    organization: record.School_Group_Community_S_G_C || "Unknown",
+                    name: record.Patient_Orders_FullName || "Unknown",
                     timestamp: new Date()
                 };
 
