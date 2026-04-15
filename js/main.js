@@ -248,7 +248,8 @@ function navigateTo(page) {
         'SpecialRequests': 'pages/specialrequests/index.html',
         'Clinics & Events': 'pages/clinics/index.html',
         'Location Labels': 'pages/management/barcodeLocationGen.html',
-        'ROC Request': 'rocrequest/index.html'   // ← NEW
+        'Scan-O-Matic': 'pages/management/ScanOMatic.html',
+        'ROC Request': 'rocrequest/index.html'
     };
     
     if (paths[page]) {
@@ -328,6 +329,10 @@ function generateSidebar(activePage) {
                 <a href="javascript:void(0)" data-page="Location Labels" class="nav-item ${activePage === 'Location Labels' ? 'active' : ''}">
                     <div class="nav-icon">🏷️</div>
                     Location Labels
+                </a>
+                <a href="javascript:void(0)" data-page="Scan-O-Matic" class="nav-item ${activePage === 'Scan-O-Matic' ? 'active' : ''}">
+                    <div class="nav-icon">📷</div>
+                    Scan-O-Matic
                 </a>
                 <a href="javascript:void(0)" data-page="ROC Request" class="nav-item ${activePage === 'ROC Request' ? 'active' : ''}">
                     <div class="nav-icon">📥</div>

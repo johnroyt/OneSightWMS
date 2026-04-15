@@ -1,28 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shuttle Status Scan-O-Matic 9001</title>
+    <title>Shuttle Status Scan-O-Matic 9001 - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
+        /* All Scan-O-Matic styles scoped to .scanomatic-page so they don't leak into the WMS shell */
+
+        .scanomatic-page,
+        .scanomatic-page * {
             box-sizing: border-box;
+        }
+
+        .scanomatic-page {
+            padding: 20px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-
-        .container {
+        .scanomatic-page .container {
             max-width: 500px;
             margin: 0 auto;
             width: 100%;
@@ -32,23 +30,23 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .tracking-section {
+        .scanomatic-page .tracking-section {
             margin-bottom: 1.5rem;
             padding-bottom: 1.5rem;
             border-bottom: 2px solid #eee;
         }
 
-        .tracking-form {
+        .scanomatic-page .tracking-form {
             display: grid;
             gap: 1rem;
         }
 
-        .tracking-controls {
+        .scanomatic-page .tracking-controls {
             display: flex;
             gap: 0.5rem;
         }
 
-        .status-select {
+        .scanomatic-page .status-select {
             padding: 0.75rem;
             border: 2px solid #ddd;
             border-radius: 8px;
@@ -57,16 +55,16 @@
             flex-grow: 1;
         }
 
-        .input-with-camera {
+        .scanomatic-page .input-with-camera {
             display: flex;
             gap: 0.5rem;
         }
 
-        .input-with-camera input {
+        .scanomatic-page .input-with-camera input {
             flex-grow: 1;
         }
 
-        .camera-button {
+        .scanomatic-page .camera-button {
             padding: 0.75rem;
             border: none;
             border-radius: 8px;
@@ -79,15 +77,15 @@
             justify-content: center;
         }
 
-        .camera-button:hover {
+        .scanomatic-page .camera-button:hover {
             background-color: #5a6268;
         }
 
-        .camera-button.active {
+        .scanomatic-page .camera-button.active {
             background-color: #dc3545;
         }
 
-        .scanner-container {
+        .scanomatic-page .scanner-container {
             width: 100%;
             margin-top: 1rem;
             margin-bottom: 1rem;
@@ -98,13 +96,13 @@
             height: 350px;
         }
 
-        .scanner {
+        .scanomatic-page .scanner {
             width: 100%;
             height: 100%;
             display: none;
         }
 
-        .scanner-overlay {
+        .scanomatic-page .scanner-overlay {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -113,7 +111,7 @@
             gap: 0.5rem;
         }
 
-        .scanner-button {
+        .scanomatic-page .scanner-button {
             padding: 0.5rem;
             border: none;
             border-radius: 50%;
@@ -128,24 +126,24 @@
             font-size: 1.25rem;
         }
 
-        .scanner-button:hover {
+        .scanomatic-page .scanner-button:hover {
             background-color: rgba(255, 255, 255, 0.9);
         }
 
-        .stats {
+        .scanomatic-page .stats {
             background: #f8f9fa;
             padding: 1rem;
             border-radius: 8px;
             margin-bottom: 1rem;
         }
 
-        .stats-grid {
+        .scanomatic-page .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
 
-        .stat-box {
+        .scanomatic-page .stat-box {
             background: white;
             padding: 1rem;
             border-radius: 6px;
@@ -153,19 +151,19 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .stat-number {
+        .scanomatic-page .stat-number {
             font-size: 1.5rem;
             font-weight: bold;
             color: #007bff;
         }
 
-        .stat-label {
+        .scanomatic-page .stat-label {
             font-size: 0.875rem;
             color: #6c757d;
             margin-top: 0.25rem;
         }
 
-        #scanned-list {
+        .scanomatic-page #scanned-list {
             max-height: 200px;
             overflow-y: auto;
             border: 1px solid #dee2e6;
@@ -173,22 +171,22 @@
             margin-top: 1rem;
         }
 
-        .scanned-item {
+        .scanomatic-page .scanned-item {
             padding: 0.75rem;
             border-bottom: 1px solid #dee2e6;
         }
 
-        .scanned-item:last-child {
+        .scanomatic-page .scanned-item:last-child {
             border-bottom: none;
         }
 
-        .time {
+        .scanomatic-page .time {
             color: #6c757d;
             font-size: 0.875rem;
             margin-top: 0.25rem;
         }
 
-        input {
+        .scanomatic-page input {
             padding: 0.75rem;
             border: 2px solid #ddd;
             border-radius: 8px;
@@ -197,12 +195,12 @@
             transition: border-color 0.3s;
         }
 
-        input:focus {
+        .scanomatic-page input:focus {
             outline: none;
             border-color: #007bff;
         }
 
-        button {
+        .scanomatic-page button {
             padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 8px;
@@ -213,11 +211,11 @@
             transition: background-color 0.3s;
         }
 
-        button:hover {
+        .scanomatic-page button:hover {
             background-color: #0056b3;
         }
 
-        .error-message {
+        .scanomatic-page .error-message {
             color: #dc3545;
             font-size: 0.875rem;
             margin-top: 0.5rem;
@@ -228,17 +226,17 @@
             word-break: break-word;
         }
 
-        .highlight-success {
+        .scanomatic-page .highlight-success {
             background-color: #d4ffda;
-            animation: fadeBackgroundOut 3s forwards;
+            animation: scanomaticFadeBackgroundOut 3s forwards;
         }
 
-        @keyframes fadeBackgroundOut {
+        @keyframes scanomaticFadeBackgroundOut {
             0%, 70% { background-color: #d4ffda; }
             100% { background-color: transparent; }
         }
 
-        .loading-indicator {
+        .scanomatic-page .loading-indicator {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -251,28 +249,28 @@
             z-index: 5;
         }
 
-        .spinner {
+        .scanomatic-page .spinner {
             width: 40px;
             height: 40px;
             border: 4px solid rgba(0, 123, 255, 0.1);
             border-radius: 50%;
             border-top: 4px solid #007bff;
-            animation: spin 1s linear infinite;
+            animation: scanomaticSpin 1s linear infinite;
         }
 
-        @keyframes spin {
+        @keyframes scanomaticSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        .instructions-container {
+        .scanomatic-page .instructions-container {
             margin-bottom: 1.5rem;
             border: 1px solid #dee2e6;
             border-radius: 8px;
             overflow: hidden;
         }
 
-        .instructions-header {
+        .scanomatic-page .instructions-header {
             padding: 1rem;
             background: #f8f9fa;
             cursor: pointer;
@@ -281,17 +279,17 @@
             align-items: center;
         }
 
-        .instructions-content {
+        .scanomatic-page .instructions-content {
             padding: 1rem;
             display: none;
             border-top: 1px solid #dee2e6;
         }
 
-        .instructions-content.visible {
+        .scanomatic-page .instructions-content.visible {
             display: block;
         }
 
-        .status-message {
+        .scanomatic-page .status-message {
             text-align: center;
             padding: 1rem;
             color: #6c757d;
@@ -299,144 +297,173 @@
         }
 
         @media (max-width: 576px) {
-            .container {
+            .scanomatic-page .container {
                 padding: 1rem;
             }
 
-            .scanner {
+            .scanomatic-page .scanner {
                 min-height: 250px;
             }
 
-            button {
+            .scanomatic-page button {
                 padding: 0.75rem 1rem;
+            }
+        }
+
+        /* Print: hide WMS chrome so the packing slip / nametag iframe prints clean.
+           (Existing print logic uses an iframe, so this is mostly defensive.) */
+        @media print {
+            #sidebar-container,
+            #header-container {
+                display: none !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div style="text-align: center; margin-bottom: 1.5rem;">
-            <img src="../../images/ScanOMatic9001.png" alt="Scan-O-Matic Order Status Updater 9000" style="max-width: 100%; height: auto; max-height: 200px;">
-        </div>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
 
-        <!-- Collapsible Instructions Section -->
-        <div class="instructions-container">
-            <div class="instructions-header" onclick="toggleInstructions()">
-                <strong>How to use this scanner</strong>
-                <i class="fas fa-chevron-down" id="instructions-icon"></i>
-            </div>
-            <div class="instructions-content" id="instructions-content">
-                <ol style="padding-left: 1.5rem; margin-bottom: 1rem;">
-                    <li style="margin-bottom: 0.5rem;">Select the appropriate status from the dropdown menu.</li>
-                    <li style="margin-bottom: 0.5rem;">If the status is "Shipped to Partner", you can optionally enter a tracking number.</li>
-                    <li style="margin-bottom: 0.5rem;">Scan the SP number using the camera button or type it in manually.</li>
-                    <li style="margin-bottom: 0.5rem;">Click on the camera icon to activate your device's camera for scanning.</li>
-                    <li style="margin-bottom: 0.5rem;">Once scanned, the item will be recorded and appear in the scanned items list.</li>
-                </ol>
-                <p><strong>Note:</strong> You can also use a physical barcode scanner connected to your device.</p>
-            </div>
-        </div>
+        <div class="main-wrapper">
+            <div id="header-container"></div>
 
-        <div class="tracking-section">
-            <h2 style="margin-bottom: 1rem;">Select Order Status</h2>
-            <form id="tracking-form" class="tracking-form">
-                <select id="status-select" class="status-select" required onchange="handleStatusChange()">
-                    <option value="">Select Status</option>
-                    <option value="Received by OSELF">Received at ROC (Pending Inspection)</option>
-                    <option value="Passed Inspection">Passed Inspection (Pending Shipment)</option>
-                    <option value="Shipped to Partner">Shipped to Partner</option>
-                    <option value="Re-Ordered">Re-Ordered</option>
-                </select>
-                <div id="status-message" class="status-message">Select a status to begin</div>
-                <div id="tracking-section" style="display: none;">
-                    <div class="input-with-camera">
-                        <input
-                            type="text"
-                            id="tracking-number"
-                            placeholder="Enter tracking number (optional)"
-                        >
-                        <button type="button" class="camera-button" id="tracking-camera-btn" onclick="toggleTrackingScanner()">
-                            <i class="fas fa-camera"></i>
-                        </button>
+            <main class="main-content">
+                <div class="scanomatic-page">
+                    <div class="container">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <img src="../../images/ScanOMatic9001.png" alt="Scan-O-Matic Order Status Updater 9000" style="max-width: 100%; height: auto; max-height: 200px;">
+                        </div>
+
+                        <!-- Collapsible Instructions Section -->
+                        <div class="instructions-container">
+                            <div class="instructions-header" onclick="toggleInstructions()">
+                                <strong>How to use this scanner</strong>
+                                <i class="fas fa-chevron-down" id="instructions-icon"></i>
+                            </div>
+                            <div class="instructions-content" id="instructions-content">
+                                <ol style="padding-left: 1.5rem; margin-bottom: 1rem;">
+                                    <li style="margin-bottom: 0.5rem;">Select the appropriate status from the dropdown menu.</li>
+                                    <li style="margin-bottom: 0.5rem;">If the status is "Shipped to Partner", you can optionally enter a tracking number.</li>
+                                    <li style="margin-bottom: 0.5rem;">Scan the SP number using the camera button or type it in manually.</li>
+                                    <li style="margin-bottom: 0.5rem;">Click on the camera icon to activate your device's camera for scanning.</li>
+                                    <li style="margin-bottom: 0.5rem;">Once scanned, the item will be recorded and appear in the scanned items list.</li>
+                                </ol>
+                                <p><strong>Note:</strong> You can also use a physical barcode scanner connected to your device.</p>
+                            </div>
+                        </div>
+
+                        <div class="tracking-section">
+                            <h2 style="margin-bottom: 1rem;">Select Order Status</h2>
+                            <form id="tracking-form" class="tracking-form">
+                                <select id="status-select" class="status-select" required onchange="handleStatusChange()">
+                                    <option value="">Select Status</option>
+                                    <option value="Received by OSELF">Received at ROC (Pending Inspection)</option>
+                                    <option value="Passed Inspection">Passed Inspection (Pending Shipment)</option>
+                                    <option value="Shipped to Partner">Shipped to Partner</option>
+                                    <option value="Re-Ordered">Re-Ordered</option>
+                                </select>
+                                <div id="status-message" class="status-message">Select a status to begin</div>
+                                <div id="tracking-section" style="display: none;">
+                                    <div class="input-with-camera">
+                                        <input
+                                            type="text"
+                                            id="tracking-number"
+                                            placeholder="Enter tracking number (optional)"
+                                        >
+                                        <button type="button" class="camera-button" id="tracking-camera-btn" onclick="toggleTrackingScanner()">
+                                            <i class="fas fa-camera"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div id="tracking-scanner-container" class="scanner-container" style="display: none;">
+                                <div id="tracking-reader" class="scanner"></div>
+                                <div class="scanner-overlay">
+                                    <button type="button" class="scanner-button" id="tracking-flip-btn" onclick="flipCamera('tracking')">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                    <button type="button" class="scanner-button" id="tracking-close-btn" onclick="toggleTrackingScanner()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div id="tracking-loading" class="loading-indicator" style="display: none;">
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats">
+                            <div class="stats-grid">
+                                <div class="stat-box">
+                                    <div class="stat-number" id="items-scanned">0</div>
+                                    <div class="stat-label">Items Scanned</div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-number" id="scan-time">0:00</div>
+                                    <div class="stat-label">Session Time</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="sp-scanner-section" style="display: none;">
+                            <h2 style="margin-bottom: 1rem;">SP Number</h2>
+
+                            <div class="input-with-camera">
+                                <input
+                                    type="text"
+                                    id="sp-number-input"
+                                    placeholder="Scan or enter SP number (e.g. SP5GP4AZ)"
+                                    pattern="[A-Za-z0-9]{8}"
+                                    title="Please enter an 8-character code"
+                                    onkeydown="if(event.key === 'Enter') { event.preventDefault(); submitSPNumber(); }"
+                                >
+                                <button type="button" class="camera-button" id="sp-camera-btn" onclick="toggleSPScanner()">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+
+                            <div id="sp-scanner-container" class="scanner-container" style="display: none;">
+                                <div id="sp-reader" class="scanner"></div>
+                                <div class="scanner-overlay">
+                                    <button type="button" class="scanner-button" id="sp-flip-btn" onclick="flipCamera('sp')">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                    <button type="button" class="scanner-button" id="sp-close-btn" onclick="toggleSPScanner()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div id="sp-loading" class="loading-indicator" style="display: none;">
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+
+                            <div id="error-message" class="error-message">Please enter a valid SP number</div>
+                        </div>
+
+                        <div id="scanned-items-section">
+                            <h3 style="margin: 1.5rem 0 0.5rem 0;">Scanned Items</h3>
+                            <div id="scanned-list">
+                                <div id="no-items-placeholder" class="scanned-item" style="text-align: center; color: #6c757d; font-style: italic;">
+                                    No items scanned yet
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="print-slip-btn" onclick="printPackingSlip()" style="margin-top: 1rem; display: none;">Print Packing Slip</button>
                     </div>
                 </div>
-            </form>
-
-            <div id="tracking-scanner-container" class="scanner-container" style="display: none;">
-                <div id="tracking-reader" class="scanner"></div>
-                <div class="scanner-overlay">
-                    <button type="button" class="scanner-button" id="tracking-flip-btn" onclick="flipCamera('tracking')">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button type="button" class="scanner-button" id="tracking-close-btn" onclick="toggleTrackingScanner()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="tracking-loading" class="loading-indicator" style="display: none;">
-                    <div class="spinner"></div>
-                </div>
-            </div>
+            </main>
         </div>
-
-        <div class="stats">
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-number" id="items-scanned">0</div>
-                    <div class="stat-label">Items Scanned</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="scan-time">0:00</div>
-                    <div class="stat-label">Session Time</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="sp-scanner-section" style="display: none;">
-            <h2 style="margin-bottom: 1rem;">SP Number</h2>
-
-            <div class="input-with-camera">
-                <input
-                    type="text"
-                    id="sp-number-input"
-                    placeholder="Scan or enter SP number (e.g. SP5GP4AZ)"
-                    pattern="[A-Za-z0-9]{8}"
-                    title="Please enter an 8-character code"
-                    onkeydown="if(event.key === 'Enter') { event.preventDefault(); submitSPNumber(); }"
-                >
-                <button type="button" class="camera-button" id="sp-camera-btn" onclick="toggleSPScanner()">
-                    <i class="fas fa-camera"></i>
-                </button>
-            </div>
-
-            <div id="sp-scanner-container" class="scanner-container" style="display: none;">
-                <div id="sp-reader" class="scanner"></div>
-                <div class="scanner-overlay">
-                    <button type="button" class="scanner-button" id="sp-flip-btn" onclick="flipCamera('sp')">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button type="button" class="scanner-button" id="sp-close-btn" onclick="toggleSPScanner()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="sp-loading" class="loading-indicator" style="display: none;">
-                    <div class="spinner"></div>
-                </div>
-            </div>
-
-            <div id="error-message" class="error-message">Please enter a valid SP number</div>
-        </div>
-
-        <div id="scanned-items-section">
-            <h3 style="margin: 1.5rem 0 0.5rem 0;">Scanned Items</h3>
-            <div id="scanned-list">
-                <div id="no-items-placeholder" class="scanned-item" style="text-align: center; color: #6c757d; font-style: italic;">
-                    No items scanned yet
-                </div>
-            </div>
-        </div>
-
-        <button id="print-slip-btn" onclick="printPackingSlip()" style="margin-top: 1rem; display: none;">Print Packing Slip</button>
     </div>
+
+    <script src="../../js/main.js"></script>
+    <script>
+        // Initialize WMS chrome (sidebar + header) around the scanner UI
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage('Scan-O-Matic', 'Scan-O-Matic');
+        });
+    </script>
 
     <script>
         // ========== CONFIG ==========
