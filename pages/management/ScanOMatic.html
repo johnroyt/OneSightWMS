@@ -936,12 +936,12 @@
                 console.log("First record:", record);
                 console.log("Available fields:", Object.keys(record));
 
-                // PK comes from the view with the Patient_Orders_ prefix
-                const recordId = record.Patient_Orders_PK_ID;
+                // Caspio views expose source-table PKs as _PK_ID_<TableName>
+                const recordId = record._PK_ID_Patient_Orders;
                 if (recordId === undefined || recordId === null || recordId === "") {
                     const fields = Object.keys(record).join(", ");
                     throw new Error(
-                        `No Patient_Orders_PK_ID in search result. Available fields: ${fields}`
+                        `No _PK_ID_Patient_Orders in search result. Available fields: ${fields}`
                     );
                 }
                 console.log("Using recordId:", recordId, "(type:", typeof recordId, ")");
@@ -975,7 +975,7 @@
                     status,
                     location: record.Clinic_Setup_and_Results_Clinic || "Unknown",
                     organization: record.School_Group_Community_S_G_C || "Unknown",
-                    name: record.Patient_Orders_FullName || "Unknown",
+                    name: record.Patient_Orders_FirstandLast || "Unknown",
                     timestamp: new Date()
                 };
 
