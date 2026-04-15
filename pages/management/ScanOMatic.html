@@ -930,7 +930,13 @@
 
                 const record = searchData.Result[0];
 
-                // ----- 2. UPDATE the record by SP_Number directly (no Frame_Scan needed) -----
+                // Caspio's system primary key — needed for the update
+                const recordId = record.PK_ID;
+                if (!recordId) {
+                    throw new Error("Search result missing PK_ID — cannot update");
+                }
+
+                // ----- 2. UPDATE the record by Caspio's PK_ID -----
                 const updateRes = await fetch(WORKER_URL, {
                     method: "POST",
                     headers: {
@@ -939,7 +945,7 @@
                     },
                     body: JSON.stringify({
                         action: "update_order",
-                        spNumber: spNumber,
+                        recordId: recordId,
                         status: status,
                         trackingNumber: trackingNumber
                     })
