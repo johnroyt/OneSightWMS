@@ -930,11 +930,22 @@
 
                 const record = searchData.Result[0];
 
-                // Caspio's system primary key — needed for the update
-                const recordId = record.PK_ID;
-                if (!recordId) {
-                    throw new Error("Search result missing PK_ID — cannot update");
+                // DIAGNOSTIC: log what the search returned so we can identify the PK field
+                console.log("=== Caspio search result ===");
+                console.log("Full response:", searchData);
+                console.log("First record:", record);
+                console.log("Available fields:", Object.keys(record));
+
+                // Try common PK field names — Caspio tables vary in what they expose
+                const recordId = record.PK_ID ?? record.Frame_Scan ?? record.ID ?? record.PatientOrderID;
+                if (recordId === undefined || recordId === null || recordId === "") {
+                    const fields = Object.keys(record).join(", ");
+                    throw new Error(
+                        `No PK field found in search result. Available fields: ${fields}. ` +
+                        `Tell me which one is the primary key.`
+                    );
                 }
+                console.log("Using recordId:", recordId, "(type:", typeof recordId, ")");
 
                 // ----- 2. UPDATE the record by Caspio's PK_ID -----
                 const updateRes = await fetch(WORKER_URL, {
@@ -959,14 +970,13 @@
                 }
 
                 // ----- 3. ADD TO UI AND PLAY SOUND -----
-                // NOTE: Adjust these field names to match your Caspio Patient_Orders columns
                 const scannedItem = {
                     spNumber,
                     trackingNumber,
                     status,
-                    location: record.Location || "Unknown",
-                    organization: record.Organization || "Unknown",
-                    name: `${record.First_Name || ""} ${record.Last_Initial || ""}`.trim() || "Unknown",
+                    location: record.Clinic || "Unknown",
+                    organization: record.School_Group || "Unknown",
+                    name: record.FullName || "Unknown",
                     timestamp: new Date()
                 };
 
@@ -1001,8 +1011,8 @@
                 <div><strong>SP Number:</strong> ${spNumber}</div>
                 <div><strong>Name:</strong> ${name}</div>
                 <div><strong>Status:</strong> ${status}</div>
+                <div><strong>Clinic:</strong> ${location}</div>
                 <div><strong>Organization:</strong> ${organization}</div>
-                <div><strong>Location:</strong> ${location}</div>
                 ${trackingNumber ? `<div><strong>Tracking:</strong> ${trackingNumber}</div>` : ''}
                 <div class="time"><strong>Scanned At:</strong> ${timestamp.toLocaleTimeString()}</div>
             `;
