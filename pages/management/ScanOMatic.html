@@ -1042,8 +1042,18 @@
 
         // Print a 4 x 2.25 Nametag with QR Code for Dymo LabelWriter
         function printNameTag(name, spNumber, location, organization) {
-            // Resolve logo URL relative to the current page so it works locally and in prod
-            const logoUrl = new URL('../../images/OSELFLogo.png', window.location.href).href;
+            // Resolve logo URL relative to the current page (case matters on Linux/GitHub Pages)
+            const logoUrl = new URL('../../images/OSELFlogo.png', window.location.href).href;
+
+            // Dynamically size the name font based on length so long names still fit.
+            // Info area is ~2.4in wide x ~1.3in tall, so we can wrap up to 2 lines.
+            const nameLen = (name || '').length;
+            let nameFontSize;
+            if (nameLen <= 15)      nameFontSize = '28px';
+            else if (nameLen <= 20) nameFontSize = '24px';
+            else if (nameLen <= 26) nameFontSize = '20px';
+            else if (nameLen <= 34) nameFontSize = '17px';
+            else                    nameFontSize = '14px';
 
             var iframe = document.createElement('iframe');
             iframe.style.position = 'fixed';
@@ -1110,16 +1120,21 @@
                   flex-grow: 1;
                   overflow: hidden;
                   padding-right: 0.1in;
+                  min-width: 0; /* allow flex child to shrink below content size */
                 }
                 h1 {
                   margin: 0 0 5px 0;
-                  font-size: 28px;
-                  line-height: 1;
+                  font-size: ${nameFontSize};
+                  line-height: 1.15;
                   font-weight: 600;
                   color: #000;
-                  white-space: nowrap;
+                  /* Allow wrapping up to 2 lines, then truncate */
+                  display: -webkit-box;
+                  -webkit-line-clamp: 2;
+                  -webkit-box-orient: vertical;
                   overflow: hidden;
-                  text-overflow: ellipsis;
+                  word-wrap: break-word;
+                  overflow-wrap: break-word;
                 }
                 .details {
                   font-size: 11px;
