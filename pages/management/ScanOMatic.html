@@ -927,13 +927,12 @@ function processBarcodeInput(barcode) {
             }
         }
 // --- 2. SEARCH CASPIO FOR THE SP NUMBER ---
-                const searchRes = await fetch(workerUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "X-App-Access-Key": appAccessKey },
-                    body: JSON.stringify({ action: "search_sp", spNumber: spNumber })
-                });
-
-                const searchData = await searchRes.json();
+                if (!searchRes.ok) {
+                    const caspioMsg = searchData.caspioResponse?.Message
+                        || JSON.stringify(searchData.caspioResponse || {});
+                    console.error("Worker search error:", searchData);
+                    throw new Error(`[${searchData.stage}] ${searchData.message} — Caspio: ${caspioMsg}`);
+                }
 
                 if (!searchData.Result || searchData.Result.length === 0) {
                     throw new Error("No order found with this SP number");
@@ -951,7 +950,7 @@ function processBarcodeInput(barcode) {
                     headers: { "Content-Type": "application/json", "X-App-Access-Key": appAccessKey },
                     body: JSON.stringify({
                         action: "update_order",
-                        recordId: recordId,
+                        spNumber: spNumber,
                         status: status,
                         trackingNumber: trackingNumber
                     })
@@ -960,8 +959,12 @@ function processBarcodeInput(barcode) {
                 const updateData = await updateRes.json();
 
                 if (!updateRes.ok) {
-                    // This will now show the EXACT reason from Caspio (e.g. "Field Job_Status not found")
-                    throw new Error(updateData.details || "Update failed");
+                    const caspioMsg = updateData.caspioResponse?.Message
+                        || updateData.caspioResponse?.error_description
+                        || JSON.stringify(updateData.caspioResponse || {});
+                    const fullMsg = `[${updateData.stage}] ${updateData.message} — Caspio: ${caspioMsg}`;
+                    console.error("Worker error response:", updateData);
+                    throw new Error(fullMsg);
                 }
 
        // Add to scanned list
