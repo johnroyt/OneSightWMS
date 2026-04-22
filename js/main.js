@@ -274,7 +274,8 @@ function navigateTo(page) {
 // Function to generate sidebar HTML
 function generateSidebar(activePage) {
     return `
-        <aside class="sidebar">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+        <aside class="sidebar" id="main-sidebar">
             <div class="logo">
                 <div class="logo-icon"></div>
                 <span class="logo-text">WMS</span>
@@ -357,6 +358,7 @@ function generateHeader(pageTitle, additionalButtons = '') {
     return `
         <header class="header">
             <div class="header-left">
+                <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">&#9776;</button>
                 <h1 class="page-title">${pageTitle}</h1>
             </div>
             <div class="header-right">
@@ -416,6 +418,21 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeModalTriggers();
 });
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const opening = !sidebar.classList.contains('open');
+    sidebar.classList.toggle('open', opening);
+    overlay.classList.toggle('visible', opening);
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('visible');
+}
 
 /**
  * Initialize page with standard sidebar, header, and navigation
