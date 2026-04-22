@@ -808,15 +808,7 @@
                     e.preventDefault();
                     updatePrintButtonVisibility();
                     document.getElementById('sp-number-input').focus();
-                    return;
                 }
-
-                if (isInSPField && e.key === 'Enter') {
-                    e.preventDefault();
-                    submitSPNumber();
-                    return;
-                }
-
                 return;
             }
 
