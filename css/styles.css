@@ -99,7 +99,8 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
 /* ---------- Layout shell -------------------------------------------------- */
 .app-container {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;          /* constrain to viewport — no page-level growth */
+    overflow: hidden;       /* any overflow is handled by inner scroll containers */
 }
 
 .sidebar {
@@ -143,7 +144,7 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     font-weight: 700; font-size: 14px; letter-spacing: 0.01em; color: #fff;
 }
 .logo .logo-wordmark .sub {
-    font-size: 10.5px; color: var(--c-on-dark-2); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px;
+    font-size: 8.5px; color: var(--c-on-dark-2); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px;
 }
 .logo .logo-img { display: block; max-width: 200px; height: auto; }
 .logo.logo-mode-image .logo-mark, .logo.logo-mode-image .logo-wordmark { display: none; }
@@ -204,11 +205,14 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     display: flex;
     flex-direction: column;
     min-width: 0;
+    min-height: 0;          /* allow flex child to constrain to parent height */
+    overflow: hidden;       /* contain children — they manage their own scroll */
 }
 .main-content {
     flex: 1;
     padding: 24px 28px 40px;
     overflow-y: auto;
+    min-height: 0;          /* allow flex shrinking */
 }
 
 .header {
@@ -378,7 +382,7 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
 .full-width-section {
     grid-column: 1 / -1;
     margin-top: 18px;
-    overflow: hidden;
+    overflow: hidden;        /* clips table corners to the card's rounded bottom */
 }
 
 .card-header {
@@ -732,13 +736,137 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
 }
 .info-callout svg { width: 16px; height: 16px; stroke-width: 1.8; flex: none; margin-top: 1px; color: var(--c-primary); }
 
-/* ---------- Datapage placeholders --------------------------------------- */
+/* ---------- Datapage container (host for Caspio embeds) ---------------- */
 .datapage-container,
 .tab-datapage-container {
     min-height: 200px;
     background: var(--c-surface);
-    color: var(--c-ink-3);
+    color: var(--c-ink);
     border-radius: var(--radius);
+    padding: 18px;
+    overflow: auto;                     /* both axes; scrollbars sit on this container */
+}
+
+/* When the datapage container sits inside a section, card, or tab body, that
+   wrapper already provides the visual frame and padding. Strip the inner
+   padding so the table (and its scrollbars) reach the section edges. */
+.full-width-section > .datapage-container,
+.full-width-section > .tab-datapage-container,
+.card > .datapage-container,
+.card > .tab-datapage-container,
+.inventory-tab-content > .datapage-container,
+.inventory-tab-content > .tab-datapage-container,
+.tab-content > .datapage-container,
+.tab-content > .tab-datapage-container {
+    padding: 0 !important;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    min-height: 0;          /* allow flex children to shrink */
+}
+
+/* When a tab body contains a datapage, kill the tab's own padding too */
+.inventory-tab-content:has(> .tab-datapage-container),
+.inventory-tab-content:has(> .datapage-container),
+.tab-content:has(> .tab-datapage-container),
+.tab-content:has(> .datapage-container) {
+    padding: 0 !important;
+}
+
+/* =========================================================================
+   Page-stretching layout — when main-content holds a datapage, switch to
+   flex column so the section + datapage grow to fill the remaining viewport.
+   This puts the bottom and right scrollbars tight against the viewport edges
+   regardless of how tall or wide the embedded table is.
+   ========================================================================= */
+
+/* Switch main-content into flex-column mode whenever any datapage is present.
+   Splitting the :has() into two rules avoids any browser quirks with comma-
+   separated selectors inside :has(). */
+.main-content:has(.datapage-container),
+.main-content:has(.tab-datapage-container) {
+    display: flex !important;
+    flex-direction: column !important;
+    padding-bottom: 12px !important;     /* small breathing room at bottom */
+    overflow: hidden !important;          /* delegate scroll to the datapage */
+}
+
+/* Section with a datapage grows to fill remaining height */
+.main-content:has(.datapage-container) > .full-width-section,
+.main-content:has(.tab-datapage-container) > .full-width-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
+/* Card-header / tab bars / toolbars don't grow */
+.full-width-section > .card-header,
+.full-width-section > .inventory-tabs,
+.full-width-section > .tabs,
+.inventory-tab-content > .sessions-toolbar,
+.inventory-tab-content > .info-callout,
+.tab-content > .sessions-toolbar,
+.tab-content > .info-callout {
+    flex: none;
+}
+
+/* Datapage container fills the section */
+.full-width-section > .datapage-container,
+.full-width-section > .tab-datapage-container {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* For tabbed layouts: only the active tab content stretches */
+.full-width-section > .inventory-tab-content,
+.full-width-section > .tab-content {
+    flex: none;
+}
+.full-width-section > .inventory-tab-content.active,
+.full-width-section > .tab-content.active {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.inventory-tab-content.active > .datapage-container,
+.inventory-tab-content.active > .tab-datapage-container,
+.tab-content.active > .datapage-container,
+.tab-content.active > .tab-datapage-container {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Always-visible scrollbars on datapage containers so users discover them
+   without needing to scroll first. */
+.datapage-container::-webkit-scrollbar,
+.tab-datapage-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+.datapage-container::-webkit-scrollbar-track,
+.tab-datapage-container::-webkit-scrollbar-track {
+    background: var(--c-surface-2);
+}
+.datapage-container::-webkit-scrollbar-thumb,
+.tab-datapage-container::-webkit-scrollbar-thumb {
+    background: #C9C2B0;
+    border-radius: 6px;
+    border: 2px solid var(--c-surface-2);
+}
+.datapage-container::-webkit-scrollbar-thumb:hover,
+.tab-datapage-container::-webkit-scrollbar-thumb:hover {
+    background: var(--c-ink-4);
+}
+.datapage-container::-webkit-scrollbar-corner,
+.tab-datapage-container::-webkit-scrollbar-corner {
+    background: var(--c-surface-2);
+}
+.datapage-container,
+.tab-datapage-container {
+    scrollbar-color: #C9C2B0 var(--c-surface-2);
+    scrollbar-width: thin;
 }
 
 /* For dashboard + tabs we let real content show; only wrap empty stub */
@@ -960,3 +1088,1160 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
 .main-content::-webkit-scrollbar { width: 10px; height: 10px; }
 .main-content::-webkit-scrollbar-thumb { background: #DFD8C7; border-radius: 5px; border: 2px solid var(--c-bg); }
 .main-content::-webkit-scrollbar-track { background: transparent; }
+
+/* =========================================================================
+   CASPIO OVERRIDES
+   --------------------------------------------------------------------------
+   Caspio regenerates a baseline stylesheet whenever the Style is saved, and
+   compiles selectors at high specificity (article.STxxx .cbFormTextField).
+   All overrides below are scoped under
+   `:is(.datapage-container, .tab-datapage-container)` so they only touch
+   embedded Caspio output, and use `!important` where Caspio's per-Style or
+   inline rules would otherwise win.
+   --------------------------------------------------------------------------
+   Recommendation: in Caspio's Style editor, set ALL responsive (_tablet,
+   _mobile) blocks to empty `{}` so the responsive font-size/height/width
+   resets aren't even emitted. The rules below assume that, but still
+   include resets as a safety net.
+   ========================================================================= */
+
+/* ---------- Reset Caspio's table-based scaffolding ---------------------- */
+:is(.datapage-container, .tab-datapage-container) *,
+:is(.datapage-container, .tab-datapage-container) *::before,
+:is(.datapage-container, .tab-datapage-container) *::after {
+    box-sizing: border-box !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) table { border-collapse: separate; border-spacing: 0; }
+:is(.datapage-container, .tab-datapage-container) .cbFormTable,
+:is(.datapage-container, .tab-datapage-container) .cbFormOuterTable,
+:is(.datapage-container, .tab-datapage-container) .cbFormNestedTable,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetOuterTable,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTable,
+:is(.datapage-container, .tab-datapage-container) .cbFormAuthTable {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormFieldCell,
+:is(.datapage-container, .tab-datapage-container) .cbFormDataCell,
+:is(.datapage-container, .tab-datapage-container) .cbFormDataCellNumberDate,
+:is(.datapage-container, .tab-datapage-container) .cbFormLabelCell {
+    padding: 6px 8px !important;
+    vertical-align: middle !important;
+}
+
+/* ---------- Typography baseline ---------------------------------------- */
+:is(.datapage-container, .tab-datapage-container),
+:is(.datapage-container, .tab-datapage-container) td,
+:is(.datapage-container, .tab-datapage-container) th,
+:is(.datapage-container, .tab-datapage-container) span,
+:is(.datapage-container, .tab-datapage-container) div,
+:is(.datapage-container, .tab-datapage-container) p,
+:is(.datapage-container, .tab-datapage-container) li {
+    font-family: var(--font-sans) !important;
+    color: var(--c-ink);
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbHTMLBlockContainer {
+    font-size: 13px !important;
+    color: var(--c-ink) !important;
+    font-family: var(--font-sans) !important;
+}
+
+/* ---------- Labels ------------------------------------------------------ */
+:is(.datapage-container, .tab-datapage-container) .cbFormLabel,
+:is(.datapage-container, .tab-datapage-container) .cbFormLabelRequired,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetLabel,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListViewDataLabel,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarLabel,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarDataLabel {
+    font-family: var(--font-sans) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: var(--c-ink-2) !important;
+    letter-spacing: 0 !important;
+    margin: 0 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormLabelRequired,
+:is(.datapage-container, .tab-datapage-container) .cbFormRequiredMarker {
+    color: var(--c-ink-2) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormRequiredMarker {
+    color: var(--c-danger) !important;
+    margin-left: 2px !important;
+    font-size: 12px !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormHintLabel,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetHintLabel,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListViewHintLabel,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarHintLabel {
+    color: var(--c-ink-3) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormHintLabel:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetHintLabel:hover {
+    color: var(--c-primary) !important;
+    cursor: help;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormHintTipText,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetHintTipText {
+    font-size: 12px !important;
+    color: var(--c-ink-2) !important;
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: var(--radius) !important;
+    padding: 6px 10px !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+/* ---------- Form fields (inputs / selects / textareas) ----------------- */
+:is(.datapage-container, .tab-datapage-container) .cbFormTextField,
+:is(.datapage-container, .tab-datapage-container) .cbFormTextArea,
+:is(.datapage-container, .tab-datapage-container) .cbFormSelect,
+:is(.datapage-container, .tab-datapage-container) .cbFormPassword,
+:is(.datapage-container, .tab-datapage-container) .cbFormFile,
+:is(.datapage-container, .tab-datapage-container) .cbFormMultiSelectField,
+:is(.datapage-container, .tab-datapage-container) .cbFormJumpToTextField,
+:is(.datapage-container, .tab-datapage-container) .cbFormNavigationDDown,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTextField,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTextArea,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSelect,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetFile,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetMultiSelectField,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetJumpToTextField,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetNavigationDDown,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetRecordPerPageControl {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    color: var(--c-ink) !important;
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: var(--radius) !important;
+    padding: 7px 10px !important;
+    height: auto !important;
+    min-height: 34px !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    transition: border-color .12s ease, box-shadow .12s ease !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormTextArea,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTextArea {
+    min-height: 80px !important;
+    line-height: 1.5 !important;
+    max-width: 520px !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormTextField:focus,
+:is(.datapage-container, .tab-datapage-container) .cbFormTextArea:focus,
+:is(.datapage-container, .tab-datapage-container) .cbFormSelect:focus,
+:is(.datapage-container, .tab-datapage-container) .cbFormPassword:focus,
+:is(.datapage-container, .tab-datapage-container) .cbFormMultiSelectField:focus,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTextField:focus,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTextArea:focus,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSelect:focus {
+    border-color: var(--c-primary) !important;
+    box-shadow: 0 0 0 3px var(--c-primary-soft) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormTextField::placeholder,
+:is(.datapage-container, .tab-datapage-container) .cbFormTextArea::placeholder,
+:is(.datapage-container, .tab-datapage-container) .cbFormPassword::placeholder {
+    color: var(--c-ink-4) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormData,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalculatedField,
+:is(.datapage-container, .tab-datapage-container) .cbFormDataLink {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    color: var(--c-ink) !important;
+    line-height: 1.5 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormDataLink {
+    color: var(--c-primary) !important;
+    text-decoration: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormDataLink:hover {
+    color: var(--c-primary-ink) !important;
+    text-decoration: underline !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormMultiSelectText,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetMultiSelectText {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    color: var(--c-ink) !important;
+    padding: 4px 8px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormMultiSelectText_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetMultiSelectText_hover {
+    background: var(--c-primary-soft) !important;
+    color: var(--c-primary-ink) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) input[type="radio"],
+:is(.datapage-container, .tab-datapage-container) input[type="checkbox"] {
+    accent-color: var(--c-primary);
+    width: 15px;
+    height: 15px;
+    margin: 0 6px 0 0;
+    vertical-align: middle;
+}
+
+/* Errors */
+:is(.datapage-container, .tab-datapage-container) .cbFormLabelError,
+:is(.datapage-container, .tab-datapage-container) .cbFormError,
+:is(.datapage-container, .tab-datapage-container) .cbFormErrorMarker,
+:is(.datapage-container, .tab-datapage-container) .cbFormCommonError,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetError,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCommonError,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetErrorMarker {
+    color: var(--c-danger) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCommonError,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCommonError {
+    background: var(--c-danger-soft) !important;
+    border: 1px solid #E8C3C0 !important;
+    border-radius: var(--radius) !important;
+    padding: 8px 12px !important;
+    margin-bottom: 10px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormErrorField {
+    border-color: var(--c-danger) !important;
+    box-shadow: 0 0 0 3px var(--c-danger-soft) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbConfirmationMessages,
+:is(.datapage-container, .tab-datapage-container) .cbFormChargeOffConfirmation {
+    background: var(--c-success-soft) !important;
+    color: var(--c-success) !important;
+    border: 1px solid #BFE0CD !important;
+    border-radius: var(--radius) !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbSystemMessageContainer,
+:is(.datapage-container, .tab-datapage-container) .cbSystemMessageContainerContent {
+    font-size: 13px !important;
+    color: var(--c-ink) !important;
+    background: var(--c-info-soft) !important;
+    border: 1px solid #C5DCE3 !important;
+    border-radius: var(--radius) !important;
+    padding: 10px 14px !important;
+}
+
+/* Password strength */
+:is(.datapage-container, .tab-datapage-container) .cbPasswordStrength {
+    font-size: 11.5px !important;
+    color: var(--c-ink-3) !important;
+    margin-top: 4px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbPasswordStrengthBarContainer {
+    height: 4px !important;
+    background: var(--c-line) !important;
+    border-radius: 2px !important;
+    overflow: hidden !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbPasswordStrengthBar { border-radius: 2px !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordBarWeak   { background: var(--c-danger)  !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordBarFair   { background: var(--c-warning) !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordBarGood   { background: var(--c-info)    !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordBarStrong { background: var(--c-success) !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordTextWeak   { color: var(--c-danger)  !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordTextFair   { color: var(--c-warning) !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordTextGood   { color: var(--c-info)    !important; }
+:is(.datapage-container, .tab-datapage-container) .cbPasswordTextStrong { color: var(--c-success) !important; }
+
+/* ---------- Auto-complete dropdowns ------------------------------------ */
+:is(.datapage-container, .tab-datapage-container) .cbFormAutoCompleteList,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAutoCompleteList,
+:is(.datapage-container, .tab-datapage-container) .cbBulkFormAutoCompleteList {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow) !important;
+    padding: 4px 0 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormAutoCompleteOption,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAutoCompleteOption,
+:is(.datapage-container, .tab-datapage-container) .cbBulkFormAutoCompleteOption {
+    padding: 6px 10px !important;
+    background: transparent !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormAutoCompleteOption_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAutoCompleteOption_hover,
+:is(.datapage-container, .tab-datapage-container) .cbBulkFormAutoCompleteOption_hover {
+    background: var(--c-primary-soft) !important;
+    cursor: pointer !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormAutoCompleteOptionText,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAutoCompleteOptionText,
+:is(.datapage-container, .tab-datapage-container) .cbBulkFormAutoCompleteOptionText {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: var(--c-ink) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormAutoCompleteOptionRemainder,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAutoCompleteOptionRemainder,
+:is(.datapage-container, .tab-datapage-container) .cbBulkFormAutoCompleteOptionRemainder {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--c-ink) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormAutoCompleteOptionText_hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormAutoCompleteOptionRemainder_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAutoCompleteOptionText_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAutoCompleteOptionRemainder_hover {
+    color: var(--c-primary-ink) !important;
+}
+
+/* ---------- Buttons ----------------------------------------------------- */
+:is(.datapage-container, .tab-datapage-container) .cbSubmitButton,
+:is(.datapage-container, .tab-datapage-container) .cbUpdateButton,
+:is(.datapage-container, .tab-datapage-container) .cbSearchButton,
+:is(.datapage-container, .tab-datapage-container) .cbLoginButton,
+:is(.datapage-container, .tab-datapage-container) .cbPasswordResetButton,
+:is(.datapage-container, .tab-datapage-container) .cbPasswordRecoveryButton,
+:is(.datapage-container, .tab-datapage-container) .cbInlineAddFormButton,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAddButton {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    color: #fff !important;
+    background: var(--c-primary) !important;
+    border: 1px solid var(--c-primary) !important;
+    border-radius: var(--radius) !important;
+    padding: 8px 14px !important;
+    height: auto !important;
+    min-height: 34px !important;
+    width: auto !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    transition: background .12s ease, border-color .12s ease !important;
+    box-shadow: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbSubmitButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbUpdateButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbSearchButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbLoginButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbPasswordResetButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbPasswordRecoveryButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbInlineAddFormButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetAddButton:hover {
+    background: var(--c-primary-ink) !important;
+    border-color: var(--c-primary-ink) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbBackButton,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetModifyButton,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCancelButton {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    color: var(--c-ink) !important;
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: var(--radius) !important;
+    padding: 8px 14px !important;
+    height: auto !important;
+    min-height: 34px !important;
+    width: auto !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    transition: background .12s ease, border-color .12s ease !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbBackButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetModifyButton:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCancelButton:hover {
+    background: var(--c-bg) !important;
+    border-color: #D6CDB8 !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbDeleteButton {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    color: var(--c-danger) !important;
+    background: var(--c-surface) !important;
+    border: 1px solid #E8C3C0 !important;
+    border-radius: var(--radius) !important;
+    padding: 8px 14px !important;
+    height: auto !important;
+    min-height: 34px !important;
+    width: auto !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    text-transform: none !important;
+    transition: background .12s ease, color .12s ease, border-color .12s ease !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbDeleteButton:hover {
+    background: var(--c-danger) !important;
+    color: #fff !important;
+    border-color: var(--c-danger) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbSubmitButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbUpdateButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbSearchButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbLoginButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbBackButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbDeleteButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbInlineAddFormButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbPasswordResetButtonContainer,
+:is(.datapage-container, .tab-datapage-container) .cbPasswordRecoveryButtonContainer {
+    padding: 4px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormActionsContainer {
+    padding: 12px 0 4px !important;
+}
+
+@media (max-width: 768px) {
+    :is(.datapage-container, .tab-datapage-container) .cbSubmitButton,
+    :is(.datapage-container, .tab-datapage-container) .cbUpdateButton,
+    :is(.datapage-container, .tab-datapage-container) .cbSearchButton,
+    :is(.datapage-container, .tab-datapage-container) .cbLoginButton,
+    :is(.datapage-container, .tab-datapage-container) .cbInlineAddFormButton,
+    :is(.datapage-container, .tab-datapage-container) .cbBackButton,
+    :is(.datapage-container, .tab-datapage-container) .cbDeleteButton,
+    :is(.datapage-container, .tab-datapage-container) .cbResultSetAddButton,
+    :is(.datapage-container, .tab-datapage-container) .cbResultSetModifyButton,
+    :is(.datapage-container, .tab-datapage-container) .cbResultSetCancelButton,
+    :is(.datapage-container, .tab-datapage-container) .cbPasswordResetButton,
+    :is(.datapage-container, .tab-datapage-container) .cbPasswordRecoveryButton {
+        width: auto !important;
+        min-width: 80px !important;
+    }
+}
+
+/* ---------- Action / utility links ------------------------------------- */
+:is(.datapage-container, .tab-datapage-container) .cbResultSetActionsLinks,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetNavigationLinks,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarNavigationLinks,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSearchAgainLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetDownloadLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetExpandLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetLabelLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridEditActionLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetBulkEditActionLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetBulkDeleteActionLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetBackToPivotActionLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListGallerySelectAllActionLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetShowHideGroupText,
+:is(.datapage-container, .tab-datapage-container) .cbFormSearchAgainLink,
+:is(.datapage-container, .tab-datapage-container) .cbFormDownloadDetailsLink,
+:is(.datapage-container, .tab-datapage-container) .cbFormBackToReportActionLink,
+:is(.datapage-container, .tab-datapage-container) .cbFormBackToPivotActionLink,
+:is(.datapage-container, .tab-datapage-container) .cbFormExpandLink,
+:is(.datapage-container, .tab-datapage-container) .cbFormNavigationLinks,
+:is(.datapage-container, .tab-datapage-container) .cbGenerateTemplatesLink,
+:is(.datapage-container, .tab-datapage-container) .cbResultGenerateTemplatesLink {
+    color: var(--c-primary) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    line-height: 1.4 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetActionsLinks:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetNavigationLinks:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarNavigationLinks:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSearchAgainLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetDownloadLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetExpandLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridEditActionLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetBulkEditActionLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetBulkDeleteActionLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetShowHideGroupText:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormSearchAgainLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormDownloadDetailsLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormBackToReportActionLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormBackToPivotActionLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormExpandLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormNavigationLinks:hover,
+:is(.datapage-container, .tab-datapage-container) .cbGenerateTemplatesLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultGenerateTemplatesLink:hover {
+    color: var(--c-primary-ink) !important;
+    text-decoration: underline !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridActionLinkDisabled {
+    color: var(--c-ink-4) !important;
+    cursor: not-allowed !important;
+}
+
+/* ---------- Result set table (older Caspio renderer) ------------------- */
+/* No table border — the section card already provides one. */
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    font-size: 12.5px !important;
+    background: var(--c-surface) !important;
+    border: none !important;
+}
+
+/* Sticky header row (older renderer) */
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTableHeader,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetHeaderCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetHeaderCellNumberDate,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridTableHeader,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridHeaderCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridHeaderCellNumberDate,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetHeaderCheckBoxCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridHeaderCheckBoxCell {
+    background: var(--c-surface-2) !important;
+    color: var(--c-ink-3) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    padding: 10px 14px !important;
+    text-align: left !important;
+    border: none !important;
+    border-bottom: 1px solid var(--c-line) !important;
+    white-space: nowrap !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetHeaderCellNumberDate,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridHeaderCellNumberDate {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTableHeader_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridTableHeader_hover {
+    background: var(--c-bg) !important;
+    color: var(--c-ink) !important;
+    cursor: pointer !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSortText {
+    color: var(--c-primary) !important;
+    margin-left: 4px !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbResultSetData,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetDataLink {
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    color: var(--c-ink) !important;
+    line-height: 1.5 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetDataLink {
+    color: var(--c-primary) !important;
+    text-decoration: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetDataLink:hover {
+    color: var(--c-primary-ink) !important;
+    text-decoration: underline !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTableCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTableCellNumberDate,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridDataCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridDataCellNumberDate,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCheckBoxCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSelectRecordCheckBoxCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridCheckBoxCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetActionCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridActionCell {
+    padding: 10px 14px !important;
+    border: none !important;
+    border-bottom: 1px solid var(--c-line-2) !important;
+    vertical-align: middle !important;
+    color: var(--c-ink) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTableCellNumberDate,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridDataCellNumberDate {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbResultSetEvenRow,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetOddRow,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridEvenRow,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridOddRow {
+    background: transparent !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetEvenRow_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetOddRow_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridEvenRow_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridOddRow_hover {
+    background: var(--c-surface-2) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetDataRow_selected,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridDataRow_selected {
+    background: var(--c-primary-soft) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTable tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridSeletedDataCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridSeletedDataCellNumberDate {
+    background: var(--c-primary-soft) !important;
+    box-shadow: inset 0 0 0 1px var(--c-primary) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridErrorDataCell {
+    background: var(--c-danger-soft) !important;
+    box-shadow: inset 0 0 0 1px var(--c-danger) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridNonEditableColumn,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGridNonEditableColumnNumberDate {
+    background: var(--c-bg) !important;
+    color: var(--c-ink-3) !important;
+}
+
+/* ---------- Group rows (Group 1-4) ------------------------------------- */
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup1Row,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup2Row,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup3Row,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup4Row {
+    background: var(--c-bg) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup1Label,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup2Label,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup3Label,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup4Label,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup1Data,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup2Data,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup3Data,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup4Data,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup1SubTotal,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup2SubTotal,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup3SubTotal,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup4SubTotal,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCollapsedSubTotalLabel {
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    color: var(--c-ink) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup1LabelCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup2LabelCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup3LabelCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup4LabelCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup1SubTotalCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup2SubTotalCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup3SubTotalCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup4SubTotalCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup1DataCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup2DataCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup3DataCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetGroup4DataCell {
+    padding: 10px 14px !important;
+    border-bottom: 1px solid var(--c-line) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTotalsRow {
+    background: var(--c-surface-2) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTotalsLabel,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTotalsData {
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--c-ink) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTotalsLabelCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTotalsDataCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTotalsDataCellNumberDate {
+    padding: 12px 14px !important;
+    border-top: 2px solid var(--c-line) !important;
+    border-bottom: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTotalsDataCellNumberDate {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+/* ---------- Pagination / record info ----------------------------------- */
+:is(.datapage-container, .tab-datapage-container) .cbResultSetRecordMessage,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetNavigationMessages,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetRecordPerPageMessage,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetRecordIndex,
+:is(.datapage-container, .tab-datapage-container) .cbFormNavigationMessage {
+    font-family: var(--font-sans) !important;
+    font-size: 12px !important;
+    color: var(--c-ink-3) !important;
+    font-weight: 500 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetNavigationTable {
+    margin: 12px 0 !important;
+    width: 100% !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetActionsContainer,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSearchAgainContainer,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetSortContainer {
+    padding: 8px 14px !important;
+}
+
+/* ---------- List / gallery view ---------------------------------------- */
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListView {
+    width: 100% !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListViewRow,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListViewTableEvenCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListViewTableOddCell {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: var(--radius) !important;
+    padding: 14px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListViewTableEvenCell_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetListViewTableOddCell_hover {
+    background: var(--c-surface-2) !important;
+    border-color: var(--c-primary) !important;
+}
+
+/* ---------- Calendar (report) ------------------------------------------ */
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendar {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: var(--radius-lg) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarCaption {
+    font-family: var(--font-sans) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--c-ink) !important;
+    padding: 10px 14px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarHeader,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarHeaderCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarHeaderCellDaily {
+    background: var(--c-surface-2) !important;
+    color: var(--c-ink-3) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    padding: 8px 10px !important;
+    border-bottom: 1px solid var(--c-line) !important;
+    text-align: center !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarOddCell,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarEvenCell {
+    padding: 10px 8px !important;
+    border: 1px solid var(--c-line-2) !important;
+    background: var(--c-surface) !important;
+    vertical-align: top !important;
+    min-height: 80px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarOddCell_hover,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarEvenCell_hover {
+    background: var(--c-surface-2) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarTableNowCell {
+    padding: 10px 8px !important;
+    background: var(--c-primary-soft) !important;
+    border: 1px solid var(--c-primary) !important;
+    vertical-align: top !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarField {
+    font-family: var(--font-sans) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--c-ink) !important;
+    text-align: left !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarFieldInactiveDate {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    color: var(--c-ink-4) !important;
+    text-align: left !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarFieldActiveDayName,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetCalendarFieldInactiveDayName {
+    display: none !important;
+}
+
+/* ---------- Date picker (form calendar) -------------------------------- */
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendar,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerNavBar {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow) !important;
+    padding: 8px !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerNavBarItem,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerMonthItem,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerWeekDayItem,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerWeekDayContainer {
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    color: var(--c-ink-2) !important;
+    padding: 4px 8px !important;
+    border-radius: var(--radius-sm) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerNavBarItem_hover {
+    background: var(--c-bg) !important;
+    cursor: pointer !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerWeekDayItem,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerWeekDayContainer {
+    color: var(--c-ink-4) !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    font-weight: 600 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerDate,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerMonthDay {
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    min-width: 30px !important;
+    color: var(--c-ink) !important;
+    border-radius: var(--radius-sm) !important;
+    text-align: center !important;
+    cursor: pointer !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerDate:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerMonthDay:hover,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerMonthDay_hover {
+    background: var(--c-primary-soft) !important;
+    color: var(--c-primary-ink) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerSelectedDate {
+    background: var(--c-primary) !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerTodayDate {
+    border: 1px solid var(--c-primary) !important;
+    color: var(--c-primary) !important;
+    font-weight: 600 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerPrevMonthDay,
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerNextMonthDay {
+    color: var(--c-ink-4) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerTodaySection {
+    border-top: 1px solid var(--c-line) !important;
+    padding: 6px 8px !important;
+    margin-top: 4px !important;
+    text-align: center !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormCalendarPickerTodayLabel {
+    font-size: 12px !important;
+    color: var(--c-primary) !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+}
+
+/* ---------- Charts ----------------------------------------------------- */
+:is(.datapage-container, .tab-datapage-container) .cbChartContainer { padding: 8px !important; }
+:is(.datapage-container, .tab-datapage-container) .cbChartTitle {
+    font-family: var(--font-sans) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--c-ink) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbChartSubTitle,
+:is(.datapage-container, .tab-datapage-container) .cbChartLegendTitle,
+:is(.datapage-container, .tab-datapage-container) .cbChartCategoriesTitle,
+:is(.datapage-container, .tab-datapage-container) .cbChartValuesTitle {
+    font-family: var(--font-sans) !important;
+    font-size: 12px !important;
+    color: var(--c-ink-3) !important;
+    font-weight: 500 !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbChartLegend,
+:is(.datapage-container, .tab-datapage-container) .cbChartCategoriesLabel,
+:is(.datapage-container, .tab-datapage-container) .cbChartValuesLabel,
+:is(.datapage-container, .tab-datapage-container) .cbChartValuesData {
+    font-family: var(--font-sans) !important;
+    font-size: 11.5px !important;
+    color: var(--c-ink-2) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbHighChartsBarDataLabel {
+    fill: #fff !important;
+    color: #fff !important;
+    font-family: var(--font-sans) !important;
+}
+
+/* ---------- Auth (login screens) — basic harmonization ---------------- */
+:is(.datapage-container, .tab-datapage-container) .cbAuthSimpleProviderPrompt,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSimpleSignInWithPrompt,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSidebarProviderPrompt,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSidebarProviderInstruction {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    color: var(--c-ink-2) !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbAuthIconsProviderLink,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSimpleProviderLink,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSidebarProviderLink,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSidebarProviderActiveLink {
+    color: var(--c-primary) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    text-decoration: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbAuthIconsProviderLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSimpleProviderLink:hover,
+:is(.datapage-container, .tab-datapage-container) .cbAuthSidebarProviderLink:hover {
+    color: var(--c-primary-ink) !important;
+    text-decoration: underline !important;
+}
+:is(.datapage-container, .tab-datapage-container) .cbAuthSidebarProviderWarning {
+    color: var(--c-warning) !important;
+    background: var(--c-warning-soft) !important;
+    border: 1px solid #E8D5A8 !important;
+    border-radius: var(--radius) !important;
+    padding: 8px 12px !important;
+    font-size: 12.5px !important;
+}
+
+/* ---------- Mobile fine-tuning inside datapages ------------------------ */
+@media (max-width: 575px) {
+    :is(.datapage-container, .tab-datapage-container) .cbResultSetLabel,
+    :is(.datapage-container, .tab-datapage-container) .cbFormLabel,
+    :is(.datapage-container, .tab-datapage-container) .cbFormLabelRequired {
+        font-size: 12px !important;
+        margin-right: 4px !important;
+    }
+    :is(.datapage-container, .tab-datapage-container) .cbResultSetTable,
+    :is(.datapage-container, .tab-datapage-container) .cbFormTable {
+        font-size: 12.5px !important;
+    }
+    :is(.datapage-container, .tab-datapage-container) .cbResultSetActionsContainer {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+
+/* =========================================================================
+   NEWER CASPIO REPORT TABLES (data-cb-name renderer)
+   --------------------------------------------------------------------------
+   Some DataPages use data-cb-name="cbTable" with cbTable_<hash> classes
+   instead of the older cbResultSetTable family. Selectors below cover that
+   flavor. The thead is given a real opaque background and a high z-index so
+   the sticky header doesn't show data rows behind it during vertical scroll.
+   ========================================================================= */
+
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    font-size: 12.5px !important;
+    background: var(--c-surface) !important;
+    border: none !important;
+}
+
+/* thead is its own positioned layer with a backstop background */
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead {
+    position: relative;
+    z-index: 10;
+    background: var(--c-surface-2);
+}
+
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead th {
+    background: var(--c-surface-2) !important;
+    color: var(--c-ink-3) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    padding: 10px 14px !important;
+    text-align: left !important;
+    border: none !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+/* Sticky header bottom border travels with the header during scroll */
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead th::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--c-line);
+}
+
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead th[class*="NumberDate"],
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody td[class*="NumberDate"] {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+/* Sort link inside the header should inherit so it doesn't stand out as primary */
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead th a {
+    color: inherit !important;
+    text-decoration: none !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    text-transform: inherit !important;
+    letter-spacing: inherit !important;
+}
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead th a:hover {
+    color: var(--c-primary) !important;
+}
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead th[aria-sort="ascending"] a,
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] thead th[aria-sort="descending"] a {
+    color: var(--c-primary) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody td {
+    padding: 10px 14px !important;
+    border: none !important;
+    border-bottom: 1px solid var(--c-line-2) !important;
+    vertical-align: middle !important;
+    color: var(--c-ink) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    line-height: 1.5 !important;
+    background: var(--c-surface);   /* solid backstop so sticky header has nothing transparent to bleed through */
+}
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody td a {
+    color: var(--c-primary) !important;
+    text-decoration: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody td a:hover {
+    color: var(--c-primary-ink) !important;
+    text-decoration: underline !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody tr:hover td {
+    background: var(--c-surface-2) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody tr.Selected td,
+:is(.datapage-container, .tab-datapage-container) table[data-cb-name="cbTable"] tbody tr[aria-selected="true"] td {
+    background: var(--c-primary-soft) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) [class*="cbReportSpa"] a {
+    color: var(--c-primary) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 12.5px !important;
+    text-decoration: none !important;
+}
+:is(.datapage-container, .tab-datapage-container) [class*="cbReportSpa"] a:hover {
+    color: var(--c-primary-ink) !important;
+    text-decoration: underline !important;
+}
+
+/* =========================================================================
+   CASPIO SEARCH-FORM SIZING PATCH
+   --------------------------------------------------------------------------
+   Caspio sometimes lays out search forms in narrow table cells. Without a
+   real min-width text inputs collapse to a few pixels.
+   ========================================================================= */
+
+:is(.datapage-container, .tab-datapage-container) .cbFormTextField,
+:is(.datapage-container, .tab-datapage-container) .cbFormPassword,
+:is(.datapage-container, .tab-datapage-container) .cbFormFile,
+:is(.datapage-container, .tab-datapage-container) .cbFormJumpToTextField,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTextField,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetJumpToTextField {
+    min-width: 200px !important;
+    width: auto !important;
+    flex: 1 1 200px;
+}
+:is(.datapage-container, .tab-datapage-container) .cbFormTextArea,
+:is(.datapage-container, .tab-datapage-container) .cbResultSetTextArea {
+    min-width: 260px !important;
+    width: 100% !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) select.cbFormSelect[size="1"],
+:is(.datapage-container, .tab-datapage-container) select.cbResultSetSelect[size="1"] {
+    min-width: 90px !important;
+    max-width: 140px !important;
+    width: auto !important;
+    padding-right: 24px !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) select.cbFormSelect:not([size="1"]),
+:is(.datapage-container, .tab-datapage-container) select.cbResultSetSelect:not([size="1"]) {
+    min-width: 200px !important;
+    width: auto !important;
+}
+
+/* When edge-to-edge inside a card, give the search form some inner air */
+.full-width-section > :is(.datapage-container, .tab-datapage-container) .cbFormTable,
+.card > :is(.datapage-container, .tab-datapage-container) .cbFormTable,
+.inventory-tab-content > :is(.datapage-container, .tab-datapage-container) .cbFormTable,
+.tab-content > :is(.datapage-container, .tab-datapage-container) .cbFormTable {
+    padding: 14px 18px !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormFieldCell,
+:is(.datapage-container, .tab-datapage-container) .cbFormLabelCell,
+:is(.datapage-container, .tab-datapage-container) .cbFormDataCell {
+    padding: 6px 8px !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormFieldCell > * + * {
+    margin-left: 6px !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormFieldCell input[type="button"],
+:is(.datapage-container, .tab-datapage-container) .cbFormFieldCell input[type="image"],
+:is(.datapage-container, .tab-datapage-container) .cbFormFieldCell a[role="button"] {
+    background: var(--c-surface) !important;
+    color: var(--c-ink-2) !important;
+    border: 1px solid var(--c-line) !important;
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 6px 10px !important;
+    font-size: 12.5px !important;
+    border-radius: var(--radius) !important;
+}
+
+:is(.datapage-container, .tab-datapage-container) .cbFormTable,
+:is(.datapage-container, .tab-datapage-container) .cbFormTable tbody,
+:is(.datapage-container, .tab-datapage-container) .cbFormTable tr {
+    display: revert;
+}

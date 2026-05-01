@@ -267,12 +267,15 @@ function generateSidebar(activePage) {
     return `
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
         <aside class="sidebar" id="main-sidebar">
-            <div class="logo">
-                <div class="logo-mark">${icon('eye')}</div>
-                <div class="logo-wordmark">
-                    <span class="name">OneSight WMS</span>
-                    <span class="sub">Warehouse Mgmt</span>
-                </div>
+        <div class="logo">
+            <div class="logo-mark">
+                <img src="/images/wmslogo.jpg" alt="WMS Logo" style="max-width: 100%; height: auto; border-radius: 4px; display: block;" />
+            </div>
+            <div class="logo-wordmark">
+                <span class="name">OneSight WMS</span>
+                <span class="sub">Warehouse Management</span>
+            </div>
+        </div>
             </div>
             ${navHTML}
             <div class="user-profile" id="wms-user-profile" style="visibility:hidden;">
