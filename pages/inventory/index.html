@@ -248,15 +248,7 @@
                     <div id="tab-count-sessions" class="inventory-tab-content">
 
                         <div class="sessions-toolbar">
-                            <div class="sessions-filter">
-                                <label for="session-status-filter">Status:</label>
-                                <select id="session-status-filter">
-                                    <option value="">All</option>
-                                    <option value="Open" selected>Open</option>
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="Finalized">Finalized</option>
-                                </select>
-                            </div>
+
                             <button class="start-session-btn" onclick="openNewSessionModal()">
                                 + Start New Count Session
                             </button>
@@ -346,27 +338,15 @@
             if (countSessionsDpLoaded && !forceReload) return;
 
             const container = document.getElementById('count-sessions-datapage');
-            const statusFilter = document.getElementById('session-status-filter').value;
-
-            let url = COUNT_SESSIONS_DATAPAGE_URL;
-            if (statusFilter) {
-                url += (url.includes('?') ? '&' : '?') + 'cbParamStatus=' + encodeURIComponent(statusFilter);
-            }
 
             container.innerHTML = '';
             const script = document.createElement('script');
             script.type = 'text/javascript';
-            script.src = url;
+            script.src = COUNT_SESSIONS_DATAPAGE_URL;
             container.appendChild(script);
 
             countSessionsDpLoaded = true;
         }
-
-        // Re-load when status filter changes
-        document.getElementById('session-status-filter').addEventListener('change', function() {
-            countSessionsDpLoaded = false;
-            loadCountSessionsDataPage();
-        });
 
         // ── New Session Modal ──────────────────────────────────────────────────────
         function openNewSessionModal() {
