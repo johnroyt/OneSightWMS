@@ -294,16 +294,7 @@ function generateHeader(pageTitle, additionalButtons = '') {
                 <h1 class="page-title">${pageTitle}</h1>
             </div>
             <div class="header-right">
-                <div class="global-search">
-                    <span style="display:flex">${icon('search')}</span>
-                    <input type="text" placeholder="Search SKUs, orders, locations…" />
-                    <kbd>⌘K</kbd>
-                </div>
-                <button class="icon-btn notification-bell" aria-label="Notifications">
-                    ${icon('bell')}
-                    <span class="notification-badge">3</span>
-                </button>
-                <button class="icon-btn" aria-label="Settings">${icon('settings')}</button>
+
                 ${additionalButtons}
             </div>
         </header>`;
