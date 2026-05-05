@@ -57,6 +57,7 @@ const CASPIO_DATAPAGES = {
     purchaseOrderCreate:   'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb',
     purchaseOrderCreates:  'https://c2ect483.caspio.com/dp/97594000e5a237cd35884e7997e9/emb',
     shipmentCreate:        'https://c2ect483.caspio.com/dp/9759400020270d4c4dbb4f508ce2/emb',
+    shipmentReceiptLog:    'https://c2ect483.caspio.com/dp/97594000283282e705bd4b318859/emb',
     specialRequestCreate:  'https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb',
     productCreate:         'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
     modelStockCreate:      'https://c2ect483.caspio.com/dp/9759400006122dd8bc2842fa9cb0/emb',
@@ -288,7 +289,30 @@ function generateSidebar(activePage) {
             <div id="wms-user-script" style="display:none;"></div>
         </aside>`;
 }
-
+(function() {
+    function applyCellTooltips(scope) {
+        const root = scope || document;
+        const cells = root.querySelectorAll(
+            '.datapage-container td.cbResultSetData, .tab-datapage-container td.cbResultSetData'
+        );
+        cells.forEach(td => {
+            // Extract the cell text minus the inline mobile label
+            const label = td.querySelector('.cbResultSetLabel');
+            const labelText = label ? label.textContent : '';
+            const fullText = td.textContent.replace(labelText, '').trim();
+            
+            if (fullText && fullText.length > 40) {
+                td.setAttribute('title', fullText);
+            }
+        });
+    }
+    
+    // Fire on Caspio's DataPage ready event (every load + every search/sort/page change)
+    document.addEventListener('DataPageReady', () => applyCellTooltips());
+    
+    // Initial pass for static content already in DOM
+    document.addEventListener('DOMContentLoaded', () => applyCellTooltips());
+})();
 function generateHeader(pageTitle, additionalButtons = '') {
     return `
         <header class="header">
