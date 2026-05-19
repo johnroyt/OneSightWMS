@@ -233,6 +233,32 @@ function navigateTo(page) {
     window.location.href = baseUrl + repoPath + '/' + paths[page];
 }
 
+function getNavUrl(page) {
+    const paths = {
+        'Dashboard':         'index.html',
+        'Purchase Orders':   'pages/purchase-orders/index.html',
+        'Orders':            'pages/orders/index.html',
+        'Warehouse Tasks':   'pages/tasks/index.html',
+        'Inventory':         'pages/inventory/index.html',
+        'Products':          'pages/products/index.html',
+        'Shipments':         'pages/shipments/index.html',
+        'Transactions':      'pages/usage/index.html',
+        'SpecialRequests':   'pages/specialrequests/index.html',
+        'Clinics & Events':  'pages/clinics/index.html',
+        'Location Labels':   'pages/management/barcodeLocationGen.html',
+        'Scan-O-Matic':      'pages/management/ScanOMatic.html',
+        'ROC Request':       'rocrequest/index.html'
+    };
+    if (!paths[page]) return '#';
+    const baseUrl = window.location.href.split('/').slice(0, 3).join('/');
+    let repoPath = '';
+    if (window.location.hostname.includes('github.io')) {
+        const parts = window.location.pathname.split('/');
+        if (parts.length > 1) repoPath = '/' + parts[1];
+    }
+    return baseUrl + repoPath + '/' + paths[page];
+}
+
 /* ---------- Sidebar / header generators -------------------------------- */
 const SIDEBAR_NAV = {
     Main: [
@@ -259,7 +285,7 @@ function generateSidebar(activePage) {
         <nav class="nav-section">
             <div class="nav-section-title">${sectionName}</div>
             ${items.map(it => `
-                <a href="javascript:void(0)" data-page="${it.label}" class="nav-item ${activePage === it.label ? 'active' : ''}">
+                <a href="${getNavUrl(it.label)}" data-page="${it.label}" class="nav-item ${activePage === it.label ? 'active' : ''}">
                     <span class="nav-icon">${icon(it.icon)}</span>
                     <span>${it.display || it.label}</span>
                 </a>`).join('')}
@@ -351,6 +377,7 @@ function initializeNavigation() {
     document.addEventListener('click', function(e) {
         const navItem = e.target.closest('.nav-item');
         if (!navItem) return;
+        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
         e.preventDefault();
         const pageName = navItem.getAttribute('data-page');
         if (pageName) navigateTo(pageName);
