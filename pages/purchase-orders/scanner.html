@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO Scanner - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+
+            <main class="main-content">
+
+                <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 2rem;">
+
+                    <div class="full-width-section" style="flex: 2; margin-top: 0;">
+                        <div class="card-header">
+                            <h2 class="card-title">Scanner Input</h2>
+                        </div>
+                        <div id="scanner-input-container" class="datapage-container"></div>
+                    </div>
+
+                    <div class="full-width-section" style="flex: 1; margin-top: 0; background-color: #f8fafc; border: 2px dashed #cbd5e1;">
+                        <div class="card-header">
+                            <h2 class="card-title">Finish Session</h2>
+                        </div>
+                        <div id="finalize-container" class="datapage-container"></div>
+                    </div>
+
+                </div>
+
+                <div class="full-width-section">
+                    <div class="card-header">
+                        <h2 class="card-title">Session Tally</h2>
+                    </div>
+                    <div id="tally-container" class="datapage-container"></div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/main.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('SessionID');
+        const purchaseOrderId = urlParams.get('PurchaseOrderID');
+
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Purchase Orders');
+        document.getElementById('header-container').innerHTML = generateHeader(`Active Session: ${sessionId || 'Unknown'}`);
+        initializeNavigation();
+
+        if (sessionId && purchaseOrderId) {
+            const inputScript = document.createElement('script');
+            inputScript.src = `https://c2ect483.caspio.com/dp/97594000ba19ba9f265348bb91b2/emb?SessionID=${sessionId}&PurchaseOrderID=${purchaseOrderId}`;
+            document.getElementById('scanner-input-container').appendChild(inputScript);
+
+            const tallyScript = document.createElement('script');
+            tallyScript.src = `https://c2ect483.caspio.com/dp/97594000e32c6583d85947c99ec5/emb?SessionID=${sessionId}`;
+            document.getElementById('tally-container').appendChild(tallyScript);
+
+            const finalizeScript = document.createElement('script');
+            finalizeScript.src = `https://c2ect483.caspio.com/dp/9759400005c63bb9d87943a4b827/emb?SessionID=${sessionId}&PurchaseOrderID=${purchaseOrderId}`;
+            document.getElementById('finalize-container').appendChild(finalizeScript);
+        } else {
+            document.querySelector('.main-content').innerHTML = '<h3 style="color: red; padding: 20px;">Error: Missing SessionID or PurchaseOrderID in URL. Please start a session from the PO Details page.</h3>';
+        }
+    </script>
+</body>
+</html>

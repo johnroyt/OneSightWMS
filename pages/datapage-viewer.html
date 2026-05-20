@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datapage - WMS</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="datapage-container" id="dp-embed"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const dpid = params.get('dpid');
+            const host = params.get('host') || 'c2ect483';
+
+            document.getElementById('sidebar-container').innerHTML = generateSidebar('');
+            document.getElementById('header-container').innerHTML = generateHeader('');
+            initializeNavigation();
+            initializeModalTriggers();
+            interceptDpLinks();
+
+            if (!dpid) return;
+
+            // Pass through any params that aren't internal routing params
+            const embedParams = new URLSearchParams();
+            params.forEach((v, k) => { if (k !== 'dpid' && k !== 'host') embedParams.set(k, v); });
+            const embedUrl = `https://${host}.caspio.com/dp/${dpid}/emb`
+                + (embedParams.toString() ? '?' + embedParams : '');
+
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = embedUrl;
+            document.getElementById('dp-embed').appendChild(script);
+        })();
+    </script>
+</body>
+</html>

@@ -61,7 +61,8 @@ const CASPIO_DATAPAGES = {
     specialRequestCreate:  'https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb',
     productCreate:         'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
     modelStockCreate:      'https://c2ect483.caspio.com/dp/9759400006122dd8bc2842fa9cb0/emb',
-    transactionCreate:     'https://c2ect483.caspio.com/dp/97594000588934525a27433b83a7/emb'
+    transactionCreate:        'https://c2ect483.caspio.com/dp/97594000588934525a27433b83a7/emb',
+    poReceivingSessionCreate: 'https://c2ect483.caspio.com/dp/975940008c2457accdfd4293852f/emb'
 };
 
 const MODAL_OPTIONS = {
@@ -384,9 +385,42 @@ function initializeNavigation() {
     });
 }
 
+/* ---------- Datapage link interceptor ----------------------------------- */
+const _DP_ID_RE = /\/dp\/([0-9a-f]{20,})/i;
+
+function interceptDpLinks() {
+    document.addEventListener('click', function(e) {
+        const anchor = e.target.closest('a[href]');
+        if (!anchor) return;
+        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+
+        let url;
+        try { url = new URL(anchor.getAttribute('href'), window.location.href); } catch { return; }
+
+        const match = url.pathname.match(_DP_ID_RE);
+        if (!match) return;
+
+        e.preventDefault();
+        const dpid = match[1];
+        const caspioHost = url.hostname.endsWith('.caspio.com')
+            ? url.hostname.replace('.caspio.com', '')
+            : 'c2ect483';
+
+        const viewerParams = new URLSearchParams({ dpid, host: caspioHost });
+        url.searchParams.forEach((v, k) => viewerParams.set(k, v));
+
+        const base = window.location.href.split('/').slice(0, 3).join('/');
+        const repo = window.location.hostname.includes('github.io')
+            ? '/' + window.location.pathname.split('/')[1]
+            : '';
+        window.location.href = `${base}${repo}/pages/datapage-viewer.html?${viewerParams}`;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeModalTriggers();
+    interceptDpLinks();
 });
 
 function toggleSidebar() {
@@ -432,4 +466,5 @@ function initializePage(activePage, pageTitle, additionalButtons = '') {
 
     initializeNavigation();
     initializeModalTriggers();
+    interceptDpLinks();
 }
