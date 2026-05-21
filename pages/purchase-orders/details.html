@@ -9,39 +9,46 @@
 <body>
     <div class="app-container">
         <div id="sidebar-container"></div>
-        
+
         <div class="main-wrapper">
             <div id="header-container"></div>
-            
-            <main class="main-content">
-                <!-- Purchase Order Details Section -->
-                <div class="full-width-section">
-                    <div class="card-header">
-                        <h2 class="card-title">Purchase Order Details</h2>
-                        <div id="po-number" style="color: #4c6ef5; font-weight: 600;"></div>
+
+            <main class="main-content multi-section">
+                <!-- Top row: PO Details (left, flexible) + Receiving History (right, fixed) -->
+                <div class="po-top-row">
+                    <div class="full-width-section">
+                        <div class="card-header">
+                            <h2 class="card-title">Purchase Order Details</h2>
+                            <div id="po-number" style="color: #4c6ef5; font-weight: 600;"></div>
+                        </div>
+                        <div id="po-details-container" class="datapage-container">
+                            <p>Loading Purchase Order Details...</p>
+                        </div>
                     </div>
-                    
-                    <div id="po-details-container" class="datapage-container">
-                        <!-- Caspio PO Details DataPage will be embedded here -->
-                        <p>Loading Purchase Order Details...</p>
+
+                    <div class="full-width-section po-history-side">
+                        <div class="card-header">
+                            <h2 class="card-title">Receiving History</h2>
+                        </div>
+                        <div id="po-history-container" class="datapage-container">
+                            <p>Loading Receiving History...</p>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Purchase Order Items Section -->
-                <div class="full-width-section" style="margin-top: 2rem;">
+
+                <!-- Purchase Order Items: full width below -->
+                <div class="full-width-section">
                     <div class="card-header">
                         <h2 class="card-title">Purchase Order Items</h2>
                     </div>
-                    
                     <div id="po-items-container" class="datapage-container">
-                        <!-- Caspio PO Items DataPage will be embedded here -->
                         <p>Loading Purchase Order Items...</p>
                     </div>
                 </div>
             </main>
         </div>
     </div>
-    
+
     <script src="../../js/main.js"></script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
@@ -59,7 +66,6 @@
         initializeNavigation();
         initializeModalTriggers();
 
-        // Receive the DestinationLocationID broadcast from the Caspio PO Details DataPage footer
         window.addEventListener('message', function(e) {
             if (e.data && e.data.destinationLocationID) {
                 const btn = document.querySelector('[data-modal-key="poReceivingSessionCreate"]');
@@ -82,25 +88,17 @@
             itemsContainer.innerHTML = '';
             itemsContainer.appendChild(itemsScript);
 
-            const historySection = document.createElement('div');
-            historySection.className = 'full-width-section';
-            historySection.style.marginTop = '2rem';
-            historySection.innerHTML = `
-                <div class="card-header">
-                    <h2 class="card-title">Receiving History</h2>
-                </div>
-                <div id="po-history-container" class="datapage-container"></div>
-            `;
-            document.querySelector('.main-content').appendChild(historySection);
-
+            const historyContainer = document.getElementById('po-history-container');
             const historyScript = document.createElement('script');
             historyScript.src = `https://c2ect483.caspio.com/dp/9759400005c63bb9d87943a4b827/emb?PurchaseOrderID=${purchaseOrderId}`;
-            document.getElementById('po-history-container').appendChild(historyScript);
+            historyContainer.innerHTML = '';
+            historyContainer.appendChild(historyScript);
         } else {
             document.getElementById('po-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
             document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
+            document.getElementById('po-history-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
         }
     </script>
-    
+
 </body>
 </html>

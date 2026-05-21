@@ -830,6 +830,53 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     padding: 14px 16px !important;  /* restore inner breathing room stripped by the full-width-section rule */
 }
 
+/* Multi-section pages: revert to natural page-level scrolling.
+   The single-section page-stretching approach breaks when 3+ sections
+   compete for flex space: CSS distributes the deficit proportionally to
+   each section's natural content size, so a late-loading section with
+   near-zero content size gets squeezed to a thin strip.
+   With this class, main-content scrolls instead, sections stack at their
+   natural height, and each datapage container scrolls its own content. */
+.main-content.multi-section:has(.datapage-container),
+.main-content.multi-section:has(.tab-datapage-container) {
+    overflow-y: auto !important;
+}
+.main-content.multi-section:has(.datapage-container) > .full-width-section,
+.main-content.multi-section:has(.tab-datapage-container) > .full-width-section {
+    flex: 0 0 auto;
+}
+.main-content.multi-section > .full-width-section > .datapage-container,
+.main-content.multi-section > .full-width-section > .tab-datapage-container {
+    min-height: 320px;
+    max-height: 58vh;
+}
+/* po-top-row: side-by-side card row used on the PO details page */
+.main-content.multi-section > .po-top-row {
+    flex: 0 0 auto;
+}
+.po-top-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    margin-top: 8px;
+}
+.po-top-row > .full-width-section {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.po-top-row > .po-history-side {
+    flex: 0 0 400px;
+    min-width: 300px;
+}
+.po-top-row > .full-width-section > .datapage-container {
+    flex: 1 1 auto;
+    min-height: 200px;
+    overflow-y: auto;
+}
+
 /* For tabbed layouts: only the active tab content stretches */
 .full-width-section > .inventory-tab-content,
 .full-width-section > .tab-content {
