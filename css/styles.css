@@ -2554,89 +2554,152 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
 }   
 
 /* =========================================================================
-   CHATTER / NEW MESSAGE FORM STYLES
+   CHATTER / NEW MESSAGE FORM STYLES (custom compose UI)
    ========================================================================= */
 
-/* Force vertical stacking for the whole form */
-#chatter-create-container section[data-cb-name="cbTable"] {
+.chatter-compose {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0;
 }
 
-/* Caspio wraps the label and input in nested divs. 
-   Make the block a flex-column to stack them cleanly with a 6px gap. */
-#chatter-create-container div[class^="cbFormBlock"] {
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
+.chatter-compose-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-ink);
+    margin-bottom: 8px;
 }
 
-/* Clean up the labels */
-#chatter-create-container label {
-    display: block !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: var(--c-ink) !important;
+.chatter-compose-textarea {
+    width: 100%;
+    min-height: 90px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1.5px solid var(--c-line);
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    font-family: var(--font-sans);
+    color: var(--c-ink);
+    background: var(--c-surface);
+    line-height: 1.6;
+    outline: none;
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    word-break: break-word;
 }
 
-/* Force inputs to full width and override Caspio's default styles */
-#chatter-create-container .cbFormTextField,
-#chatter-create-container .cbFormTextArea {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    font-family: var(--font-sans) !important;
-    font-size: 13px !important;
-    border: 1px solid var(--c-line) !important;
-    border-radius: var(--radius) !important;
-    padding: 8px 12px !important;
-    box-shadow: none !important;
-    background: #ffffff !important;
+.chatter-compose-textarea:focus {
+    border-color: var(--c-primary);
+    box-shadow: 0 0 0 3px var(--c-primary-soft);
 }
 
-/* Override the bulky 200px height Caspio forces on TextAreas */
-#chatter-create-container .cbFormTextArea {
-    height: 90px !important;
-    min-height: 90px !important;
-    resize: vertical;
+/* Placeholder for contenteditable */
+.chatter-compose-textarea:empty::before {
+    content: attr(data-placeholder);
+    color: var(--c-ink-4);
+    font-size: 13px;
+    pointer-events: none;
 }
 
-/* Input Focus States */
-#chatter-create-container .cbFormTextField:focus,
-#chatter-create-container .cbFormTextArea:focus {
-    border-color: var(--c-primary) !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px var(--c-primary-soft) !important;
+/* Mention chip */
+.mention-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--c-primary-soft);
+    color: var(--c-primary-ink);
+    border: 1px solid rgba(17, 124, 153, 0.25);
+    border-radius: 20px;
+    padding: 1px 6px 1px 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    vertical-align: middle;
+    margin: 0 1px;
+    line-height: 1.6;
+    user-select: none;
 }
 
-/* Right-align the Submit button container */
-#chatter-create-container div[class^="cbFormBlock"]:last-of-type {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end !important;
-    margin-top: 4px !important;
+.mention-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--c-primary-ink);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.55;
+    line-height: 1;
+    transition: background 0.1s, opacity 0.1s;
 }
 
-/* Modern chat 'pill' shape for the Submit button */
-#chatter-create-container input[type="submit"] {
-    margin: 0 !important;
-    padding: 8px 24px !important;
-    border-radius: 20px !important;
-    background: var(--c-primary) !important;
-    color: #ffffff !important;
-    border: none !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: background 0.15s ease !important;
+.mention-chip-remove:hover {
+    background: var(--c-primary);
+    color: #fff;
+    opacity: 1;
 }
 
-#chatter-create-container input[type="submit"]:hover {
-    background: var(--c-primary-ink) !important;
+.chatter-submit-btn {
+    padding: 8px 24px;
+    border-radius: 20px;
+    border: none;
+    background: var(--c-primary);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    letter-spacing: 0.01em;
+}
+
+.chatter-submit-btn:hover:not(:disabled) {
+    background: var(--c-primary-ink);
+}
+
+.chatter-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* @mention dropdown */
+.chatter-compose-wrap {
+    position: relative;
+}
+
+.mention-dropdown {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 0;
+    min-width: 200px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.mention-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--c-ink);
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.mention-item:hover,
+.mention-item-active {
+    background: var(--c-primary-soft);
+    color: var(--c-primary-ink);
 }
 
 

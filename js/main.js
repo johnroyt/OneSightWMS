@@ -178,6 +178,261 @@ function closeGenericModal() {
     if (optionsContainer) { optionsContainer.innerHTML = ''; optionsContainer.style.display = 'none'; }
 }
 
+/* ---------- Chatter compose constants ----------------------------------- */
+const CHATTER_WORKER_URL     = 'https://holy-glitter-ebc0.operations-78f.workers.dev/';
+const CHATTER_APP_ACCESS_KEY = 'fQ$V6iIAVDh318F#';
+
+let _wmsUserEmail = '';
+let _wmsUserGuid  = '';
+
+async function _fetchChatterUsers() {
+    try {
+        const res = await fetch(CHATTER_WORKER_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-App-Access-Key': CHATTER_APP_ACCESS_KEY
+            },
+            body: JSON.stringify({ action: 'get_users' })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.Result) return [];
+        return data.Result
+            .map(u => ({
+                key:   `${u.First_Name || ''} ${u.Last_Name || ''}`.trim(),
+                value: u.UserGUID || '',   // stored as RecipientGUID
+                email: u.Email    || ''    // for SenderGUID lookup
+            }))
+            .filter(u => u.key && u.value)
+            .sort((a, b) => a.key.localeCompare(b.key));
+    } catch {
+        return [];
+    }
+}
+
+function _getEditorContent(editorEl) {
+    let text = '';
+    const guids = [];
+
+    function walk(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            text += node.textContent.replace(/ /g, ' ');
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.classList.contains('mention-chip')) {
+                text += '@' + (node.dataset.name || '');
+                if (node.dataset.guid) guids.push(node.dataset.guid);
+            } else if (node.nodeName === 'BR') {
+                text += '\n';
+            } else {
+                if (['DIV', 'P'].includes(node.nodeName)) text += '\n';
+                node.childNodes.forEach(walk);
+            }
+        }
+    }
+
+    editorEl.childNodes.forEach(walk);
+    return { text: text.trim(), guids: [...new Set(guids)] };
+}
+
+function _attachMentionDropdown(editor, wrapEl, users) {
+    const dropdown = document.createElement('div');
+    dropdown.className = 'mention-dropdown';
+    wrapEl.appendChild(dropdown);
+
+    let currentMatches = [];
+    let activeIndex    = -1;
+    let mentionInfo    = null;
+
+    function getCurrentMention() {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return null;
+        const range = sel.getRangeAt(0);
+        if (!range.collapsed) return null;
+        const node = range.startContainer;
+        if (node.nodeType !== Node.TEXT_NODE || !editor.contains(node)) return null;
+        const text = node.textContent.substring(0, range.startOffset);
+        const atIdx = text.lastIndexOf('@');
+        if (atIdx === -1) return null;
+        const fragment = text.substring(atIdx + 1);
+        if (/[\s\n]/.test(fragment)) return null;
+        return { query: fragment.toLowerCase(), textNode: node, atOffset: atIdx, cursorOffset: range.startOffset };
+    }
+
+    function setActive(index) {
+        dropdown.querySelectorAll('.mention-item').forEach((el, i) =>
+            el.classList.toggle('mention-item-active', i === index));
+        activeIndex = index;
+    }
+
+    function show(matches, info) {
+        mentionInfo    = info;
+        currentMatches = matches;
+        activeIndex    = -1;
+        dropdown.innerHTML = '';
+        matches.forEach(user => {
+            const item = document.createElement('div');
+            item.className   = 'mention-item';
+            item.textContent = user.key;
+            item.addEventListener('mousedown', e => { e.preventDefault(); insert(user); });
+            dropdown.appendChild(item);
+        });
+        dropdown.style.display = 'block';
+    }
+
+    function hide() {
+        dropdown.style.display = 'none';
+        currentMatches = [];
+        activeIndex    = -1;
+        mentionInfo    = null;
+    }
+
+    function insert(user) {
+        if (!mentionInfo) return;
+        const { textNode, atOffset, cursorOffset } = mentionInfo;
+
+        // Build chip
+        const chip = document.createElement('span');
+        chip.className        = 'mention-chip';
+        chip.dataset.guid     = user.value;
+        chip.dataset.name     = user.key;
+        chip.contentEditable  = 'false';
+        chip.innerHTML =
+            `@${user.key}<button class="mention-chip-remove" tabindex="-1" aria-label="Remove">&#x2715;</button>`;
+
+        // Split text node: [before @][chip][space + after]
+        const afterText  = textNode.textContent.substring(cursorOffset);
+        textNode.textContent = textNode.textContent.substring(0, atOffset);
+        const afterNode  = document.createTextNode(' ' + afterText);
+        textNode.parentNode.insertBefore(chip, textNode.nextSibling);
+        textNode.parentNode.insertBefore(afterNode, chip.nextSibling);
+
+        // Move cursor to just after the non-breaking space
+        const sel   = window.getSelection();
+        const range = document.createRange();
+        range.setStart(afterNode, 1);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        chip.querySelector('.mention-chip-remove').addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            chip.remove();
+            editor.focus();
+        });
+
+        hide();
+    }
+
+    editor.addEventListener('input', () => {
+        const mention = getCurrentMention();
+        if (!mention) { hide(); return; }
+        const matches = users.filter(u => u.key.toLowerCase().includes(mention.query));
+        matches.length ? show(matches, mention) : hide();
+    });
+
+    editor.addEventListener('keydown', e => {
+        if (dropdown.style.display === 'none') return;
+        const count = currentMatches.length;
+        if (e.key === 'ArrowDown')                       { e.preventDefault(); setActive(Math.min(activeIndex + 1, count - 1)); }
+        else if (e.key === 'ArrowUp')                    { e.preventDefault(); setActive(Math.max(activeIndex - 1, 0)); }
+        else if (e.key === 'Enter' && activeIndex >= 0)  { e.preventDefault(); insert(currentMatches[activeIndex]); }
+        else if (e.key === 'Escape')                     { hide(); e.preventDefault(); }
+    });
+
+    editor.addEventListener('blur', () => setTimeout(hide, 150));
+}
+
+function _buildChatterForm(container, { recordId, recordType, contextUrl, onMessageSent }) {
+    container.innerHTML = `
+        <div class="chatter-compose">
+            <label class="chatter-compose-label">New Message</label>
+            <div class="chatter-compose-wrap">
+                <div id="chatter-message-body" class="chatter-compose-textarea"
+                    contenteditable="true" role="textbox" aria-multiline="true"
+                    data-placeholder="Type a message… use @ to mention someone"></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                <button id="chatter-submit-btn" class="chatter-submit-btn">Send</button>
+            </div>
+            <p id="chatter-submit-status" style="font-size:12px; margin-top:6px; display:none;"></p>
+        </div>`;
+
+    const editor = container.querySelector('#chatter-message-body');
+    const wrapEl = container.querySelector('.chatter-compose-wrap');
+
+    let _users = [];
+    _fetchChatterUsers().then(users => {
+        _users = users;
+        _attachMentionDropdown(editor, wrapEl, users);
+    });
+
+    function _resolveSenderGuid() {
+        if (_wmsUserGuid) return _wmsUserGuid;
+        const nameEl = document.getElementById('wms-user-name');
+        const displayName = nameEl?.textContent?.trim() || '';
+        const me = _users.find(u =>
+            (_wmsUserEmail && u.email.toLowerCase() === _wmsUserEmail.toLowerCase()) ||
+            (displayName   && u.key.toLowerCase()   === displayName.toLowerCase())
+        );
+        if (me) _wmsUserGuid = me.value;
+        return _wmsUserGuid;
+    }
+
+    container.querySelector('#chatter-submit-btn').addEventListener('click', async () => {
+        const statusEl = container.querySelector('#chatter-submit-status');
+        const btn      = container.querySelector('#chatter-submit-btn');
+        const { text: messageBody, guids: recipientGUIDs } = _getEditorContent(editor);
+
+        if (!messageBody) {
+            statusEl.textContent   = 'Please enter a message.';
+            statusEl.style.color   = 'var(--c-accent)';
+            statusEl.style.display = 'block';
+            return;
+        }
+
+        btn.disabled    = true;
+        btn.textContent = 'Sending…';
+        statusEl.style.display = 'none';
+
+        try {
+            const res = await fetch(CHATTER_WORKER_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-App-Access-Key': CHATTER_APP_ACCESS_KEY
+                },
+                body: JSON.stringify({
+                    action:         'insert_chatter',
+                    RecordID:       recordId,
+                    RecordType:     recordType,
+                    ContextURL:     contextUrl,
+                    MessageBody:    messageBody,
+                    RecipientGUIDs: recipientGUIDs,
+                    SenderGUID:     _resolveSenderGuid() || ''
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.message || 'Worker error');
+
+            editor.innerHTML = '';
+            if (onMessageSent) onMessageSent();
+            statusEl.textContent   = 'Message sent!';
+            statusEl.style.color   = 'var(--c-primary)';
+            statusEl.style.display = 'block';
+            setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+        } catch (err) {
+            statusEl.textContent   = 'Error: ' + (err.message || 'Failed to send');
+            statusEl.style.color   = 'var(--c-accent)';
+            statusEl.style.display = 'block';
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Send';
+        }
+    });
+}
+
 /* ---------- Chatter sidebar -------------------------------------------- */
 function toggleChatterSidebar(forceState = null) {
     const sidebar = document.getElementById('chatter-sidebar');
@@ -250,15 +505,48 @@ function initChatterSidebar() {
     `;
     document.querySelector('.app-container').appendChild(sidebar);
 
-    const createScript = document.createElement('script');
-    createScript.src = CASPIO_DATAPAGES.chatterCreate + '?' + paramsString;
-    document.getElementById('chatter-create-container').appendChild(createScript);
-
     const historyUrl = recordId === '' ? CASPIO_DATAPAGES.chatterHistoryGlobal : CASPIO_DATAPAGES.chatterHistory;
-    const historyScript = document.createElement('script');
-    historyScript.src = historyUrl + '?' + paramsString;
-    document.getElementById('chatter-history-container').innerHTML = '';
-    document.getElementById('chatter-history-container').appendChild(historyScript);
+
+    function refreshChatterHistory() {
+        const cont = document.getElementById('chatter-history-container');
+        cont.innerHTML = `
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--c-ink);">History</h3>
+            <p style="color:var(--c-ink-3);font-size:13px;">Loading history...</p>`;
+
+        // Disconnect any previous observer before creating a new one
+        if (refreshChatterHistory._observer) {
+            refreshChatterHistory._observer.disconnect();
+        }
+
+        const observer = new MutationObserver(() => {
+            // Caspio login page contains a form with a login button or login-specific elements
+            const hasLoginForm = cont.querySelector('form input[type="password"], .cbLoginArea, [id*="caspioLogin"], [class*="login"]');
+            const hasLoginText = cont.innerText && /^\s*(login|sign\s*in|digital clinic admin)/i.test(cont.innerText);
+            if (hasLoginForm || hasLoginText) {
+                observer.disconnect();
+                cont.innerHTML = `
+                    <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--c-ink);">History</h3>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 16px;text-align:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-ink-3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <p style="color:var(--c-ink-3);font-size:13px;margin:0;">Sign in to Caspio to view conversation history.</p>
+                    </div>`;
+            }
+        });
+
+        refreshChatterHistory._observer = observer;
+        observer.observe(cont, { childList: true, subtree: true });
+
+        const s = document.createElement('script');
+        s.src = `${historyUrl}?${paramsString}&_t=${Date.now()}`;
+        cont.appendChild(s);
+    }
+
+    _buildChatterForm(document.getElementById('chatter-create-container'), {
+        recordId, recordType, contextUrl: fullEmailUrl,
+        onMessageSent: refreshChatterHistory
+    });
+
+    refreshChatterHistory();
 
     sidebar.classList.add('open');
     document.body.classList.add('chatter-open');
@@ -381,6 +669,17 @@ function generateSidebar(activePage) {
                 </a>`).join('')}
         </nav>`).join('');
 
+    queueMicrotask(() => {
+        const slot = document.getElementById('wms-user-script');
+        if (slot && !slot.dataset.injected) {
+            slot.dataset.injected = '1';
+            const s = document.createElement('script');
+            s.type = 'text/javascript';
+            s.src = 'https://c2ect483.caspio.com/dp/97594000b114afb38f244fcbb64f/emb';
+            slot.appendChild(s);
+        }
+    });
+
     return `
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
         <aside class="sidebar" id="main-sidebar">
@@ -454,7 +753,7 @@ window.addEventListener('click', function(event) {
     if (genericModal && event.target === genericModal) closeGenericModal();
 });
 
-function setWMSUser(fullName, jobTitle) {
+function setWMSUser(fullName, jobTitle, email, guid) {
     const nameEl = document.getElementById('wms-user-name');
     const roleEl = document.getElementById('wms-user-role');
     const avatarEl = document.getElementById('wms-user-avatar');
@@ -466,6 +765,8 @@ function setWMSUser(fullName, jobTitle) {
         avatarEl.textContent = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
     }
     if (profileEl) profileEl.style.visibility = 'visible';
+    if (email) _wmsUserEmail = email;
+    if (guid)  _wmsUserGuid  = guid;
 }
 
 function initializeNavigation() {
@@ -587,14 +888,6 @@ function initializePage(activePage, pageTitle, additionalButtons = '') {
 
     document.getElementById('sidebar-container').innerHTML = generateSidebar(activePage);
     document.getElementById('header-container').innerHTML = generateHeader(pageTitle, additionalButtons);
-
-    const userScriptContainer = document.getElementById('wms-user-script');
-    if (userScriptContainer) {
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'https://c2ect483.caspio.com/dp/97594000b114afb38f244fcbb64f/emb';
-        userScriptContainer.appendChild(script);
-    }
 
     initializeNavigation();
     initializeModalTriggers();
