@@ -62,7 +62,10 @@ const CASPIO_DATAPAGES = {
     productCreate:         'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
     modelStockCreate:      'https://c2ect483.caspio.com/dp/9759400006122dd8bc2842fa9cb0/emb',
     transactionCreate:        'https://c2ect483.caspio.com/dp/97594000588934525a27433b83a7/emb',
-    poReceivingSessionCreate: 'https://c2ect483.caspio.com/dp/975940008c2457accdfd4293852f/emb'
+    poReceivingSessionCreate: 'https://c2ect483.caspio.com/dp/975940008c2457accdfd4293852f/emb',
+    chatterCreate:            'https://c2ect483.caspio.com/dp/97594000076ff9dd364b43c9a1c1/emb',
+    chatterHistory: 'https://c2ect483.caspio.com/dp/97594000afae078e6e644612b206/emb',
+    chatterHistoryGlobal: 'https://c2ect483.caspio.com/dp/97594000568f3ec3f1e74e3b81a2/emb'
 };
 
 const MODAL_OPTIONS = {
@@ -173,6 +176,92 @@ function closeGenericModal() {
     if (formContainer) formContainer.innerHTML = '';
     const optionsContainer = document.getElementById('generic-modal-options-container');
     if (optionsContainer) { optionsContainer.innerHTML = ''; optionsContainer.style.display = 'none'; }
+}
+
+/* ---------- Chatter sidebar -------------------------------------------- */
+function toggleChatterSidebar(forceState = null) {
+    const sidebar = document.getElementById('chatter-sidebar');
+
+    if (!sidebar) {
+        initChatterSidebar();
+        return;
+    }
+
+    const isOpen = sidebar.classList.contains('open');
+    const newState = forceState !== null ? forceState : !isOpen;
+
+    if (newState) {
+        sidebar.classList.add('open');
+        document.body.classList.add('chatter-open');
+        const badge = document.getElementById('chatter-badge');
+        if (badge) badge.style.display = 'none';
+    } else {
+        sidebar.classList.remove('open');
+        document.body.classList.remove('chatter-open');
+    }
+}
+
+function initChatterSidebar() {
+    let recordId = '', recordType = 'General';
+
+    for (const [key, value] of new URLSearchParams(window.location.search).entries()) {
+        const k = key.toLowerCase();
+        if (k === 'orderid')         { recordId = value; recordType = 'Order';             break; }
+        if (k === 'purchaseorderid') { recordId = value; recordType = 'Purchase Order';    break; }
+        if (k === 'sessionid')       { recordId = value; recordType = 'Inventory Session'; break; }
+        if (k === 'pickid')          { recordId = value; recordType = 'Pick Task';         break; }
+    }
+
+    let fullEmailUrl = window.location.origin + window.location.pathname + window.location.search;
+    if (fullEmailUrl.includes('?')) {
+        if (!fullEmailUrl.includes('openChatter=true')) fullEmailUrl += '&openChatter=true';
+    } else {
+        fullEmailUrl += '?openChatter=true';
+    }
+
+    const paramsString = new URLSearchParams({
+        ContextURL: fullEmailUrl,
+        ChatterRecordID: recordId,
+        RecordType: recordType
+    }).toString();
+
+    const sidebar = document.createElement('div');
+    sidebar.id = 'chatter-sidebar';
+    sidebar.className = 'chatter-sidebar';
+    sidebar.innerHTML = `
+        <div class="chatter-header">
+            <div class="chatter-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Conversation History
+            </div>
+            <button class="icon-btn" onclick="toggleChatterSidebar(false)" title="Close Chatter">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="chatter-scroll-area">
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div id="chatter-create-container"></div>
+                <div id="chatter-history-container" style="border-top: 1px solid var(--c-line); padding-top: 1.5rem; min-height: 150px;">
+                    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--c-ink);">History</h3>
+                    <p style="color: var(--c-ink-3); font-size: 13px;">Loading history...</p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.querySelector('.app-container').appendChild(sidebar);
+
+    const createScript = document.createElement('script');
+    createScript.src = CASPIO_DATAPAGES.chatterCreate + '?' + paramsString;
+    document.getElementById('chatter-create-container').appendChild(createScript);
+
+    const historyUrl = recordId === '' ? CASPIO_DATAPAGES.chatterHistoryGlobal : CASPIO_DATAPAGES.chatterHistory;
+    const historyScript = document.createElement('script');
+    historyScript.src = historyUrl + '?' + paramsString;
+    document.getElementById('chatter-history-container').innerHTML = '';
+    document.getElementById('chatter-history-container').appendChild(historyScript);
+
+    sidebar.classList.add('open');
+    document.body.classList.add('chatter-open');
 }
 
 /* ---------- Modal triggers / order filters / consumption ---------------- */
@@ -340,6 +429,7 @@ function generateSidebar(activePage) {
     // Initial pass for static content already in DOM
     document.addEventListener('DOMContentLoaded', () => applyCellTooltips());
 })();
+// Look at the <span id="chatter-badge"> inside the button
 function generateHeader(pageTitle, additionalButtons = '') {
     return `
         <header class="header">
@@ -348,7 +438,11 @@ function generateHeader(pageTitle, additionalButtons = '') {
                 <h1 class="page-title">${pageTitle}</h1>
             </div>
             <div class="header-right">
-
+                <button class="icon-btn" onclick="toggleChatterSidebar()" title="Message about this page">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span id="chatter-badge" class="notification-badge" style="display:none; top: 0px; right: 0px; width: 8px; height: 8px; min-width: auto; padding: 0;"></span>
+                </button>
+                
                 ${additionalButtons}
             </div>
         </header>`;
@@ -421,6 +515,44 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeModalTriggers();
     interceptDpLinks();
+
+    // 1. Auto-open Chatter check (from previous step)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openChatter') === 'true') {
+        setTimeout(() => { toggleChatterSidebar(true); }, 300);
+    }
+
+    // 2. Determine if we are on a record page, and if so, load the invisible ping
+    let recordId = null;
+    if (urlParams.has('OrderID')) recordId = urlParams.get('OrderID');
+    else if (urlParams.has('PurchaseOrderID')) recordId = urlParams.get('PurchaseOrderID');
+    else if (urlParams.has('SessionID')) recordId = urlParams.get('SessionID');
+    else if (urlParams.has('PickID')) recordId = urlParams.get('PickID');
+
+    if (recordId) {
+        // Create an invisible container for the Caspio Ping DataPage
+        const pingContainer = document.createElement('div');
+        pingContainer.style.display = 'none'; 
+        
+        // REPLACE WITH YOUR NEW PING DATAPAGE ID
+        const pingScript = document.createElement('script');
+        pingScript.src = `https://c2ect483.caspio.com/dp/975940004f9caad35f6a412c8094/emb?ChatterRecordID=${recordId}`;
+        
+        pingContainer.appendChild(pingScript);
+        document.body.appendChild(pingContainer);
+    }
+});
+
+// 3. Listen for the ping from the invisible Caspio page
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.action === 'chatter_ping') {
+        const badge = document.getElementById('chatter-badge');
+        if (event.data.hasMessages) {
+            toggleChatterSidebar(true);
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
+    }
 });
 
 function toggleSidebar() {
