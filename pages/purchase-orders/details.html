@@ -78,19 +78,19 @@
         if (purchaseOrderId) {
             const detailsContainer = document.getElementById('po-details-container');
             const detailsScript = document.createElement('script');
-            detailsScript.src = `https://c2ect483.caspio.com/dp/97594000e98e324644c14ec3991f/emb?PurchaseOrderID=${purchaseOrderId}`;
+            detailsScript.src = `${CASPIO_DATAPAGES.purchaseOrderDetails}?PurchaseOrderID=${purchaseOrderId}`;
             detailsContainer.innerHTML = '';
             detailsContainer.appendChild(detailsScript);
 
             const itemsContainer = document.getElementById('po-items-container');
             const itemsScript = document.createElement('script');
-            itemsScript.src = `https://c2ect483.caspio.com/dp/9759400078819e1302ad47aa9c7f/emb?PurchaseOrderID=${purchaseOrderId}`;
+            itemsScript.src = `${CASPIO_DATAPAGES.purchaseOrderItems}?PurchaseOrderID=${purchaseOrderId}`;
             itemsContainer.innerHTML = '';
             itemsContainer.appendChild(itemsScript);
 
             const historyContainer = document.getElementById('po-history-container');
             const historyScript = document.createElement('script');
-            historyScript.src = `https://c2ect483.caspio.com/dp/9759400005c63bb9d87943a4b827/emb?PurchaseOrderID=${purchaseOrderId}`;
+            historyScript.src = `${CASPIO_DATAPAGES.purchaseOrderHistory}?PurchaseOrderID=${purchaseOrderId}`;
             historyContainer.innerHTML = '';
             historyContainer.appendChild(historyScript);
         } else {

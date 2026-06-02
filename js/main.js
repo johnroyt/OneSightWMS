@@ -65,7 +65,10 @@ const CASPIO_DATAPAGES = {
     poReceivingSessionCreate: 'https://c2ect483.caspio.com/dp/975940008c2457accdfd4293852f/emb',
     chatterCreate:            'https://c2ect483.caspio.com/dp/97594000076ff9dd364b43c9a1c1/emb',
     chatterHistory: 'https://c2ect483.caspio.com/dp/97594000afae078e6e644612b206/emb',
-    chatterHistoryGlobal: 'https://c2ect483.caspio.com/dp/97594000568f3ec3f1e74e3b81a2/emb'
+    chatterHistoryGlobal: 'https://c2ect483.caspio.com/dp/97594000568f3ec3f1e74e3b81a2/emb',
+    purchaseOrderDetails:  'https://c2ect483.caspio.com/dp/97594000e98e324644c14ec3991f/emb',
+    purchaseOrderItems:    'https://c2ect483.caspio.com/dp/9759400078819e1302ad47aa9c7f/emb',
+    purchaseOrderHistory:  'https://c2ect483.caspio.com/dp/9759400002acafc3e14b49cb995b/emb'
 };
 
 const MODAL_OPTIONS = {
