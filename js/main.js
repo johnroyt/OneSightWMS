@@ -182,6 +182,11 @@ function closeGenericModal() {
 }
 
 /* ---------- Chatter compose constants ----------------------------------- */
+// Master switch for the Chatter messaging feature. Set to `true` to surface it
+// in the UI again. While `false`, the header button is hidden, auto-open and the
+// ping listener are disabled, and no Chatter network calls fire. All Chatter
+// code below is intentionally left intact so the feature can be re-enabled.
+const CHATTER_ENABLED        = false;
 const CHATTER_WORKER_URL     = 'https://holy-glitter-ebc0.operations-78f.workers.dev/';
 const CHATTER_APP_ACCESS_KEY = 'fQ$V6iIAVDh318F#';
 
@@ -733,6 +738,12 @@ function generateSidebar(activePage) {
 })();
 // Look at the <span id="chatter-badge"> inside the button
 function generateHeader(pageTitle, additionalButtons = '') {
+    // Chatter button is only rendered when the feature is enabled.
+    const chatterButton = CHATTER_ENABLED ? `
+                <button class="icon-btn" onclick="toggleChatterSidebar()" title="Message about this page">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span id="chatter-badge" class="notification-badge" style="display:none; top: 0px; right: 0px; width: 8px; height: 8px; min-width: auto; padding: 0;"></span>
+                </button>` : '';
     return `
         <header class="header">
             <div class="header-left">
@@ -740,11 +751,8 @@ function generateHeader(pageTitle, additionalButtons = '') {
                 <h1 class="page-title">${pageTitle}</h1>
             </div>
             <div class="header-right">
-                <button class="icon-btn" onclick="toggleChatterSidebar()" title="Message about this page">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <span id="chatter-badge" class="notification-badge" style="display:none; top: 0px; right: 0px; width: 8px; height: 8px; min-width: auto; padding: 0;"></span>
-                </button>
-                
+                ${chatterButton}
+
                 ${additionalButtons}
             </div>
         </header>`;
@@ -820,35 +828,39 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModalTriggers();
     interceptDpLinks();
 
-    // 1. Auto-open Chatter check (from previous step)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('openChatter') === 'true') {
-        setTimeout(() => { toggleChatterSidebar(true); }, 300);
-    }
+    // Chatter bootstrap (auto-open + invisible ping loader) only runs when enabled.
+    if (CHATTER_ENABLED) {
+        // 1. Auto-open Chatter check (from previous step)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('openChatter') === 'true') {
+            setTimeout(() => { toggleChatterSidebar(true); }, 300);
+        }
 
-    // 2. Determine if we are on a record page, and if so, load the invisible ping
-    let recordId = null;
-    if (urlParams.has('OrderID')) recordId = urlParams.get('OrderID');
-    else if (urlParams.has('PurchaseOrderID')) recordId = urlParams.get('PurchaseOrderID');
-    else if (urlParams.has('SessionID')) recordId = urlParams.get('SessionID');
-    else if (urlParams.has('PickID')) recordId = urlParams.get('PickID');
+        // 2. Determine if we are on a record page, and if so, load the invisible ping
+        let recordId = null;
+        if (urlParams.has('OrderID')) recordId = urlParams.get('OrderID');
+        else if (urlParams.has('PurchaseOrderID')) recordId = urlParams.get('PurchaseOrderID');
+        else if (urlParams.has('SessionID')) recordId = urlParams.get('SessionID');
+        else if (urlParams.has('PickID')) recordId = urlParams.get('PickID');
 
-    if (recordId) {
-        // Create an invisible container for the Caspio Ping DataPage
-        const pingContainer = document.createElement('div');
-        pingContainer.style.display = 'none'; 
-        
-        // REPLACE WITH YOUR NEW PING DATAPAGE ID
-        const pingScript = document.createElement('script');
-        pingScript.src = `https://c2ect483.caspio.com/dp/975940004f9caad35f6a412c8094/emb?ChatterRecordID=${recordId}`;
-        
-        pingContainer.appendChild(pingScript);
-        document.body.appendChild(pingContainer);
+        if (recordId) {
+            // Create an invisible container for the Caspio Ping DataPage
+            const pingContainer = document.createElement('div');
+            pingContainer.style.display = 'none';
+
+            // REPLACE WITH YOUR NEW PING DATAPAGE ID
+            const pingScript = document.createElement('script');
+            pingScript.src = `https://c2ect483.caspio.com/dp/975940004f9caad35f6a412c8094/emb?ChatterRecordID=${recordId}`;
+
+            pingContainer.appendChild(pingScript);
+            document.body.appendChild(pingContainer);
+        }
     }
 });
 
 // 3. Listen for the ping from the invisible Caspio page
 window.addEventListener('message', function(event) {
+    if (!CHATTER_ENABLED) return;
     if (event.data && event.data.action === 'chatter_ping') {
         const badge = document.getElementById('chatter-badge');
         if (event.data.hasMessages) {
