@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>North America Service Footprint</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    />
+    <link rel="stylesheet" href="styles.css?v=dark-header-1" />
+  </head>
+  <body>
+    <div class="app-shell" id="appShell">
+      <aside class="control-panel" aria-label="Map controls">
+        <div class="brand-block">
+          <p class="eyebrow">OneSight</p>
+          <h1>North America Service Footprint</h1>
+        </div>
+
+        <section class="upload-section" aria-labelledby="uploadTitle">
+          <h2 id="uploadTitle">CSV Data</h2>
+          <label class="file-drop" for="csvFile">
+            <span class="file-drop-icon">CSV</span>
+            <span>
+              <strong>Replace or enrich source data</strong>
+              <small>The live page loads data/service_locations.csv automatically. Upload here only for prep or cleanup.</small>
+            </span>
+          </label>
+          <input id="csvFile" type="file" accept=".csv,text/csv" />
+          <div class="control-row">
+            <button id="loadSampleBtn" type="button">Load sample data</button>
+            <button id="downloadTemplateBtn" type="button">CSV template</button>
+          </div>
+          <div class="status-message" id="statusMessage" role="status"></div>
+          <details class="warnings" id="warningDetails">
+            <summary><span id="warningCount">0</span> validation warning(s)</summary>
+            <ul id="warningList"></ul>
+          </details>
+        </section>
+
+        <section class="cleanup-section" aria-labelledby="cleanupTitle">
+          <h2 id="cleanupTitle">Location Cleanup</h2>
+          <div class="cleanup-status" id="cleanupStatus">No rows need coordinate cleanup.</div>
+          <label>
+            Geoapify API key
+            <input id="geoapifyKey" type="password" autocomplete="off" placeholder="Paste key for this session" />
+          </label>
+          <div class="control-row">
+            <label>
+              Max geocodes
+              <select id="geocodeLimit">
+                <option value="3">3 rows</option>
+                <option value="5" selected>5 rows</option>
+                <option value="10">10 rows</option>
+                <option value="25">25 rows</option>
+                <option value="50">50 rows</option>
+                <option value="100">100 rows</option>
+              </select>
+            </label>
+            <button id="geocodeMissingBtn" type="button">Geocode missing</button>
+          </div>
+          <div class="control-row">
+            <button id="exportEnrichedBtn" type="button">Export enriched CSV</button>
+            <button id="clearGeocodeCacheBtn" type="button">Clear cache</button>
+          </div>
+          <div class="cleanup-table-wrap">
+            <table class="cleanup-table" id="cleanupTable">
+              <thead>
+                <tr>
+                  <th>Location</th>
+                  <th>Lookup text</th>
+                  <th>Latitude</th>
+                  <th>Longitude</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cleanupTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="filter-section" aria-labelledby="filtersTitle">
+          <h2 id="filtersTitle">Filters</h2>
+          <fieldset class="service-toggles">
+            <legend>Service type</legend>
+            <label class="toggle direct">
+              <input type="checkbox" name="serviceType" value="direct_service" checked />
+              <span class="marker-sample direct_service"></span>
+              <span>Direct Service</span>
+            </label>
+            <label class="toggle indirect">
+              <input type="checkbox" name="serviceType" value="indirect_service" checked />
+              <span class="marker-sample indirect_service"></span>
+              <span>Indirect Service</span>
+            </label>
+            <label class="toggle voucher">
+              <input type="checkbox" name="serviceType" value="voucher_active_store" checked />
+              <span class="marker-sample voucher_active_store"></span>
+              <span>Voucher Active Store</span>
+            </label>
+          </fieldset>
+
+          <label>
+            Country
+            <select id="countryFilter">
+              <option value="all">All countries</option>
+            </select>
+          </label>
+          <label>
+            State/province
+            <select id="stateFilter">
+              <option value="all">All states/provinces</option>
+            </select>
+          </label>
+          <label>
+            Reporting period
+            <select id="periodFilter">
+              <option value="all">All periods</option>
+            </select>
+          </label>
+          <label>
+            Program
+            <select id="programFilter">
+              <option value="all">All programs</option>
+            </select>
+          </label>
+          <label>
+            Partner
+            <select id="partnerFilter">
+              <option value="all">All partners</option>
+            </select>
+          </label>
+          <label>
+            Active status
+            <select id="statusFilter">
+              <option value="all">All statuses</option>
+            </select>
+          </label>
+          <div class="control-row">
+            <button id="resetFiltersBtn" type="button">Reset filters</button>
+            <button id="exportCsvBtn" type="button">Export filtered CSV</button>
+          </div>
+        </section>
+      </aside>
+
+      <main class="map-stage">
+        <header class="presentation-header">
+          <div>
+            <p class="eyebrow">OneSight North America</p>
+            <h2>North America Service Footprint</h2>
+          </div>
+          <div class="header-actions">
+            <button id="presentationBtn" type="button" title="Hide prep controls">Presentation mode</button>
+            <button id="fullscreenBtn" type="button" title="Open full-screen map">Full screen</button>
+            <button id="printBtn" type="button" title="Print or save as PDF">Print</button>
+          </div>
+        </header>
+
+        <div id="map" aria-label="North America map"></div>
+
+        <section class="legend" aria-label="Map legend">
+          <div><span class="marker-sample direct_service"></span> Direct Service</div>
+          <div><span class="marker-sample indirect_service"></span> Indirect Service</div>
+          <div><span class="marker-sample voucher_active_store"></span> Voucher Active Store</div>
+        </section>
+
+        <div class="empty-state" id="emptyState">No records match the current filters.</div>
+      </main>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    ></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="app.js?v=map-size-fix-1"></script>
+  </body>
+</html>
