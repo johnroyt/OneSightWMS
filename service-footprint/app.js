@@ -600,23 +600,14 @@ function makeRecordPopup(record) {
     fields = [
       ["Type", SERVICE_TYPES[record.service_type]],
       ["Record Type", getValue(record, "record_type")],
-      ["Avg Orders / Year", formatOrders(getValue(record, "avg_orders_per_year"))],
-      ["Orders YTD", formatOrders(getValue(record, "orders_ytd"))],
       ["Location", location],
       ["Notes", getValue(record, "notes")],
     ];
   } else if (record.service_type === "vision_clinic_programming") {
-    const wearers = getValue(record, "wearers_ytd");
-    // Show actual wearers once a clinic has served; until then show the target.
-    const wearersLine =
-      wearers !== ""
-        ? ["Wearers Served", formatOrders(wearers)]
-        : ["Target Lives Served", formatOrders(getValue(record, "target_lives_served"))];
     fields = [
       ["Type", SERVICE_TYPES[record.service_type]],
       ["Status", getValue(record, "active_status")],
       ["Clinic Date", formatDateRange(getValue(record, "start_date"), getValue(record, "end_date"))],
-      wearersLine,
       ["Partner", getValue(record, "partner_name")],
       ["Location", location],
     ];
@@ -624,7 +615,6 @@ function makeRecordPopup(record) {
     fields = [
       ["Type", SERVICE_TYPES[record.service_type]],
       ["Brand", getValue(record, "partner_name")],
-      ["Vouchers 2026", formatOrders(getValue(record, "wearers_ytd"))],
       ["Location", location],
     ];
   } else {
