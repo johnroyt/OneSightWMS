@@ -14,9 +14,9 @@ const SERVICE_TYPES = {
 };
 
 const SERVICE_ICONS = {
-  direct_service: "img/directicon.png",
-  indirect_service: "img/indirect.png",
-  voucher_active_store: "img/vouchericon.png",
+  direct_service: "../img/directicon.png",
+  indirect_service: "../img/indirect.png",
+  voucher_active_store: "../img/vouchericon.png",
 };
 
 const NORTH_AMERICA_PRESENTATION_CENTER = [42.5, -97];
@@ -71,7 +71,7 @@ VS-004,San Juan Voucher Store,voucher_active_store,18.4655,-66.1057,San Juan,PR,
 
 const GEOCODE_CACHE_KEY = "onesight-geocode-cache-v1";
 const SESSION_STORAGE_KEY = "onesight-service-locations-session-v1";
-const DEFAULT_DATA_URL = "data/service_locations.csv";
+const DEFAULT_DATA_URL = "../data/service_locations.csv";
 
 let validRecords = [];
 let filteredRecords = [];
@@ -229,6 +229,7 @@ elements.markersToggleBtn?.addEventListener("click", () => {
   markersVisible = !markersVisible;
   elements.markersToggleBtn.classList.toggle("is-active", markersVisible);
   elements.markersToggleBtn.setAttribute("aria-pressed", String(markersVisible));
+  elements.markersToggleBtn.setAttribute("aria-checked", String(markersVisible));
   if (markersVisible) {
     map.addLayer(markerGroup);
   } else {
@@ -244,6 +245,7 @@ elements.heatToggleBtn?.addEventListener("click", () => {
   heatVisible = !heatVisible;
   elements.heatToggleBtn.classList.toggle("is-active", heatVisible);
   elements.heatToggleBtn.setAttribute("aria-pressed", String(heatVisible));
+  elements.heatToggleBtn.setAttribute("aria-checked", String(heatVisible));
   renderHeat();
 });
 

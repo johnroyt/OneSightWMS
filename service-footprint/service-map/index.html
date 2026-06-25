@@ -16,7 +16,7 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="styles.css?v=dark-header-1" />
+    <link rel="stylesheet" href="styles.css?v=service-map-2" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -159,12 +159,22 @@
             <p class="eyebrow">OneSight North America</p>
             <h2>North America Service Footprint</h2>
           </div>
-          <div class="header-actions">
-            <button id="presentationBtn" type="button" title="Hide prep controls">Presentation mode</button>
-            <button id="fullscreenBtn" type="button" title="Open full-screen map">Full screen</button>
-            <button id="printBtn" type="button" title="Print or save as PDF">Print</button>
-            <button id="markersToggleBtn" type="button" class="is-active" aria-pressed="true" title="Toggle location markers (admin)">Markers</button>
-            <button id="heatToggleBtn" type="button" aria-pressed="false" title="Toggle wearers heat map (admin)">Heat map</button>
+          <div class="header-right">
+            <div class="map-tools">
+              <button id="markersToggleBtn" type="button" class="switch is-active" role="switch" aria-checked="true" aria-pressed="true" title="Show or hide location markers">
+                <span class="switch-label">Markers</span>
+                <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+              </button>
+              <button id="heatToggleBtn" type="button" class="switch" role="switch" aria-checked="false" aria-pressed="false" title="Show or hide the wearers heat map">
+                <span class="switch-label">Heat map</span>
+                <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+              </button>
+            </div>
+            <div class="header-actions">
+              <button id="presentationBtn" type="button" title="Hide prep controls">Presentation mode</button>
+              <button id="fullscreenBtn" type="button" title="Open full-screen map">Full screen</button>
+              <button id="printBtn" type="button" title="Print or save as PDF">Print</button>
+            </div>
           </div>
         </header>
 
@@ -193,6 +203,6 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="app.js?v=voucher-popup-1"></script>
+    <script src="app.js?v=service-map-1"></script>
   </body>
 </html>

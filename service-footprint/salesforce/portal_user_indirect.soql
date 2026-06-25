@@ -1,0 +1,35 @@
+-- Source query for INDIRECT service data (Salesforce Portal_User__c)
+-- Used to populate service-footprint/data/service_locations.csv (indirect_service rows).
+-- Saved for potential future live integration with Salesforce.
+--
+-- Field notes:
+--   Id                              -> stored as salesforce_id in the CSV (not displayed)
+--   RecordTypeId                    -> mapped to a record type name (CLTL / CFS / ...) for display
+--   Average_Orders_per_Year__c      -> displayed in popup ("Avg Orders / Year")
+--   Rx_Orders_YTD__c                -> displayed in popup ("Orders YTD")
+--   Smarty_Streets_Geolocation__Latitude__s / __Longitude__s -> latitude / longitude
+
+SELECT
+  Account_Email__c,
+  Account_Name__c,
+  Account_Status__c,
+  Average_Jobs_Per_Year_Range__c,
+  Average_Orders_Per_Month__c,
+  Average_Orders_per_Year__c,
+  Average_User_Sessions_per_Day__c,
+  Engagement_Level__c,
+  Engagement_Status__c,
+  Id,
+  Last_Logged_In_Date__c,
+  Name,
+  RecordTypeId,
+  Rx_Orders_YTD__c,
+  Shipping_Address_Line_1__c,
+  Shipping_Address_Line_2__c,
+  Shipping_Address__c,
+  Smarty_Streets_Geolocation__Latitude__s,
+  Smarty_Streets_Geolocation__Longitude__s,
+  State_Code__c,
+  State__c,
+  Zip_Code__c
+FROM Portal_User__c
