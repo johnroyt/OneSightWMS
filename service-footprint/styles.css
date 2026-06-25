@@ -466,15 +466,15 @@ select {
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.12));
 }
 
-.marker-sample.direct_service {
+.marker-sample.vision_clinic_programming {
   background-image: url("img/directicon.png");
 }
 
-.marker-sample.indirect_service {
+.marker-sample.non_vision_clinic_programming {
   background-image: url("img/indirect.png");
 }
 
-.marker-sample.voucher_active_store {
+.marker-sample.voucher {
   background-image: url("img/vouchericon.png");
 }
 
@@ -510,15 +510,15 @@ select {
   flex: 1 1 0;
 }
 
-.service-segment.direct_service {
+.service-segment.vision_clinic_programming {
   background: var(--direct);
 }
 
-.service-segment.indirect_service {
+.service-segment.non_vision_clinic_programming {
   background: var(--indirect);
 }
 
-.service-segment.voucher_active_store {
+.service-segment.voucher {
   background: var(--voucher);
 }
 

@@ -8,15 +8,15 @@ const REQUIRED_FIELDS = [
 ];
 
 const SERVICE_TYPES = {
-  direct_service: "Direct Service",
-  indirect_service: "Indirect Service",
-  voucher_active_store: "Voucher Active Store",
+  vision_clinic_programming: "Vision Clinic Programming",
+  non_vision_clinic_programming: "Non-Vision Clinic Programming",
+  voucher: "Voucher",
 };
 
 const SERVICE_ICONS = {
-  direct_service: "img/directicon.png",
-  indirect_service: "img/indirect.png",
-  voucher_active_store: "img/vouchericon.png",
+  vision_clinic_programming: "img/directicon.png",
+  non_vision_clinic_programming: "img/indirect.png",
+  voucher: "img/vouchericon.png",
 };
 
 const NORTH_AMERICA_PRESENTATION_CENTER = [42.5, -97];
@@ -58,16 +58,16 @@ const TEMPLATE_COLUMNS = [
 ];
 
 const SAMPLE_CSV = `location_id,location_name,service_type,latitude,longitude,city,state_province,country,program_name,partner_name,reporting_period,active_status,notes
-DS-001,Chicago Community Vision Clinic,direct_service,41.8781,-87.6298,Chicago,IL,United States,Mobile Clinic,,H1 2026,Active,School and community clinic
-DS-002,Los Angeles Mobile Clinic,direct_service,34.0522,-118.2437,Los Angeles,CA,United States,Mobile Clinic,,H1 2026,Active,Multi-day direct service event
-DS-003,Toronto School Vision Day,direct_service,43.6532,-79.3832,Toronto,ON,Canada,School Vision,,H1 2026,Active,School-based event
-IS-001,Denver Partner Fulfillment,indirect_service,39.7392,-104.9903,Denver,CO,United States,Champions for Sight,Front Range Outreach,H1 2026,Active,Partner-delivered service
-IS-002,Atlanta CLTL Network,indirect_service,33.7490,-84.3880,Atlanta,GA,United States,CLTL,Southeast Health Alliance,H1 2026,Active,Network partner access
-IS-003,Montreal Donation Access,indirect_service,45.5017,-73.5673,Montreal,QC,Canada,Donation Access,Vision Care Collective,H1 2026,Active,Donation-supported access
-VS-001,Dallas Voucher Store,voucher_active_store,32.7767,-96.7970,Dallas,TX,United States,Voucher Access,Retail Partner A,H1 2026,Active,Active redemption store
-VS-002,Phoenix Voucher Store,voucher_active_store,33.4484,-112.0740,Phoenix,AZ,United States,Voucher Access,Retail Partner B,H1 2026,Active,Active redemption store
-VS-003,Vancouver Voucher Store,voucher_active_store,49.2827,-123.1207,Vancouver,BC,Canada,Voucher Access,Retail Partner C,H1 2026,Active,Active redemption store
-VS-004,San Juan Voucher Store,voucher_active_store,18.4655,-66.1057,San Juan,PR,United States,Voucher Access,Retail Partner D,H1 2026,Active,Active redemption store`;
+DS-001,Chicago Community Vision Clinic,vision_clinic_programming,41.8781,-87.6298,Chicago,IL,United States,Mobile Clinic,,H1 2026,Active,School and community clinic
+DS-002,Los Angeles Mobile Clinic,vision_clinic_programming,34.0522,-118.2437,Los Angeles,CA,United States,Mobile Clinic,,H1 2026,Active,Multi-day direct service event
+DS-003,Toronto School Vision Day,vision_clinic_programming,43.6532,-79.3832,Toronto,ON,Canada,School Vision,,H1 2026,Active,School-based event
+IS-001,Denver Partner Fulfillment,non_vision_clinic_programming,39.7392,-104.9903,Denver,CO,United States,Champions for Sight,Front Range Outreach,H1 2026,Active,Partner-delivered service
+IS-002,Atlanta CLTL Network,non_vision_clinic_programming,33.7490,-84.3880,Atlanta,GA,United States,CLTL,Southeast Health Alliance,H1 2026,Active,Network partner access
+IS-003,Montreal Donation Access,non_vision_clinic_programming,45.5017,-73.5673,Montreal,QC,Canada,Donation Access,Vision Care Collective,H1 2026,Active,Donation-supported access
+VS-001,Dallas Voucher Store,voucher,32.7767,-96.7970,Dallas,TX,United States,Voucher Access,Retail Partner A,H1 2026,Active,Active redemption store
+VS-002,Phoenix Voucher Store,voucher,33.4484,-112.0740,Phoenix,AZ,United States,Voucher Access,Retail Partner B,H1 2026,Active,Active redemption store
+VS-003,Vancouver Voucher Store,voucher,49.2827,-123.1207,Vancouver,BC,Canada,Voucher Access,Retail Partner C,H1 2026,Active,Active redemption store
+VS-004,San Juan Voucher Store,voucher,18.4655,-66.1057,San Juan,PR,United States,Voucher Access,Retail Partner D,H1 2026,Active,Active redemption store`;
 
 const GEOCODE_CACHE_KEY = "onesight-geocode-cache-v1";
 const SESSION_STORAGE_KEY = "onesight-service-locations-session-v1";
@@ -567,7 +567,7 @@ function makeMarkerIcon(serviceType, records = []) {
     });
   }
 
-  const size = serviceType === "direct_service" ? [38, 52] : serviceType === "indirect_service" ? [36, 50] : [36, 50];
+  const size = serviceType === "vision_clinic_programming" ? [38, 52] : serviceType === "non_vision_clinic_programming" ? [36, 50] : [36, 50];
   return L.divIcon({
     className: "service-marker-wrapper",
     html: `<img class="service-marker ${serviceType}" src="${SERVICE_ICONS[serviceType]}" alt="" aria-hidden="true" />`,
@@ -596,7 +596,7 @@ function makeRecordPopup(record) {
   const location = [record.city, record.state_province, record.country].filter(Boolean).join(", ");
   let fields;
 
-  if (record.service_type === "indirect_service") {
+  if (record.service_type === "non_vision_clinic_programming") {
     fields = [
       ["Type", SERVICE_TYPES[record.service_type]],
       ["Record Type", getValue(record, "record_type")],
@@ -605,7 +605,7 @@ function makeRecordPopup(record) {
       ["Location", location],
       ["Notes", getValue(record, "notes")],
     ];
-  } else if (record.service_type === "direct_service") {
+  } else if (record.service_type === "vision_clinic_programming") {
     const wearers = getValue(record, "wearers_ytd");
     // Show actual wearers once a clinic has served; until then show the target.
     const wearersLine =
@@ -620,7 +620,7 @@ function makeRecordPopup(record) {
       ["Partner", getValue(record, "partner_name")],
       ["Location", location],
     ];
-  } else if (record.service_type === "voucher_active_store") {
+  } else if (record.service_type === "voucher") {
     fields = [
       ["Type", SERVICE_TYPES[record.service_type]],
       ["Brand", getValue(record, "partner_name")],
@@ -674,9 +674,9 @@ function countServiceTypes(records) {
       return counts;
     },
     {
-      direct_service: 0,
-      indirect_service: 0,
-      voucher_active_store: 0,
+      vision_clinic_programming: 0,
+      non_vision_clinic_programming: 0,
+      voucher: 0,
     },
   );
 }

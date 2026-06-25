@@ -16,7 +16,7 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
     />
-    <link rel="stylesheet" href="styles.css?v=dark-header-1" />
+    <link rel="stylesheet" href="styles.css?v=labels-1" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -94,19 +94,19 @@
           <fieldset class="service-toggles">
             <legend>Service type</legend>
             <label class="toggle direct">
-              <input type="checkbox" name="serviceType" value="direct_service" checked />
-              <span class="marker-sample direct_service"></span>
-              <span>Direct Service</span>
+              <input type="checkbox" name="serviceType" value="vision_clinic_programming" checked />
+              <span class="marker-sample vision_clinic_programming"></span>
+              <span>Vision Clinic Programming</span>
             </label>
             <label class="toggle indirect">
-              <input type="checkbox" name="serviceType" value="indirect_service" checked />
-              <span class="marker-sample indirect_service"></span>
-              <span>Indirect Service</span>
+              <input type="checkbox" name="serviceType" value="non_vision_clinic_programming" checked />
+              <span class="marker-sample non_vision_clinic_programming"></span>
+              <span>Non-Vision Clinic Programming</span>
             </label>
             <label class="toggle voucher">
-              <input type="checkbox" name="serviceType" value="voucher_active_store" checked />
-              <span class="marker-sample voucher_active_store"></span>
-              <span>Voucher Active Store</span>
+              <input type="checkbox" name="serviceType" value="voucher" checked />
+              <span class="marker-sample voucher"></span>
+              <span>Voucher</span>
             </label>
           </fieldset>
 
@@ -172,14 +172,14 @@
 
         <section class="legend" aria-label="Filter by service type">
           <p class="legend-hint">Tap to filter</p>
-          <button type="button" class="legend-toggle" data-service-type="direct_service" aria-pressed="true">
-            <span class="marker-sample direct_service"></span><span>Direct Service</span>
+          <button type="button" class="legend-toggle" data-service-type="vision_clinic_programming" aria-pressed="true">
+            <span class="marker-sample vision_clinic_programming"></span><span>Vision Clinic Programming</span>
           </button>
-          <button type="button" class="legend-toggle" data-service-type="indirect_service" aria-pressed="true">
-            <span class="marker-sample indirect_service"></span><span>Indirect Service</span>
+          <button type="button" class="legend-toggle" data-service-type="non_vision_clinic_programming" aria-pressed="true">
+            <span class="marker-sample non_vision_clinic_programming"></span><span>Non-Vision Clinic Programming</span>
           </button>
-          <button type="button" class="legend-toggle" data-service-type="voucher_active_store" aria-pressed="true">
-            <span class="marker-sample voucher_active_store"></span><span>Voucher Active Store</span>
+          <button type="button" class="legend-toggle" data-service-type="voucher" aria-pressed="true">
+            <span class="marker-sample voucher"></span><span>Voucher</span>
           </button>
         </section>
 
@@ -193,6 +193,6 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="app.js?v=voucher-popup-1"></script>
+    <script src="app.js?v=labels-1"></script>
   </body>
 </html>
