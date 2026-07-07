@@ -420,7 +420,7 @@ function renderMap() {
       icon: makeMarkerIcon(lead.service_type, records),
       title: lead.location_name,
       records,
-    }).bindPopup(makePopup(records), { maxWidth: 340 });
+    }).bindPopup(makePopup(records), { maxWidth: 340, maxHeight: 360 });
     markerGroup.addLayer(marker);
   });
 
