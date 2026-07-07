@@ -62,7 +62,7 @@ const CASPIO_DATAPAGES = {
     productCreate:         'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
     modelStockCreate:      'https://c2ect483.caspio.com/dp/9759400006122dd8bc2842fa9cb0/emb',
     transactionCreate:        'https://c2ect483.caspio.com/dp/97594000588934525a27433b83a7/emb',
-    poReceivingSessionCreate: 'https://c2ect483.caspio.com/dp/975940008c2457accdfd4293852f/emb',
+    poReceivingSessionCreate: 'https://c2ect483.caspio.com/dp/975940009ba2551ac10c44c9a190/emb',
     chatterCreate:            'https://c2ect483.caspio.com/dp/97594000076ff9dd364b43c9a1c1/emb',
     chatterHistory: 'https://c2ect483.caspio.com/dp/97594000afae078e6e644612b206/emb',
     chatterHistoryGlobal: 'https://c2ect483.caspio.com/dp/97594000568f3ec3f1e74e3b81a2/emb',

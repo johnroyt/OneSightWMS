@@ -70,7 +70,7 @@
             if (e.data && e.data.destinationLocationID) {
                 const btn = document.querySelector('[data-modal-key="poReceivingSessionCreate"]');
                 if (btn) {
-                    btn.setAttribute('data-modal-params', JSON.stringify({ DestinationLocationID: e.data.destinationLocationID }));
+                    btn.setAttribute('data-modal-params', JSON.stringify({ LocationID: e.data.destinationLocationID }));
                 }
             }
         });
