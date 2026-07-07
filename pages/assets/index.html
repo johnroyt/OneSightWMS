@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Schedule - WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <style>
+        /* ---- Asset schedule (Pod timeline) — scoped styles ---------------- */
+        .pod-controls {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+            padding: 12px 14px; border-bottom: 1px solid var(--c-line-2);
+        }
+        .pod-controls label { font-size: 12px; color: var(--c-ink-3); font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .pod-controls select { font-size: 12.5px; padding: 5px 8px; border: 1px solid var(--c-line); border-radius: 8px; background: var(--c-surface); color: var(--c-ink); }
+        .pod-controls input[type="checkbox"] { accent-color: var(--c-primary); }
+        .pod-spacer { flex: 1 1 auto; }
+
+        .pod-help { padding: 9px 14px; font-size: 12px; color: var(--c-ink-3); background: var(--c-surface-2); border-bottom: 1px solid var(--c-line-2); }
+        .pod-help b { color: var(--c-ink-2); font-weight: 600; }
+
+        /* Issues summary — collapsible */
+        .pod-issues { border-bottom: 1px solid var(--c-line-2); }
+        .pod-issues-head {
+            display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; user-select: none;
+            font-size: 12.5px; font-weight: 600; color: var(--c-ink);
+        }
+        .pod-issues-head .chev { transition: transform .15s; color: var(--c-ink-3); }
+        .pod-issues.collapsed .chev { transform: rotate(-90deg); }
+        .pod-issues.collapsed .pod-summary { display: none; }
+        .pod-pill { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+        .pod-pill.red { background: var(--c-danger-soft); color: #7A2A28; }
+        .pod-pill.amber { background: var(--c-warning-soft); color: #6E4A09; }
+        .pod-pill.green { background: var(--c-success-soft); color: #1E5A40; }
+
+        .pod-summary { padding: 0 14px 12px; display: flex; flex-direction: column; gap: 7px; }
+        .pod-alert {
+            display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px;
+            padding: 9px 11px; border-radius: 8px; border: 1px solid transparent;
+        }
+        .pod-alert.clickable { cursor: pointer; }
+        .pod-alert.clickable:hover { filter: brightness(0.98); }
+        .pod-alert .ico { flex: 0 0 auto; margin-top: 1px; }
+        .pod-alert.conflict { background: var(--c-danger-soft); border-color: #E7C3C1; color: #7A2A28; }
+        .pod-alert.tight    { background: var(--c-warning-soft); border-color: #E7D29A; color: #6E4A09; }
+        .pod-alert.ok       { background: var(--c-success-soft); border-color: #BFE0CE; color: #1E5A40; }
+        .pod-alert b { font-weight: 600; }
+
+        .pod-legend { display: flex; flex-wrap: wrap; gap: 16px; padding: 9px 14px; font-size: 11.5px; color: var(--c-ink-3); border-bottom: 1px solid var(--c-line-2); }
+        .pod-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .pod-swatch { width: 20px; height: 12px; border-radius: 3px; display: inline-block; }
+        .sw-clinic { background: var(--c-primary); }
+        .sw-buffer { background: #E1ECF1; border: 1px solid #CFE0E8; }
+        .sw-conflict { background: var(--c-danger); }
+        .sw-tight { background: var(--c-warning); }
+        .sw-today { width: 0; border-left: 2px dashed var(--c-accent); height: 14px; }
+
+        /* Timeline shell */
+        .pod-timeline-wrap { overflow-x: auto; cursor: grab; }
+        .pod-timeline-wrap.dragging { cursor: grabbing; user-select: none; }
+        .pod-timeline-wrap.dragging .pod-booking, .pod-timeline-wrap.dragging .pod-ext-label { pointer-events: none; }
+        .pod-timeline { position: relative; }
+        .pod-head { display: flex; align-items: flex-end; height: 28px; background: var(--c-surface); position: sticky; top: 0; z-index: 6; }
+        .pod-head-label { flex: 0 0 168px; width: 168px; position: relative; z-index: 8; background: var(--c-surface); will-change: transform;
+            font-size: 11px; font-weight: 600; color: var(--c-ink-4); text-transform: uppercase; letter-spacing: .05em; padding: 0 0 5px 8px; display: flex; align-items: flex-end; border-right: 1px solid var(--c-line); box-shadow: 3px 0 5px -3px rgba(17,35,58,.18); }
+        .pod-axis { position: relative; height: 28px; }
+        .pod-axis .tick { position: absolute; bottom: 5px; border-left: 1px solid var(--c-line); height: 9px; padding-left: 6px; font-size: 10.5px; color: var(--c-ink-3); white-space: nowrap; }
+
+        .pod-body { position: relative; }
+        .pod-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--c-line-2); }
+        .pod-row:nth-child(even) { background: #FCFBF8; }
+        .pod-label {
+            flex: 0 0 168px; width: 168px; display: flex; align-items: center; gap: 6px;
+            font-size: 12.5px; font-weight: 600; color: var(--c-ink); padding: 6px 10px 6px 8px;
+            position: relative; z-index: 5; background: var(--c-surface); border-right: 1px solid var(--c-line);
+            box-shadow: 3px 0 5px -3px rgba(17,35,58,.18); will-change: transform;
+        }
+        .pod-row:nth-child(even) .pod-label { background: #FCFBF8; }
+        .pod-track { position: relative; flex: 1 1 auto; }
+
+        .grid-line { position: absolute; top: 0; bottom: 0; z-index: 0; }
+        .grid-line.month { border-left: 1px solid #E0DACE; }
+        .grid-line.week  { border-left: 1px solid #F1ECE2; }
+        .pod-axis .tick.month { font-weight: 700; color: var(--c-ink-2); }
+        .grid-today { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--c-accent); z-index: 1; }
+
+        .pod-buffer { position: absolute; z-index: 1; border-radius: 3px; background: #E1ECF1; border: 1px solid #D2E1E8; }
+        .pod-booking {
+            position: absolute; z-index: 3; border-radius: 5px; background: var(--c-primary); color: #fff;
+            box-shadow: var(--shadow-sm); display: flex; align-items: center; padding: 0 8px; overflow: hidden;
+            text-decoration: none; transition: filter .12s, box-shadow .12s;
+        }
+        .pod-booking .pb-label { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pod-booking.clickable { cursor: pointer; }
+        .pod-booking.clickable:hover { filter: brightness(1.07); box-shadow: 0 3px 10px rgba(0,0,0,.2); }
+        .pod-booking.is-conflict { background: var(--c-danger); }
+        .pod-booking.is-tight    { background: var(--c-warning); }
+
+        .pod-ext-label {
+            position: absolute; z-index: 3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 11px; font-weight: 600; color: var(--c-ink-2); text-decoration: none;
+            display: flex; align-items: center;
+        }
+        .pod-ext-label.clickable { cursor: pointer; }
+        .pod-ext-label.clickable:hover { color: var(--c-primary); }
+        .pod-ext-label.is-conflict { color: var(--c-danger); }
+        .pod-ext-label.is-tight    { color: #8A5E12; }
+
+        .flash { animation: podflash 1.1s ease-out 2; }
+        @keyframes podflash { 0%,100% { box-shadow: var(--shadow-sm); } 40% { box-shadow: 0 0 0 3px var(--c-accent); } }
+
+        .pod-empty, .pod-loading, .pod-error { padding: 28px 16px; text-align: center; color: var(--c-ink-3); font-size: 13px; }
+        .pod-error { color: var(--c-danger); }
+
+        /* Hover card */
+        .pod-tip {
+            position: fixed; z-index: 1000; max-width: 290px; background: var(--c-ink); color: #fff;
+            border-radius: 9px; padding: 10px 12px; font-size: 12px; line-height: 1.5; pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,.28); opacity: 0; transition: opacity .1s; display: none;
+        }
+        .pod-tip.show { opacity: 1; display: block; }
+        .pod-tip .tip-title { font-weight: 700; font-size: 12.5px; margin-bottom: 1px; }
+        .pod-tip .tip-loc { color: #B9C6D6; margin-bottom: 6px; }
+        .pod-tip .tip-row { display: flex; justify-content: space-between; gap: 16px; }
+        .pod-tip .tip-row span { color: #9CB0CC; }
+        .pod-tip .tip-row b { font-weight: 600; }
+        .pod-tip .tip-est { color: #E0B07A; font-style: italic; font-size: 10.5px; }
+        .pod-tip .tip-sev { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.15); font-weight: 600; }
+        .pod-tip .tip-sev.conflict { color: #F2A6A2; }
+        .pod-tip .tip-sev.tight    { color: #F0C673; }
+        .pod-tip .tip-open { margin-top: 6px; color: #8FD0E0; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+
+            <main class="main-content">
+                <div class="full-width-section">
+                    <div class="pod-controls">
+                        <label>Pod
+                            <select id="pod-filter"><option value="">All pods</option></select>
+                        </label>
+                        <label>Zoom
+                            <select id="pod-zoom">
+                                <option value="44">Day</option>
+                                <option value="22" selected>Week</option>
+                                <option value="12">Month</option>
+                                <option value="5">Quarter</option>
+                            </select>
+                        </label>
+                        <label><input type="checkbox" id="pod-issues-only"> Issues only</label>
+                        <span class="pod-spacer"></span>
+                        <button class="btn btn-secondary btn-sm" id="pod-today">Today</button>
+                        <button class="btn btn-secondary btn-sm" id="pod-refresh">Refresh</button>
+                    </div>
+
+                    <div class="pod-help">
+                        <b>Each row is one pod.</b> Bars are clinics it's committed to; the light block before &amp; after each bar is ship-out and return&nbsp;+&nbsp;prep time. Overlapping clinics stack so clashes are visible. Empty space = the pod is free. <b>Click a clinic</b> to open it.
+                    </div>
+
+                    <div class="pod-issues" id="pod-issues">
+                        <div class="pod-issues-head" id="pod-issues-head">
+                            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            <span>Issues</span>
+                            <span id="pod-issue-pills" style="display:inline-flex;gap:6px;"></span>
+                        </div>
+                        <div id="pod-summary" class="pod-summary"></div>
+                    </div>
+
+                    <div class="pod-legend">
+                        <span><i class="pod-swatch sw-clinic"></i> Clinic dates</span>
+                        <span><i class="pod-swatch sw-buffer"></i> Ship / prep buffer</span>
+                        <span><i class="pod-swatch sw-conflict"></i> Hard conflict</span>
+                        <span><i class="pod-swatch sw-tight"></i> Tight turnaround</span>
+                        <span><i class="pod-swatch sw-today"></i> Today</span>
+                    </div>
+
+                    <div class="pod-timeline-wrap" id="pod-timeline-wrap">
+                        <div id="pod-timeline" class="pod-timeline">
+                            <div class="pod-loading">Loading pod schedule…</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="pod-tip" id="pod-tip"></div>
+
+    <script src="../../js/main.js"></script>
+    <script>
+        document.getElementById('sidebar-container').innerHTML = generateSidebar('Asset Schedule');
+        document.getElementById('header-container').innerHTML = generateHeader('Asset Schedule');
+        initializeNavigation();
+    </script>
+
+    <script>
+    /* =====================================================================
+       Asset Schedule — Pod / equipment-set timeline with conflict detection
+       Data source: Cloudflare worker action `get_pod_schedule` (raw Caspio
+       rows). ALL date parsing + fallback logic lives here.
+       ===================================================================== */
+    (function () {
+        'use strict';
+
+        const WORKER_URL = 'https://holy-glitter-ebc0.operations-78f.workers.dev/';
+        const APP_ACCESS_KEY = 'fQ$V6iIAVDh318F#';
+
+        // Clinic detail DataPage. ClinicID is passed as EventID. The app's global
+        // /dp/ link interceptor (main.js) catches this and opens it in-app.
+        const CLINIC_DP_URL   = 'https://c2ect483.caspio.com/dp/97594000087dc2b145d040389521';
+        const CLINIC_ID_PARAM = 'EventID';
+
+        // ---- Tunable assumptions (hardcoded for now) --------------------
+        const PREP_DAYS   = 2;  // calendar days at the ROC to refurb/repack before it can ship again
+        const SETUP_DAYS  = 1;  // days on-site before clinic start to unload + set up
+        const TIGHT_DAYS  = 4;  // gap (days) below which a turnaround is "tight" (amber)
+        const DEFAULT_TRANSIT_DAYS = 2; // one-way truck transit when the clinic's state is unknown
+
+        // North Texas clinics are local "drive between schools" events: the van
+        // goes to a school and back same/next day, so we skip transit/prep buffers
+        // and only flag a true same-day double-book. This is keyed off the CLINIC's
+        // type (not the pod), so an Optical Prime pod sent to a Regional clinic
+        // still gets full travel/prep buffers and conflict checks.
+        // OP is an alias of Optical Prime — merge them onto one track.
+        const POD_ALIASES = { 'OP': 'Optical Prime' };
+        const NTX_CLINIC_TYPE = 'north texas';   // Clinic_Type value for local drive-in clinics
+
+        // Rough one-way ground transit (days) from the ROC near Mason, OH, by US
+        // state / CA province — a dedicated truck at ~550 mi/day. Used only to
+        // estimate ship-out / return time for regional clinics; tune freely.
+        const TRANSIT_BY_STATE = {
+            'OHIO': 1, 'INDIANA': 1, 'KENTUCKY': 1, 'WEST VIRGINIA': 1, 'MICHIGAN': 1, 'ILLINOIS': 1, 'TENNESSEE': 1,
+            'PENNSYLVANIA': 2, 'NEW YORK': 2, 'NEW JERSEY': 2, 'MARYLAND': 2, 'DELAWARE': 2, 'VIRGINIA': 2,
+            'DISTRICT OF COLUMBIA': 2, 'NORTH CAROLINA': 2, 'SOUTH CAROLINA': 2, 'GEORGIA': 2, 'ALABAMA': 2,
+            'MISSISSIPPI': 2, 'WISCONSIN': 2, 'MISSOURI': 2, 'IOWA': 2, 'ARKANSAS': 2, 'CONNECTICUT': 2,
+            'MASSACHUSETTS': 2, 'RHODE ISLAND': 2, 'NEW HAMPSHIRE': 2, 'VERMONT': 2, 'MAINE': 2, 'MINNESOTA': 2,
+            'KANSAS': 2, 'OKLAHOMA': 2, 'LOUISIANA': 2, 'FLORIDA': 2,
+            'NORTH DAKOTA': 3, 'SOUTH DAKOTA': 3, 'NEBRASKA': 3, 'TEXAS': 3, 'COLORADO': 3, 'NEW MEXICO': 3,
+            'WYOMING': 3, 'MONTANA': 3,
+            'UTAH': 4, 'ARIZONA': 4, 'IDAHO': 4, 'NEVADA': 4,
+            'CALIFORNIA': 5, 'OREGON': 5, 'WASHINGTON': 5, 'ALASKA': 7, 'HAWAII': 7,
+            'ONTARIO': 2, 'QUEBEC': 3, 'MANITOBA': 3, 'SASKATCHEWAN': 4, 'ALBERTA': 5, 'BRITISH COLUMBIA': 5, 'NOVA SCOTIA': 4
+        };
+        function transitDaysFor(state, country) {
+            const s = String(state || '').trim().toUpperCase();
+            if (TRANSIT_BY_STATE[s] != null) return TRANSIT_BY_STATE[s];
+            const c = String(country || '').trim().toLowerCase();
+            // Off the North American road network — assume a long lead.
+            if (c && !['united states', 'usa', 'us', 'u.s.', 'canada'].includes(c)) return 5;
+            return DEFAULT_TRANSIT_DAYS;
+        }
+
+        // ---- Layout ----------------------------------------------------
+        const LABEL_W = 168;
+        const LANE_H  = 32;   // vertical space per stacked lane
+        const BAR_H   = 24;
+        const BUF_H   = 14;
+        const ROW_PAD = 8;
+        const DAY_MS = 86400000;
+
+        // ---- Date helpers ----------------------------------------------
+        function parseFlexibleDate(raw) {
+            if (raw == null) return null;
+            const s = String(raw).trim();
+            if (!s) return null;
+            let m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ]\d{2}:\d{2})?/);
+            if (m) return mkDate(+m[1], +m[2], +m[3]);
+            m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+            if (m) { let yr = +m[3]; if (yr < 100) yr += 2000; return mkDate(yr, +m[1], +m[2]); }
+            const t = Date.parse(s);
+            return isNaN(t) ? null : stripTime(new Date(t));
+        }
+        function mkDate(y, mo, d) { const dt = new Date(y, mo - 1, d); return isNaN(dt.getTime()) ? null : dt; }
+        function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+        function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+        function addBizDays(d, n) {
+            const step = n < 0 ? -1 : 1; let remaining = Math.abs(n); let cur = new Date(d);
+            while (remaining > 0) { cur = addDays(cur, step); const dow = cur.getDay(); if (dow !== 0 && dow !== 6) remaining--; }
+            return cur;
+        }
+        function daysBetween(a, b) { return Math.round((b - a) / DAY_MS); }
+        function fmt(d) { return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'; }
+        function fmtShort(d) { return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'; }
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+        function clinicHref(b) { return b.clinicId ? `${CLINIC_DP_URL}?${CLINIC_ID_PARAM}=${encodeURIComponent(b.clinicId)}` : null; }
+
+        // ---- Normalize a raw Caspio row into a booking ------------------
+        function toBooking(r) {
+            let pod = (r.Clinic_equip_set || '').trim();
+            if (!pod) return null;
+            pod = POD_ALIASES[pod] || pod;
+            const isLocal = String(r.Clinic_Type || '').trim().toLowerCase() === NTX_CLINIC_TYPE;
+
+            const clinicStart = parseFlexibleDate(r.ClinicStartDate);
+            const clinicEnd   = parseFlexibleDate(r.ClinicEndDate) || clinicStart;
+            if (!clinicStart) return null;
+
+            const state = (r.Clinic_state_local || '').trim();
+            let depart, pickup, freeAgain, transit = 0, departIsFallback = false, pickupIsFallback = false;
+            if (isLocal) {
+                // Local program: van drives to the school and back. No travel/prep window —
+                // the pod is only "committed" on the clinic day(s) itself.
+                depart = clinicStart;
+                pickup = clinicEnd || clinicStart;
+                freeAgain = clinicEnd || clinicStart;
+            } else {
+                transit = transitDaysFor(state, r.Clinic_Country);
+                depart = parseFlexibleDate(r.Equipment_Vehicle_Depart);
+                if (!depart || depart > clinicStart) { depart = addDays(clinicStart, -(transit + SETUP_DAYS)); departIsFallback = true; }
+                pickup = parseFlexibleDate(r.Clinic_PickUp_Date);
+                if (!pickup || pickup < (clinicEnd || clinicStart)) { pickup = addDays(clinicEnd || clinicStart, 1); pickupIsFallback = true; }
+                freeAgain = addDays(pickup, transit + PREP_DAYS);
+            }
+
+            const city = (r.Clinic_City || '').trim();
+            const loc = [city, state || r.Clinic_Country].filter(Boolean).join(', ');
+
+            return {
+                pod, isLocal, transit, name: (r.Clinic || r.ClinicID || 'Clinic').trim(),
+                short: city || (r.Clinic || r.ClinicID || 'Clinic').trim(),
+                clinicId: (r.ClinicID || '').trim(), status: r.Clinic_Status || '',
+                cancelled: !!(r.Cancelled && String(r.Cancelled).trim() && String(r.Cancelled).toLowerCase() !== 'no'),
+                location: loc, clinicStart, clinicEnd, depart, pickup, freeAgain, departIsFallback, pickupIsFallback
+            };
+        }
+
+        // ---- Conflict detection per pod --------------------------------
+        function detectConflicts(bookings) {
+            const alerts = [];
+            const byPod = {};
+            bookings.forEach(b => { (byPod[b.pod] = byPod[b.pod] || []).push(b); });
+            Object.keys(byPod).forEach(pod => {
+                const list = byPod[pod].slice().sort((a, b) => a.depart - b.depart);
+                for (let i = 1; i < list.length; i++) {
+                    const prev = list[i - 1], cur = list[i];
+                    const bids = [prev._bid, cur._bid];
+                    if (cur.clinicStart <= prev.clinicEnd) {
+                        prev.severity = cur.severity = 'conflict';
+                        alerts.push({ sev: 'conflict', pod, bids,
+                            msg: `<b>${esc(pod)}</b> is double-booked: “${esc(prev.short)}” (${fmtShort(prev.clinicStart)}–${fmtShort(prev.clinicEnd)}) overlaps “${esc(cur.short)}” (${fmtShort(cur.clinicStart)}–${fmtShort(cur.clinicEnd)}).` });
+                        continue;
+                    }
+                    // Local programs (NTX/Optical Prime) drive school-to-school — back-to-back
+                    // days are normal, so only a same-day overlap (above) counts. No turnaround flag.
+                    if (prev.isLocal && cur.isLocal) continue;
+
+                    const slack = daysBetween(prev.freeAgain, cur.depart);
+                    if (slack < 0) {
+                        prev.severity = prev.severity || 'conflict'; cur.severity = 'conflict';
+                        alerts.push({ sev: 'conflict', pod, bids,
+                            msg: `<b>${esc(pod)}</b> can't make it: needs ${prev.transit + PREP_DAYS}d to return + prep after “${esc(prev.short)}” (pickup ${fmtShort(prev.pickup)}) but must depart for “${esc(cur.short)}” on ${fmtShort(cur.depart)} — short by ${Math.abs(slack)}d.` });
+                    } else if (slack < TIGHT_DAYS) {
+                        if (!prev.severity) prev.severity = 'tight'; cur.severity = cur.severity || 'tight';
+                        alerts.push({ sev: 'tight', pod, bids,
+                            msg: `<b>${esc(pod)}</b> tight turnaround: only ${slack}d between returning from “${esc(prev.short)}” and departing for “${esc(cur.short)}” (${fmtShort(cur.depart)}).` });
+                    }
+                }
+            });
+            alerts.sort((a, b) => (a.sev === b.sev ? 0 : a.sev === 'conflict' ? -1 : 1));
+            return alerts;
+        }
+
+        // Greedy lane packing on the committed window [depart, freeAgain].
+        // Mutates each item with ._lane and ._nextDepart (next item on same lane).
+        function packLanes(items) {
+            items.sort((a, b) => a.depart - b.depart || a.clinicStart - b.clinicStart);
+            const laneEnd = [];   // freeAgain time of last item per lane
+            const laneLast = [];  // last item per lane
+            items.forEach(it => {
+                let lane = -1;
+                for (let l = 0; l < laneEnd.length; l++) {
+                    if (it.depart.getTime() >= laneEnd[l]) { lane = l; break; }
+                }
+                if (lane === -1) { lane = laneEnd.length; laneEnd.push(0); laneLast.push(null); }
+                if (laneLast[lane]) laneLast[lane]._nextDepart = it.depart;
+                it._lane = lane; it._nextDepart = null;
+                laneEnd[lane] = it.freeAgain.getTime();
+                laneLast[lane] = it;
+            });
+            return laneEnd.length;
+        }
+
+        // ---- Rendering --------------------------------------------------
+        const ICON = {
+            conflict: '<svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+            tight:    '<svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+            ok:       '<svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+        };
+
+        let ALL = [];
+        const BK = {};
+        let PXD = 22;
+
+        function renderSummary(alerts) {
+            const el = document.getElementById('pod-summary');
+            const pills = document.getElementById('pod-issue-pills');
+            const nC = alerts.filter(a => a.sev === 'conflict').length;
+            const nT = alerts.filter(a => a.sev === 'tight').length;
+            pills.innerHTML = nC ? `<span class="pod-pill red">${nC} conflict${nC > 1 ? 's' : ''}</span>` : '';
+            pills.innerHTML += nT ? `<span class="pod-pill amber">${nT} tight</span>` : '';
+            if (!nC && !nT) pills.innerHTML = `<span class="pod-pill green">All clear</span>`;
+
+            if (!alerts.length) {
+                el.innerHTML = `<div class="pod-alert ok">${ICON.ok}<div>No scheduling conflicts in the current view.</div></div>`;
+                return;
+            }
+            const row = a => `<div class="pod-alert clickable ${a.sev}" data-bids="${a.bids.join(',')}">${ICON[a.sev]}<div>${a.msg}</div></div>`;
+            el.innerHTML = alerts.map(row).join('');
+        }
+
+        function renderTimeline(bookings) {
+            const tl = document.getElementById('pod-timeline');
+            if (!bookings.length) { tl.innerHTML = `<div class="pod-empty">No clinics with assigned pods in this view.</div>`; return; }
+
+            let min = bookings[0].depart, max = bookings[0].freeAgain;
+            bookings.forEach(b => { if (b.depart < min) min = b.depart; if (b.freeAgain > max) max = b.freeAgain; });
+            min = addDays(min, -4); max = addDays(max, 4);
+            const totalDays = Math.max(1, daysBetween(min, max));
+            const width = Math.round(totalDays * PXD);
+            const xOf = d => Math.round(daysBetween(min, d) * PXD);
+
+            const ticks = [], grid = [];
+            // Month gridlines + (when stretched) month name labels.
+            const weekly = PXD >= 16;
+            const mcur = new Date(min.getFullYear(), min.getMonth(), 1);
+            while (mcur <= max) {
+                const left = xOf(mcur);
+                if (left >= 0 && left <= width) {
+                    grid.push(`<div class="grid-line month" style="left:${left}px"></div>`);
+                    ticks.push(`<div class="tick month" style="left:${left}px">${mcur.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}</div>`);
+                }
+                mcur.setMonth(mcur.getMonth() + 1);
+            }
+            if (weekly) {
+                // Weekly minor ticks (Mondays) with day labels.
+                let d = new Date(min); const dow = d.getDay();
+                d = addDays(d, dow === 1 ? 0 : (8 - dow) % 7);
+                while (d <= max) {
+                    const left = xOf(d);
+                    if (left >= 0 && left <= width) {
+                        grid.push(`<div class="grid-line week" style="left:${left}px"></div>`);
+                        if (d.getDate() > 7) ticks.push(`<div class="tick" style="left:${left}px">${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>`);
+                    }
+                    d = addDays(d, 7);
+                }
+            }
+            const today = stripTime(new Date());
+            let todayLeft = null;
+            if (today >= min && today <= max) { todayLeft = xOf(today); grid.push(`<div class="grid-today" style="left:${todayLeft}px"></div>`); }
+            const gridHTML = grid.join('');
+
+            const byPod = {};
+            bookings.forEach(b => { (byPod[b.pod] = byPod[b.pod] || []).push(b); });
+            const pods = Object.keys(byPod).sort();
+
+            const rows = pods.map(pod => {
+                const items = byPod[pod];
+                const lanes = packLanes(items);
+                const rowH = ROW_PAD * 2 + lanes * LANE_H;
+
+                const inner = items.map(b => {
+                    const laneTop = ROW_PAD + b._lane * LANE_H;
+                    const barTop = laneTop + (LANE_H - BAR_H) / 2;
+                    const bufTop = laneTop + (LANE_H - BUF_H) / 2;
+                    const bufStart = xOf(b.depart), bufEnd = xOf(b.freeAgain);
+                    const cStart = xOf(b.clinicStart), cEnd = xOf(addDays(b.clinicEnd || b.clinicStart, 1));
+                    const w = Math.max(9, cEnd - cStart);
+                    const sev = b.severity === 'conflict' ? ' is-conflict' : b.severity === 'tight' ? ' is-tight' : '';
+                    const href = clinicHref(b);
+                    const click = href ? ' clickable' : '';
+                    const tag = href ? 'a' : 'div';
+                    const hrefAttr = href ? ` href="${esc(href)}"` : '';
+                    const inside = w >= 50;
+
+                    let html = b.isLocal ? '' : `<div class="pod-buffer" data-bid="${b._bid}" style="left:${bufStart}px;width:${Math.max(2, bufEnd - bufStart)}px;top:${bufTop}px;height:${BUF_H}px"></div>`;
+                    html += `<${tag} class="pod-booking${sev}${click}" data-bid="${b._bid}" style="left:${cStart}px;width:${w}px;top:${barTop}px;height:${BAR_H}px"${hrefAttr}>` +
+                            (inside ? `<span class="pb-label">${esc(b.short)}</span>` : '') + `</${tag}>`;
+                    if (!inside) {
+                        // Label sits to the right, limited to this booking's own free space
+                        const rightBound = b._nextDepart ? xOf(b._nextDepart) : bufEnd + 130;
+                        const maxW = Math.max(26, Math.min(150, rightBound - cEnd - 5));
+                        html += `<${tag} class="pod-ext-label${sev}${click}" data-bid="${b._bid}" style="left:${cEnd + 5}px;top:${barTop}px;height:${BAR_H}px;max-width:${maxW}px"${hrefAttr}>${esc(b.short)}</${tag}>`;
+                    }
+                    return html;
+                }).join('');
+
+                return `<div class="pod-row" style="height:${rowH}px"><div class="pod-label" title="${esc(pod)}">${esc(pod)}</div><div class="pod-track" style="width:${width}px;height:${rowH}px">${gridHTML}${inner}</div></div>`;
+            }).join('');
+
+            tl.innerHTML =
+                `<div class="pod-head"><div class="pod-head-label">Pod</div><div class="pod-axis" style="width:${width}px">${ticks.join('')}</div></div>` +
+                `<div class="pod-body">${rows}</div>`;
+
+            if (todayLeft != null) {
+                const wrap = document.getElementById('pod-timeline-wrap');
+                wrap.scrollLeft = Math.max(0, LABEL_W + todayLeft - 160);
+            }
+            pinLabels();
+        }
+
+        // ---- Hover card -------------------------------------------------
+        const tip = document.getElementById('pod-tip');
+        function tipHtml(b) {
+            const est = '<span class="tip-est">est.</span>';
+            const logistics = b.isLocal
+                ? `<div class="tip-row"><span>Program</span><b>Local · drive-in (no travel/prep)</b></div>`
+                : `<div class="tip-row"><span>Depart ROC</span><b>${fmt(b.depart)} ${b.departIsFallback ? est : ''}</b></div>` +
+                  `<div class="tip-row"><span>Pickup</span><b>${fmt(b.pickup)} ${b.pickupIsFallback ? est : ''}</b></div>` +
+                  `<div class="tip-row"><span>Free again</span><b>${fmt(b.freeAgain)}</b></div>` +
+                  `<div class="tip-row"><span>Transit est.</span><b>~${b.transit}d each way</b></div>`;
+            return `<div class="tip-title">${esc(b.name)}</div>` +
+                (b.location ? `<div class="tip-loc">${esc(b.location)}</div>` : '') +
+                `<div class="tip-row"><span>Clinic</span><b>${fmt(b.clinicStart)} – ${fmt(b.clinicEnd)}</b></div>` +
+                logistics +
+                (b.status ? `<div class="tip-row"><span>Status</span><b>${esc(b.status)}</b></div>` : '') +
+                (b.severity ? `<div class="tip-sev ${b.severity}">${b.severity === 'conflict' ? '⚠ Scheduling conflict' : '⏱ Tight turnaround'}</div>` : '') +
+                (b.clinicId ? `<div class="tip-open">Open clinic →</div>` : '');
+        }
+        function positionTip(x, y) {
+            const pad = 14, r = tip.getBoundingClientRect();
+            let left = x + pad, top = y + pad;
+            if (left + r.width > window.innerWidth - 8) left = x - r.width - pad;
+            if (top + r.height > window.innerHeight - 8) top = y - r.height - pad;
+            tip.style.left = Math.max(8, left) + 'px';
+            tip.style.top = Math.max(8, top) + 'px';
+        }
+        const tlEl = document.getElementById('pod-timeline');
+        tlEl.addEventListener('mouseover', e => {
+            const el = e.target.closest('[data-bid]'); if (!el) return;
+            const b = BK[el.getAttribute('data-bid')]; if (b) { tip.innerHTML = tipHtml(b); tip.classList.add('show'); positionTip(e.clientX, e.clientY); }
+        });
+        tlEl.addEventListener('mousemove', e => { if (tip.classList.contains('show')) positionTip(e.clientX, e.clientY); });
+        tlEl.addEventListener('mouseout', e => { if (e.target.closest('[data-bid]')) tip.classList.remove('show'); });
+
+        // Click an alert -> flash the involved bars + scroll to them.
+        document.getElementById('pod-summary').addEventListener('click', e => {
+            const al = e.target.closest('.pod-alert.clickable'); if (!al) return;
+            const bids = (al.getAttribute('data-bids') || '').split(',').filter(Boolean);
+            let first = null;
+            bids.forEach(bid => document.querySelectorAll(`[data-bid="${bid}"]`).forEach(node => {
+                if (!first) first = node; node.classList.remove('flash'); void node.offsetWidth; node.classList.add('flash');
+            }));
+            if (first) {
+                document.getElementById('pod-timeline-wrap').scrollLeft = Math.max(0, first.offsetLeft - 220);
+                first.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        });
+
+        // Collapse / expand issues
+        document.getElementById('pod-issues-head').addEventListener('click', () => {
+            document.getElementById('pod-issues').classList.toggle('collapsed');
+        });
+
+        // ---- Filtering + redraw ----------------------------------------
+        function apply() {
+            const podSel = document.getElementById('pod-filter').value;
+            const issuesOnly = document.getElementById('pod-issues-only').checked;
+            PXD = parseFloat(document.getElementById('pod-zoom').value) || 12;
+
+            let list = ALL.slice();
+            if (podSel) list = list.filter(b => b.pod === podSel);
+            for (const k in BK) delete BK[k];
+            list.forEach((b, i) => { b._bid = 'bk' + i; b.severity = null; BK[b._bid] = b; });
+
+            const alerts = detectConflicts(list);
+            if (issuesOnly) { const bad = new Set(alerts.map(a => a.pod)); list = list.filter(b => bad.has(b.pod)); }
+
+            renderSummary(alerts);
+            renderTimeline(list);
+        }
+
+        function populatePodFilter() {
+            const sel = document.getElementById('pod-filter');
+            const pods = [...new Set(ALL.map(b => b.pod))].sort();
+            sel.innerHTML = '<option value="">All pods</option>' + pods.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+        }
+
+        function scrollToToday() {
+            const line = document.querySelector('.grid-today');
+            if (line) document.getElementById('pod-timeline-wrap').scrollLeft = Math.max(0, LABEL_W + line.offsetLeft - 160);
+        }
+
+        // ---- Load -------------------------------------------------------
+        async function load() {
+            const tl = document.getElementById('pod-timeline');
+            tl.innerHTML = '<div class="pod-loading">Loading pod schedule…</div>';
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-App-Access-Key': APP_ACCESS_KEY },
+                    body: JSON.stringify({ action: 'get_pod_schedule' })
+                });
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data && (data.message || data.stage) ? `${data.stage || ''}: ${data.message || ''}` : `HTTP ${res.status}`);
+                const rows = Array.isArray(data.Result) ? data.Result : [];
+                ALL = rows.map(toBooking).filter(Boolean).filter(b => !b.cancelled);
+                populatePodFilter();
+                apply();
+            } catch (err) {
+                tl.innerHTML = `<div class="pod-error">Couldn't load pod schedule.<br><small>${esc((err && err.message) || err)}</small></div>`;
+            }
+        }
+
+        // Click-and-drag to pan the timeline horizontally. A genuine click (no
+        // drag) still falls through to open the clinic; a drag is swallowed so it
+        // doesn't navigate.
+        const wrapEl = document.getElementById('pod-timeline-wrap');
+
+        // Keep the pod-name column visually frozen as the timeline scrolls. CSS
+        // position:sticky is defeated here by the card's `overflow:hidden`, so we
+        // translate the label cells by the scroll offset instead — rock solid.
+        function pinLabels() {
+            const x = wrapEl.scrollLeft;
+            const els = wrapEl.querySelectorAll('.pod-label, .pod-head-label');
+            for (let i = 0; i < els.length; i++) els[i].style.transform = `translateX(${x}px)`;
+        }
+        wrapEl.addEventListener('scroll', pinLabels);
+
+        let dragDown = false, dragStartX = 0, dragStartScroll = 0, dragMoved = false;
+        wrapEl.addEventListener('mousedown', e => {
+            if (e.button !== 0) return;
+            dragDown = true; dragMoved = false;
+            dragStartX = e.pageX; dragStartScroll = wrapEl.scrollLeft;
+        });
+        window.addEventListener('mousemove', e => {
+            if (!dragDown) return;
+            const dx = e.pageX - dragStartX;
+            if (Math.abs(dx) > 4) { dragMoved = true; wrapEl.classList.add('dragging'); }
+            wrapEl.scrollLeft = dragStartScroll - dx;
+        });
+        window.addEventListener('mouseup', () => {
+            if (!dragDown) return;
+            dragDown = false; wrapEl.classList.remove('dragging');
+        });
+        wrapEl.addEventListener('click', e => {
+            if (dragMoved) { e.preventDefault(); e.stopPropagation(); dragMoved = false; }
+        }, true);
+        wrapEl.addEventListener('dragstart', e => e.preventDefault());
+
+        document.getElementById('pod-filter').addEventListener('change', apply);
+        document.getElementById('pod-zoom').addEventListener('change', apply);
+        document.getElementById('pod-issues-only').addEventListener('change', apply);
+        document.getElementById('pod-today').addEventListener('click', scrollToToday);
+        document.getElementById('pod-refresh').addEventListener('click', load);
+
+        load();
+    })();
+    </script>
+</body>
+</html>

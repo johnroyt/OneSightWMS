@@ -605,6 +605,7 @@ function navigateTo(page) {
         'Transactions':      'pages/usage/index.html',
         'SpecialRequests':   'pages/specialrequests/index.html',
         'Clinics & Events':  'pages/clinics/index.html',
+        'Asset Schedule':    'pages/assets/index.html',
         'Location Labels':   'pages/management/barcodeLocationGen.html',
         'Scan-O-Matic':      'pages/management/ScanOMatic.html',
         'ROC Request':       'rocrequest/index.html'
@@ -631,6 +632,7 @@ function getNavUrl(page) {
         'Transactions':      'pages/usage/index.html',
         'SpecialRequests':   'pages/specialrequests/index.html',
         'Clinics & Events':  'pages/clinics/index.html',
+        'Asset Schedule':    'pages/assets/index.html',
         'Location Labels':   'pages/management/barcodeLocationGen.html',
         'Scan-O-Matic':      'pages/management/ScanOMatic.html',
         'ROC Request':       'rocrequest/index.html'
@@ -660,6 +662,7 @@ const SIDEBAR_NAV = {
     ],
     Management: [
         { label: 'Clinics & Events',  icon: 'clinic'    },
+        { label: 'Asset Schedule',    icon: 'truck'     },
         { label: 'Location Labels',   icon: 'label'     },
         { label: 'Scan-O-Matic',      icon: 'scan'      },
         { label: 'ROC Request',       icon: 'inbox'     }
