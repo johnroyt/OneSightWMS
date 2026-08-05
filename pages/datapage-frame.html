@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caspio DataPage</title>
+    <style>
+        html,
+        body {
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .datapage-frame-error {
+            margin: 0;
+            padding: 18px;
+            font: 14px/1.5 system-ui, sans-serif;
+            color: #b0413e;
+        }
+    </style>
+</head>
+<body>
+    <div id="dp-root"></div>
+
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const dpid = params.get('dpid');
+            const host = params.get('host') || 'c2ect483';
+            const dpidPattern = /^[0-9a-f]{20,}$/i;
+            const hostPattern = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
+            const container = document.getElementById('dp-root');
+
+            function showError(message) {
+                const error = document.createElement('p');
+                error.className = 'datapage-frame-error';
+                error.textContent = message;
+                container.appendChild(error);
+            }
+
+            if (!dpid || !dpidPattern.test(dpid)) {
+                showError('The DataPage ID is missing or invalid.');
+                return;
+            }
+            if (!hostPattern.test(host)) {
+                showError('The Caspio host is invalid.');
+                return;
+            }
+
+            // Caspio can emit root-relative links such as /dp/{id}. Resolve
+            // those against Caspio instead of the WMS host, then keep DataPage
+            // navigation inside the generic viewer's isolated mode.
+            const caspioOrigin = `https://${host}.caspio.com`;
+            const base = document.createElement('base');
+            base.href = caspioOrigin + '/';
+            document.head.appendChild(base);
+
+            document.addEventListener('click', function (event) {
+                const anchor = event.target.closest('a[href]');
+                if (!anchor || event.ctrlKey || event.metaKey || event.shiftKey) return;
+
+                let url;
+                try {
+                    url = new URL(anchor.getAttribute('href'), caspioOrigin);
+                } catch {
+                    return;
+                }
+
+                const match = url.pathname.match(/\/dp\/([0-9a-f]{20,})/i);
+                if (!match) return;
+
+                event.preventDefault();
+                const targetHost = url.hostname.endsWith('.caspio.com')
+                    ? url.hostname.slice(0, -'.caspio.com'.length)
+                    : host;
+                const viewerParams = new URLSearchParams({
+                    dpid: match[1],
+                    host: targetHost
+                });
+                url.searchParams.forEach((v, k) => viewerParams.append(k, v));
+
+                const viewerUrl = new URL('datapage-viewer.html', window.location.href);
+                viewerUrl.search = viewerParams.toString();
+                window.top.location.href = viewerUrl.toString();
+            });
+
+            const embedParams = new URLSearchParams();
+            params.forEach((v, k) => {
+                if (k !== 'dpid' && k !== 'host' && k !== 'style') embedParams.append(k, v);
+            });
+            const embedUrl = `https://${host}.caspio.com/dp/${dpid}/emb`
+                + (embedParams.toString() ? '?' + embedParams : '');
+
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = embedUrl;
+            container.appendChild(script);
+        })();
+    </script>
+</body>
+</html>

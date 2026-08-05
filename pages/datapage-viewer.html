@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Datapage - WMS</title>
     <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        #dp-embed:has(> .datapage-isolated-frame) {
+            padding: 0 !important;
+            overflow: hidden;
+        }
+
+        .datapage-isolated-frame {
+            display: block;
+            flex: 1 1 auto;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            border: 0;
+            background: #fff;
+        }
+
+        .datapage-viewer-error {
+            padding: 18px;
+            color: #b0413e;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -27,6 +48,10 @@
             const params = new URLSearchParams(window.location.search);
             const dpid = params.get('dpid');
             const host = params.get('host') || 'c2ect483';
+            const styleMode = (params.get('style') || '').toLowerCase();
+            const dpidPattern = /^[0-9a-f]{20,}$/i;
+            const hostPattern = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
+            const container = document.getElementById('dp-embed');
 
             document.getElementById('sidebar-container').innerHTML = generateSidebar('');
             document.getElementById('header-container').innerHTML = generateHeader('');
@@ -34,18 +59,54 @@
             initializeModalTriggers();
             interceptDpLinks();
 
-            if (!dpid) return;
+            function showError(message) {
+                const error = document.createElement('p');
+                error.className = 'datapage-viewer-error';
+                error.textContent = message;
+                container.appendChild(error);
+            }
+
+            if (!dpid) {
+                showError('A DataPage ID is required.');
+                return;
+            }
+            if (!dpidPattern.test(dpid)) {
+                showError('The DataPage ID is invalid.');
+                return;
+            }
+            if (!hostPattern.test(host)) {
+                showError('The Caspio host is invalid.');
+                return;
+            }
 
             // Pass through any params that aren't internal routing params
             const embedParams = new URLSearchParams();
-            params.forEach((v, k) => { if (k !== 'dpid' && k !== 'host') embedParams.set(k, v); });
+            params.forEach((v, k) => {
+                if (k !== 'dpid' && k !== 'host' && k !== 'style') embedParams.append(k, v);
+            });
             const embedUrl = `https://${host}.caspio.com/dp/${dpid}/emb`
                 + (embedParams.toString() ? '?' + embedParams : '');
 
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = embedUrl;
-            document.getElementById('dp-embed').appendChild(script);
+            if (styleMode === 'wms') {
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = embedUrl;
+                container.appendChild(script);
+                return;
+            }
+
+            // Default to an iframe-backed host so WMS CSS cannot leak into the
+            // DataPage. The child host uses the same embed URL and parameters.
+            const frameParams = new URLSearchParams();
+            frameParams.set('dpid', dpid);
+            frameParams.set('host', host);
+            embedParams.forEach((v, k) => frameParams.append(k, v));
+
+            const frame = document.createElement('iframe');
+            frame.className = 'datapage-isolated-frame';
+            frame.title = 'Caspio DataPage';
+            frame.src = `datapage-frame.html?${frameParams.toString()}`;
+            container.appendChild(frame);
         })();
     </script>
 </body>
