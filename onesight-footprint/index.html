@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Published OneSight North America program locations and access points."
+    />
+    <title>OneSight North America Footprint</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    />
+    <link rel="stylesheet" href="base.css?v=dark-header-1" />
+    <link rel="stylesheet" href="styles.css?v=live-caspio-1" />
+  </head>
+  <body>
+    <div class="app-shell live-footprint" id="appShell">
+      <aside class="control-panel" aria-label="Map filters">
+        <button class="collapse-filters-button" id="collapseFiltersBtn" type="button" aria-expanded="true">
+          <span aria-hidden="true">‹</span> Hide filters
+        </button>
+        <div class="brand-block">
+          <p class="eyebrow">OneSight</p>
+          <h1>North America Footprint</h1>
+          <p>Published program locations and access points from Caspio.</p>
+        </div>
+
+        <section class="live-status-section" aria-labelledby="dataStatusTitle">
+          <div class="section-heading-row">
+            <h2 id="dataStatusTitle">Live data</h2>
+            <span class="live-badge"><span aria-hidden="true"></span> Caspio</span>
+          </div>
+          <div class="status-message" id="statusMessage" role="status" aria-live="polite">
+            Loading published locations…
+          </div>
+          <button id="refreshDataBtn" type="button">Refresh published data</button>
+        </section>
+
+        <section class="filter-section" aria-labelledby="filtersTitle">
+          <h2 id="filtersTitle">Filters</h2>
+          <fieldset class="service-toggles program-hierarchy">
+            <legend>Main category</legend>
+
+            <div class="category-group">
+              <label class="category-toggle">
+                <input type="checkbox" name="programCategory" value="onesight_programming" checked />
+                <span>OneSight Programming</span>
+              </label>
+              <div class="category-children">
+                <label class="toggle direct">
+                  <input type="checkbox" name="serviceType" value="direct_service" checked />
+                  <span class="marker-sample direct_service"></span>
+                  <span>Vision clinic programming</span>
+                </label>
+                <label class="toggle indirect">
+                  <input type="checkbox" name="serviceType" value="indirect_service" checked />
+                  <span class="marker-sample indirect_service"></span>
+                  <span>Non-vision clinic programming</span>
+                </label>
+                <label class="toggle voucher">
+                  <input type="checkbox" name="serviceType" value="voucher_active_store" checked />
+                  <span class="marker-sample voucher_active_store"></span>
+                  <span>Voucher (redeeming stores)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="category-group">
+              <label class="category-toggle">
+                <input type="checkbox" name="programCategory" value="school_based_partners" checked />
+                <span>School-Based Partners</span>
+              </label>
+              <div class="category-note">KIPP and Communities In Schools coming soon</div>
+            </div>
+
+            <div class="category-group">
+              <label class="category-toggle">
+                <input type="checkbox" name="programCategory" value="el_support_locations" checked />
+                <span>EL Support Locations</span>
+              </label>
+              <div class="category-children">
+                <label class="toggle retail">
+                  <input type="checkbox" name="serviceType" value="retail_location" checked />
+                  <span class="marker-sample retail_location"></span>
+                  <span>Retail network locations</span>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+
+          <label>
+            Country or territory
+            <select id="countryFilter"><option value="all">All countries and territories</option></select>
+          </label>
+          <label>
+            State/province
+            <select id="stateFilter"><option value="all">All states/provinces</option></select>
+          </label>
+          <label>
+            Program
+            <select id="programFilter"><option value="all">All programs</option></select>
+          </label>
+          <label>
+            Brand or organization
+            <select id="organizationFilter"><option value="all">All brands and organizations</option></select>
+          </label>
+          <label>
+            Status
+            <select id="statusFilter"><option value="all">All statuses</option></select>
+          </label>
+          <button id="resetFiltersBtn" type="button">Reset filters</button>
+        </section>
+      </aside>
+
+      <main class="map-stage">
+        <button class="show-filters-button" id="showFiltersBtn" type="button" aria-expanded="false">
+          <span aria-hidden="true">☰</span> Filters
+        </button>
+        <header class="presentation-header">
+          <div>
+            <p class="eyebrow">OneSight North America</p>
+            <h2>Service and Access Footprint</h2>
+            <p id="summaryText">Loading published locations…</p>
+          </div>
+          <div class="header-actions">
+            <button id="presentationBtn" type="button">Presentation mode</button>
+            <button id="fullscreenBtn" type="button">Full screen</button>
+            <button id="printBtn" type="button">Print</button>
+          </div>
+        </header>
+
+        <div id="map" aria-label="Map of published OneSight locations"></div>
+
+        <section class="legend" aria-label="Map legend">
+          <div><span class="marker-sample direct_service"></span> Vision clinic programming</div>
+          <div><span class="marker-sample indirect_service"></span> Non-vision clinic programming</div>
+          <div><span class="marker-sample voucher_active_store"></span> Voucher (redeeming stores)</div>
+          <div><span class="marker-sample school_partner_location"></span> School-based partner</div>
+          <div><span class="marker-sample retail_location"></span> EL support location</div>
+        </section>
+
+        <div class="empty-state" id="emptyState">No published locations match the current filters.</div>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="app.js?v=live-caspio-1"></script>
+  </body>
+</html>
