@@ -44,6 +44,7 @@ const elements = {
   programFilter: document.getElementById("programFilter"),
   organizationFilter: document.getElementById("organizationFilter"),
   statusFilter: document.getElementById("statusFilter"),
+  schoolPartnerFilters: document.getElementById("schoolPartnerFilters"),
   retailBrandFilters: document.getElementById("retailBrandFilters"),
   presentationBtn: document.getElementById("presentationBtn"),
   fullscreenBtn: document.getElementById("fullscreenBtn"),
@@ -150,6 +151,7 @@ async function loadPublishedData(forceRefresh) {
     allRecords = normalized.filter((record) => record.hasCoordinates);
     const skipped = normalized.length - allRecords.length;
 
+    buildSchoolPartnerFilters();
     buildRetailBrandFilters();
     buildFilterOptions();
     applyFilters();
@@ -191,6 +193,8 @@ function normalizeProgramMapRecord(row) {
     service_type: classifyServiceType(row),
     partner_name: clean(row.organization),
     organization_display: clean(row.brand) || clean(row.organization),
+    school_partner:
+      clean(row.brand) || clean(row.program_name) || clean(row.organization) || "Other School-Based Partner",
     retail_brand: clean(row.brand) || clean(row.organization) || "Other EL locations",
     country_display: normalizeCountry(row.country, row.state_province),
     address: [clean(row.address_1), clean(row.address_2)].filter(Boolean).join(", "),
@@ -328,6 +332,62 @@ function buildRetailBrandFilters() {
     });
 }
 
+
+function buildSchoolPartnerFilters() {
+  const existingInputs = Array.from(document.querySelectorAll('input[name="schoolPartner"]'));
+  const previousSelection = new Set(
+    existingInputs.filter((input) => input.checked).map((input) => input.value)
+  );
+  const preserveSelection = existingInputs.length > 0;
+  const partnerCounts = allRecords
+    .filter((record) => record.program_category === "school_based_partners")
+    .reduce((counts, record) => {
+      counts.set(record.school_partner, (counts.get(record.school_partner) || 0) + 1);
+      return counts;
+    }, new Map());
+
+  elements.schoolPartnerFilters.replaceChildren();
+
+  if (!partnerCounts.size) {
+    const note = document.createElement("div");
+    note.className = "category-note";
+    note.textContent = "No school-based partners are currently published";
+    elements.schoolPartnerFilters.append(note);
+    return;
+  }
+
+  [...partnerCounts.entries()]
+    .sort(([partnerA], [partnerB]) => partnerA.localeCompare(partnerB))
+    .forEach(([partner, count]) => {
+      const label = document.createElement("label");
+      label.className = "toggle retail brand-toggle school-partner-toggle";
+
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.name = "schoolPartner";
+      input.value = partner;
+      input.checked = !preserveSelection || previousSelection.has(partner);
+      input.addEventListener("change", applyFilters);
+
+      const monogram = document.createElement("span");
+      monogram.className = "brand-monogram";
+      monogram.textContent = makeBrandMonogram(partner);
+      monogram.setAttribute("aria-hidden", "true");
+
+      const name = document.createElement("span");
+      name.className = "brand-name";
+      name.textContent = partner;
+
+      const countElement = document.createElement("span");
+      countElement.className = "brand-count";
+      countElement.textContent = count.toLocaleString();
+      countElement.setAttribute("aria-label", `${count.toLocaleString()} published locations`);
+
+      label.append(input, monogram, name, countElement);
+      elements.schoolPartnerFilters.append(label);
+    });
+}
+
 function makeBrandMonogram(brand) {
   const words = clean(brand).split(/\s+/).filter(Boolean);
   if (!words.length) return "EL";
@@ -359,6 +419,9 @@ function resetFilters() {
   document.querySelectorAll('input[name="retailBrand"]').forEach((input) => {
     input.checked = true;
   });
+  document.querySelectorAll('input[name="schoolPartner"]').forEach((input) => {
+    input.checked = true;
+  });
   [
     elements.countryFilter,
     elements.stateFilter,
@@ -383,6 +446,11 @@ function applyFilters() {
       .filter((input) => input.checked)
       .map((input) => input.value)
   );
+  const selectedSchoolPartners = new Set(
+    Array.from(document.querySelectorAll('input[name="schoolPartner"]'))
+      .filter((input) => input.checked)
+      .map((input) => input.value)
+  );
 
   filteredRecords = allRecords.filter((record) => {
     return (
@@ -390,6 +458,8 @@ function applyFilters() {
       (record.service_type === "school_partner_location" ||
         record.service_type === "retail_location" ||
         selectedTypes.has(record.service_type)) &&
+      (record.service_type !== "school_partner_location" ||
+        selectedSchoolPartners.has(record.school_partner)) &&
       (record.service_type !== "retail_location" || selectedRetailBrands.has(record.retail_brand)) &&
       matches(record.country_display, elements.countryFilter.value) &&
       matches(record.state_province, elements.stateFilter.value) &&
