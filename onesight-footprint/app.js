@@ -44,6 +44,7 @@ const elements = {
   programFilter: document.getElementById("programFilter"),
   organizationFilter: document.getElementById("organizationFilter"),
   statusFilter: document.getElementById("statusFilter"),
+  retailBrandFilters: document.getElementById("retailBrandFilters"),
   presentationBtn: document.getElementById("presentationBtn"),
   fullscreenBtn: document.getElementById("fullscreenBtn"),
   printBtn: document.getElementById("printBtn"),
@@ -149,6 +150,7 @@ async function loadPublishedData(forceRefresh) {
     allRecords = normalized.filter((record) => record.hasCoordinates);
     const skipped = normalized.length - allRecords.length;
 
+    buildRetailBrandFilters();
     buildFilterOptions();
     applyFilters();
     setStatus(
@@ -189,6 +191,7 @@ function normalizeProgramMapRecord(row) {
     service_type: classifyServiceType(row),
     partner_name: clean(row.organization),
     organization_display: clean(row.brand) || clean(row.organization),
+    retail_brand: clean(row.brand) || clean(row.organization) || "Other EL locations",
     country_display: normalizeCountry(row.country, row.state_province),
     address: [clean(row.address_1), clean(row.address_2)].filter(Boolean).join(", "),
     latitude: hasCoordinates ? latitude : null,
@@ -270,6 +273,68 @@ function buildFilterOptions() {
   setOptions(elements.statusFilter, "All statuses", unique("status"));
 }
 
+function buildRetailBrandFilters() {
+  const existingInputs = Array.from(document.querySelectorAll('input[name="retailBrand"]'));
+  const previousSelection = new Set(
+    existingInputs.filter((input) => input.checked).map((input) => input.value)
+  );
+  const preserveSelection = existingInputs.length > 0;
+  const brandCounts = allRecords
+    .filter((record) => record.program_category === "el_support_locations")
+    .reduce((counts, record) => {
+      counts.set(record.retail_brand, (counts.get(record.retail_brand) || 0) + 1);
+      return counts;
+    }, new Map());
+
+  elements.retailBrandFilters.replaceChildren();
+
+  if (!brandCounts.size) {
+    const note = document.createElement("div");
+    note.className = "category-note";
+    note.textContent = "No EL retail brands are currently published";
+    elements.retailBrandFilters.append(note);
+    return;
+  }
+
+  [...brandCounts.entries()]
+    .sort(([brandA], [brandB]) => brandA.localeCompare(brandB))
+    .forEach(([brand, count]) => {
+      const label = document.createElement("label");
+      label.className = "toggle retail brand-toggle";
+
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.name = "retailBrand";
+      input.value = brand;
+      input.checked = !preserveSelection || previousSelection.has(brand);
+      input.addEventListener("change", applyFilters);
+
+      const monogram = document.createElement("span");
+      monogram.className = "brand-monogram";
+      monogram.textContent = makeBrandMonogram(brand);
+      monogram.setAttribute("aria-hidden", "true");
+
+      const name = document.createElement("span");
+      name.className = "brand-name";
+      name.textContent = brand;
+
+      const countElement = document.createElement("span");
+      countElement.className = "brand-count";
+      countElement.textContent = count.toLocaleString();
+      countElement.setAttribute("aria-label", `${count.toLocaleString()} published locations`);
+
+      label.append(input, monogram, name, countElement);
+      elements.retailBrandFilters.append(label);
+    });
+}
+
+function makeBrandMonogram(brand) {
+  const words = clean(brand).split(/\s+/).filter(Boolean);
+  if (!words.length) return "EL";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return `${words[0][0]}${words[1][0]}`.toUpperCase();
+}
+
 function unique(field) {
   return [...new Set(allRecords.map((record) => clean(record[field])).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b)
@@ -291,6 +356,9 @@ function resetFilters() {
   elements.serviceTypeInputs.forEach((input) => {
     input.checked = true;
   });
+  document.querySelectorAll('input[name="retailBrand"]').forEach((input) => {
+    input.checked = true;
+  });
   [
     elements.countryFilter,
     elements.stateFilter,
@@ -310,11 +378,19 @@ function applyFilters() {
   const selectedTypes = new Set(
     elements.serviceTypeInputs.filter((input) => input.checked).map((input) => input.value)
   );
+  const selectedRetailBrands = new Set(
+    Array.from(document.querySelectorAll('input[name="retailBrand"]'))
+      .filter((input) => input.checked)
+      .map((input) => input.value)
+  );
 
   filteredRecords = allRecords.filter((record) => {
     return (
       selectedCategories.has(record.program_category) &&
-      (record.service_type === "school_partner_location" || selectedTypes.has(record.service_type)) &&
+      (record.service_type === "school_partner_location" ||
+        record.service_type === "retail_location" ||
+        selectedTypes.has(record.service_type)) &&
+      (record.service_type !== "retail_location" || selectedRetailBrands.has(record.retail_brand)) &&
       matches(record.country_display, elements.countryFilter.value) &&
       matches(record.state_province, elements.stateFilter.value) &&
       matches(record.program_name, elements.programFilter.value) &&
