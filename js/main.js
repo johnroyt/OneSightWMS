@@ -60,7 +60,7 @@ const CASPIO_DATAPAGES = {
     shipmentReceiptLog:    'https://c2ect483.caspio.com/dp/97594000283282e705bd4b318859/emb',
     specialRequestCreate:  'https://c2ect483.caspio.com/dp/97594000aaa51875ed3a4123a20d/emb',
     productCreate:         'https://c2ect483.caspio.com/dp/975940003387a5d0a52d4dd584fe/emb',
-    modelStockCreate:      'https://c2ect483.caspio.com/dp/9759400006122dd8bc2842fa9cb0/emb',
+    donationOrderCreate:   'https://c2ect483.caspio.com/dp/97594000c0e275587956467a84c0/emb',
     transactionCreate:        'https://c2ect483.caspio.com/dp/97594000588934525a27433b83a7/emb',
     poReceivingSessionCreate: 'https://c2ect483.caspio.com/dp/975940009ba2551ac10c44c9a190/emb',
     chatterCreate:            'https://c2ect483.caspio.com/dp/97594000076ff9dd364b43c9a1c1/emb',
@@ -76,8 +76,8 @@ const MODAL_OPTIONS = {
         title: 'Order Type',
         name: 'orderType',
         items: [
-            { label: 'Transfer',                 value: 'transfer',  dataPageKey: 'transferOrderCreate', formName: 'Transfer' },
-            { label: 'Model Stock Replenishment', value: 'modelstock', dataPageKey: 'modelStockCreate',   formName: 'Model Stock Replenishment' }
+            { label: 'Transfer',       value: 'transfer', dataPageKey: 'transferOrderCreate', formName: 'Transfer' },
+            { label: 'Donation Order', value: 'donation', dataPageKey: 'donationOrderCreate', formName: 'Donation Order' }
         ]
     }
 };
@@ -192,6 +192,116 @@ const CHATTER_APP_ACCESS_KEY = 'fQ$V6iIAVDh318F#';
 
 let _wmsUserEmail = '';
 let _wmsUserGuid  = '';
+window.WMSCurrentUser = window.WMSCurrentUser || null;
+let _wmsAuthInitialized = false;
+let _wmsAuthObserver = null;
+let _wmsHadAuthenticatedUser = Boolean(window.WMSCurrentUser && window.WMSCurrentUser.authenticated);
+
+function _findCaspioLoginButton() {
+    return document.querySelector('#wms-user-script .cbLoginButton, .main-content .cbLoginButton');
+}
+
+function _showWMSAuthGate(message) {
+    const gate = document.getElementById('wms-auth-gate');
+    const main = document.querySelector('.main-content');
+    const loginButton = document.getElementById('wms-auth-login');
+    const status = document.getElementById('wms-auth-status');
+    if (main) main.hidden = true;
+    if (gate) gate.hidden = false;
+    if (status && message) status.textContent = message;
+    if (loginButton) {
+        const ready = Boolean(_findCaspioLoginButton());
+        loginButton.disabled = !ready;
+        loginButton.textContent = ready ? 'Sign in to WMS' : 'Checking sign-in…';
+    }
+}
+
+function _unlockWMSPage() {
+    const gate = document.getElementById('wms-auth-gate');
+    const main = document.querySelector('.main-content');
+    if (gate) gate.hidden = true;
+    if (main) main.hidden = false;
+    if (_wmsAuthObserver) {
+        _wmsAuthObserver.disconnect();
+        _wmsAuthObserver = null;
+    }
+}
+
+function initializeWMSAuthentication() {
+    if (_wmsAuthInitialized) return;
+    const wrapper = document.querySelector('.main-wrapper');
+    const main = wrapper && wrapper.querySelector('.main-content');
+    if (!wrapper || !main) return;
+    _wmsAuthInitialized = true;
+
+    const gate = document.createElement('section');
+    gate.id = 'wms-auth-gate';
+    gate.className = 'wms-auth-gate';
+    gate.hidden = true;
+    gate.setAttribute('aria-labelledby', 'wms-auth-title');
+    gate.innerHTML = `
+        <div class="wms-auth-card">
+            <div class="wms-auth-mark" aria-hidden="true">🔒</div>
+            <p class="wms-auth-eyebrow">OneSight WMS</p>
+            <h1 id="wms-auth-title">Sign in to continue</h1>
+            <p>Your Caspio session must be active before WMS data is displayed.</p>
+            <button id="wms-auth-login" class="wms-auth-login" type="button" disabled>Checking sign-in…</button>
+            <span id="wms-auth-status" class="wms-auth-status" role="status">Checking your Caspio session.</span>
+        </div>`;
+    wrapper.insertBefore(gate, main);
+    main.hidden = true;
+
+    const loginButton = document.getElementById('wms-auth-login');
+    loginButton.addEventListener('click', () => {
+        const caspioLogin = _findCaspioLoginButton();
+        if (caspioLogin) {
+            loginButton.disabled = true;
+            loginButton.textContent = 'Opening sign-in…';
+            document.getElementById('wms-auth-status').textContent = 'Continue through the Caspio sign-in screen.';
+            caspioLogin.click();
+            return;
+        }
+        window.location.reload();
+    });
+
+    window.addEventListener('wms:user-authenticated', _unlockWMSPage);
+    if (window.WMSCurrentUser && window.WMSCurrentUser.authenticated) {
+        _unlockWMSPage();
+        return;
+    }
+
+    const update = () => {
+        if (window.WMSCurrentUser && window.WMSCurrentUser.authenticated) {
+            _unlockWMSPage();
+            return true;
+        }
+        if (!_findCaspioLoginButton()) return false;
+        if (_wmsAuthObserver) {
+            _wmsAuthObserver.disconnect();
+            _wmsAuthObserver = null;
+        }
+        _showWMSAuthGate('No active Caspio session was found.');
+        return true;
+    };
+    if (update()) return;
+
+    _wmsAuthObserver = new MutationObserver(() => update());
+    _wmsAuthObserver.observe(document.body, { childList: true, subtree: true });
+    window.setTimeout(() => {
+        if (window.WMSCurrentUser && window.WMSCurrentUser.authenticated) return;
+        if (update()) return;
+        if (_wmsAuthObserver) {
+            _wmsAuthObserver.disconnect();
+            _wmsAuthObserver = null;
+        }
+        _showWMSAuthGate('Caspio did not finish checking the session. Retry or refresh the page.');
+        const retryButton = document.getElementById('wms-auth-login');
+        if (retryButton) {
+            retryButton.disabled = false;
+            retryButton.textContent = 'Retry sign-in check';
+        }
+    }, 12000);
+}
 
 async function _fetchChatterUsers() {
     try {
@@ -689,6 +799,7 @@ function generateSidebar(activePage) {
             s.src = 'https://c2ect483.caspio.com/dp/97594000b114afb38f244fcbb64f/emb';
             slot.appendChild(s);
         }
+        initializeWMSAuthentication();
     });
 
     return `
@@ -768,20 +879,41 @@ window.addEventListener('click', function(event) {
 });
 
 function setWMSUser(fullName, jobTitle, email, guid) {
+    const normalizedName = String(fullName || '').trim();
+    if (!normalizedName) return;
     const nameEl = document.getElementById('wms-user-name');
     const roleEl = document.getElementById('wms-user-role');
     const avatarEl = document.getElementById('wms-user-avatar');
     const profileEl = document.getElementById('wms-user-profile');
-    if (nameEl) nameEl.textContent = fullName;
+    if (nameEl) nameEl.textContent = normalizedName;
     if (roleEl) roleEl.textContent = jobTitle;
     if (avatarEl) {
-        const parts = fullName.trim().split(' ');
+        const parts = normalizedName.split(' ');
         avatarEl.textContent = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
     }
     if (profileEl) profileEl.style.visibility = 'visible';
     if (email) _wmsUserEmail = email;
     if (guid)  _wmsUserGuid  = guid;
+    window.WMSCurrentUser = {
+        authenticated: true,
+        fullName: normalizedName,
+        jobTitle: String(jobTitle || '').trim(),
+        email: String(email || '').trim(),
+        guid: String(guid || '').trim()
+    };
+    _wmsHadAuthenticatedUser = true;
+    window.dispatchEvent(new CustomEvent('wms:user-authenticated', { detail: window.WMSCurrentUser }));
 }
+
+document.addEventListener('DataPageReady', () => {
+    if (!document.querySelector('.main-content .cbLoginButton')) return;
+    window.WMSCurrentUser = null;
+    _wmsUserEmail = '';
+    _wmsUserGuid = '';
+    _showWMSAuthGate(_wmsHadAuthenticatedUser
+        ? 'Your Caspio session ended. Sign in again to continue.'
+        : 'No active Caspio session was found.');
+});
 
 function initializeNavigation() {
     document.addEventListener('click', function(e) {

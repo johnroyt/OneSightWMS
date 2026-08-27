@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Purchase Order Details - WMS</title>
-    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/styles.css?v=20260827-auth-3">
 </head>
 <body>
     <div class="app-container">
@@ -13,25 +13,21 @@
         <div class="main-wrapper">
             <div id="header-container"></div>
 
-            <main class="main-content multi-section">
-                <!-- Top row: PO Details (left, flexible) + Receiving History (right, fixed) -->
+            <main class="main-content multi-section po-detail-page">
+                <!-- Headerless PO summary (the page header already supplies the title) + progress -->
                 <div class="po-top-row">
-                    <div class="full-width-section">
-                        <div class="card-header">
-                            <h2 class="card-title">Purchase Order Details</h2>
-                            <div id="po-number" style="color: #4c6ef5; font-weight: 600;"></div>
-                        </div>
+                    <div class="full-width-section detail-summary-section">
                         <div id="po-details-container" class="datapage-container">
                             <p>Loading Purchase Order Details...</p>
                         </div>
                     </div>
 
-                    <div class="full-width-section po-history-side">
+                    <div class="full-width-section po-progress-side">
                         <div class="card-header">
-                            <h2 class="card-title">Receiving History</h2>
+                            <h2 class="card-title">Receiving Progress</h2>
                         </div>
-                        <div id="po-history-container" class="datapage-container">
-                            <p>Loading Receiving History...</p>
+                        <div id="po-progress-container" class="receiving-progress" aria-live="polite">
+                            <p class="receiving-progress-message">Loading receiving progress...</p>
                         </div>
                     </div>
                 </div>
@@ -40,6 +36,7 @@
                 <div class="full-width-section">
                     <div class="card-header">
                         <h2 class="card-title">Purchase Order Items</h2>
+                        <div id="po-progress-compact" class="po-progress-compact" hidden></div>
                     </div>
                     <div id="po-items-container" class="datapage-container">
                         <p>Loading Purchase Order Items...</p>
@@ -49,10 +46,13 @@
         </div>
     </div>
 
-    <script src="../../js/main.js"></script>
+    <script src="../../js/main.js?v=20260827-auth-4"></script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const purchaseOrderId = urlParams.get('PurchaseOrderID') || urlParams.get('OrderID');
+        const progressApiBase = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://127.0.0.1:8787'
+            : 'https://onesight-wms-dashboard.operations-78f.workers.dev';
 
         document.getElementById('sidebar-container').innerHTML = generateSidebar('Purchase Orders');
 
@@ -88,15 +88,83 @@
             itemsContainer.innerHTML = '';
             itemsContainer.appendChild(itemsScript);
 
-            const historyContainer = document.getElementById('po-history-container');
-            const historyScript = document.createElement('script');
-            historyScript.src = `${CASPIO_DATAPAGES.purchaseOrderHistory}?PurchaseOrderID=${purchaseOrderId}`;
-            historyContainer.innerHTML = '';
-            historyContainer.appendChild(historyScript);
+            loadReceivingProgress(purchaseOrderId);
         } else {
             document.getElementById('po-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
             document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
-            document.getElementById('po-history-container').innerHTML = '<p style="color: #e53e3e;">Error: No Purchase Order ID provided.</p>';
+            document.getElementById('po-progress-container').innerHTML = '<p class="receiving-progress-message is-error">No purchase order ID provided.</p>';
+        }
+
+        function formatProgressNumber(value) {
+            return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value) || 0);
+        }
+
+        function formatProgressDate(value) {
+            if (!value) return 'No receipt activity recorded';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return 'No receipt activity recorded';
+            return `Last receipt ${new Intl.DateTimeFormat('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Chicago'
+            }).format(date)}`;
+        }
+
+        function renderReceivingProgress(progress) {
+            const container = document.getElementById('po-progress-container');
+            const compact = document.getElementById('po-progress-compact');
+            const progressCard = document.querySelector('.po-progress-side');
+            const pendingText = progress.overReceivedUnits > 0
+                ? `${formatProgressNumber(progress.overReceivedUnits)} over received`
+                : `${formatProgressNumber(progress.pendingUnits)} pending`;
+            const terminalStatus = ['Closed', 'Cancelled'].includes(progress.status);
+            const receivingStatus = ['Ready to Receive', 'Partially Received', 'Fully Received'].includes(progress.status);
+            const shouldShow = !terminalStatus && (receivingStatus || progress.receivedUnits > 0);
+
+            progressCard.classList.toggle('is-hidden', !shouldShow);
+            compact.hidden = !shouldShow;
+            if (!shouldShow) return;
+
+            const tone = progress.overReceivedUnits > 0 ? ' is-warning' : (progress.pendingUnits === 0 ? ' is-complete' : '');
+            container.innerHTML = `
+                <div class="receiving-progress-summary${tone}">
+                    <div class="receiving-progress-count">
+                        <strong>${formatProgressNumber(progress.receivedUnits)}</strong>
+                        <span>of ${formatProgressNumber(progress.orderedUnits)} units received</span>
+                    </div>
+                    <div class="receiving-progress-percent">${progress.progressPercent.toLocaleString('en-US', { maximumFractionDigits: 1 })}%</div>
+                </div>
+                <div class="receiving-progress-track" role="progressbar"
+                    aria-label="Purchase order receiving progress"
+                    aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.progressBarPercent}">
+                    <span style="width: ${progress.progressBarPercent}%"></span>
+                </div>
+                <div class="receiving-progress-meta">
+                    <span>${pendingText}</span>
+                    <span>${formatProgressNumber(progress.completeLines)} of ${formatProgressNumber(progress.totalLines)} lines complete</span>
+                </div>
+                <div class="receiving-progress-date">${formatProgressDate(progress.lastReceiptAt)}</div>`;
+
+            compact.innerHTML = `
+                <span><strong>${formatProgressNumber(progress.receivedUnits)} / ${formatProgressNumber(progress.orderedUnits)}</strong> received</span>
+                <span class="po-progress-compact-track" aria-hidden="true"><i style="width: ${progress.progressBarPercent}%"></i></span>
+                <span>${pendingText}</span>
+                <span class="po-progress-compact-lines">${formatProgressNumber(progress.completeLines)} / ${formatProgressNumber(progress.totalLines)} lines</span>`;
+        }
+
+        async function loadReceivingProgress(id) {
+            const container = document.getElementById('po-progress-container');
+            document.querySelector('.po-progress-side').classList.add('is-hidden');
+            try {
+                const response = await fetch(`${progressApiBase}/purchase-orders/${encodeURIComponent(id)}/receiving-progress`, {
+                    method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' }
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || 'Receiving progress is unavailable.');
+                renderReceivingProgress(payload);
+            } catch (error) {
+                console.error('Receiving progress load failed', error);
+                document.querySelector('.po-progress-side').classList.add('is-hidden');
+                document.getElementById('po-progress-compact').hidden = true;
+            }
         }
     </script>
 

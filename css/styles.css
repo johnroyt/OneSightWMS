@@ -762,6 +762,62 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     min-height: 0;          /* allow flex children to shrink */
 }
+body .main-wrapper > .main-content[hidden] { display: none !important; }
+
+/* ---------- Shared Caspio authentication gate ------------------------- */
+.wms-auth-gate {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    min-height: 0;
+    padding: 24px;
+}
+.wms-auth-gate[hidden] { display: none; }
+.wms-auth-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    max-width: 430px;
+    padding: 30px 32px;
+    text-align: center;
+    width: 100%;
+}
+.wms-auth-mark {
+    align-items: center;
+    background: var(--c-primary-soft);
+    border: 1px solid #BBD7DF;
+    border-radius: 50%;
+    color: var(--c-primary-ink);
+    display: inline-flex;
+    font-size: 20px;
+    height: 48px;
+    justify-content: center;
+    margin-bottom: 14px;
+    width: 48px;
+}
+.wms-auth-eyebrow {
+    color: var(--c-primary-ink);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .11em;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+.wms-auth-card h1 { color: var(--c-ink); font-size: 21px; font-weight: 650; letter-spacing: -.015em; }
+.wms-auth-card > p:not(.wms-auth-eyebrow) { color: var(--c-ink-3); font-size: 12.5px; line-height: 1.55; margin: 8px auto 18px; max-width: 340px; }
+.wms-auth-login { background: var(--c-primary); border: 1px solid var(--c-primary); border-radius: var(--radius); color: #fff; font-size: 12px; font-weight: 650; min-width: 170px; padding: 9px 16px; }
+.wms-auth-login:hover:not(:disabled) { background: var(--c-primary-ink); }
+.wms-auth-login:disabled { cursor: wait; opacity: .6; }
+.wms-auth-status { color: var(--c-ink-3); display: block; font-size: 10.5px; margin-top: 10px; }
+
+/* Parent-record cards on detail + child-items pages do not repeat the page
+   title. Let their DataPage use the whole card while preserving all corners. */
+.full-width-section.detail-summary-section > .datapage-container,
+.full-width-section.detail-summary-section > .tab-datapage-container {
+    border-radius: var(--radius-lg);
+}
 
 /* When a tab body contains a datapage, kill the tab's own padding too */
 .inventory-tab-content:has(> .tab-datapage-container),
@@ -867,14 +923,165 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     flex: 1 1 auto;
     min-width: 0;
 }
-.po-top-row > .po-history-side {
-    flex: 0 0 400px;
-    min-width: 300px;
+.po-top-row > .po-progress-side {
+    flex: 0 0 300px;
+    min-width: 280px;
+}
+.po-top-row > .po-progress-side.is-hidden {
+    display: none;
 }
 .po-top-row > .full-width-section > .datapage-container {
     flex: 1 1 auto;
     min-height: 200px;
     overflow-y: auto;
+}
+
+.receiving-progress {
+    min-height: 200px;
+    padding: 24px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.receiving-progress-message {
+    color: var(--c-ink-3);
+    text-align: center;
+}
+.receiving-progress-message.is-error {
+    color: var(--c-danger);
+}
+.receiving-progress-summary {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+.receiving-progress-count {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.receiving-progress-count strong {
+    color: var(--c-ink);
+    font-family: var(--font-mono);
+    font-size: 30px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+.receiving-progress-count span {
+    color: var(--c-ink-3);
+    font-size: 11.5px;
+    margin-top: 6px;
+}
+.receiving-progress-percent {
+    color: var(--c-primary-ink);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.receiving-progress-summary.is-complete .receiving-progress-percent {
+    color: var(--c-success);
+}
+.receiving-progress-summary.is-warning .receiving-progress-percent {
+    color: var(--c-warning);
+}
+.receiving-progress-track {
+    height: 9px;
+    background: var(--c-line-2);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 18px;
+}
+.receiving-progress-track > span {
+    display: block;
+    height: 100%;
+    background: var(--c-primary);
+    border-radius: inherit;
+}
+.receiving-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--c-ink-2);
+    font-size: 11px;
+    margin-top: 10px;
+}
+.receiving-progress-meta span:last-child {
+    text-align: right;
+}
+.receiving-progress-date {
+    border-top: 1px solid var(--c-line-2);
+    color: var(--c-ink-3);
+    font-size: 11px;
+    margin-top: 18px;
+    padding-top: 12px;
+}
+
+.po-progress-compact {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    color: var(--c-ink-3);
+    font-size: 11px;
+    margin-left: auto;
+    white-space: nowrap;
+}
+.po-progress-compact strong {
+    color: var(--c-ink);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+.po-progress-compact-track {
+    width: 120px;
+    height: 6px;
+    background: var(--c-line-2);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.po-progress-compact-track > i {
+    display: block;
+    height: 100%;
+    background: var(--c-primary);
+    border-radius: inherit;
+}
+
+/* Laptop layout: the four-column Caspio PO form needs the full content width.
+   Keep progress in the PO Items header instead of adding another card row. */
+@media (max-width: 1800px) {
+    .po-top-row > .po-progress-side {
+        display: none;
+    }
+    .po-progress-compact:not([hidden]) {
+        display: flex;
+    }
+}
+
+@media (max-width: 900px) {
+    .po-progress-compact-lines {
+        display: none;
+    }
+    .po-progress-compact-track {
+        width: 80px;
+    }
+}
+
+/* On desktop/laptop screens, keep the PO summary fixed and let the items card
+   use exactly the remaining viewport height. This avoids a page scrollbar on
+   top of the table's own scrollbar. Narrow layouts retain natural scrolling. */
+@media (min-width: 901px) {
+    .main-content.multi-section.po-detail-page:has(.datapage-container) {
+        overflow-y: hidden !important;
+    }
+    .main-content.multi-section.po-detail-page:has(.datapage-container) > .full-width-section {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    .main-content.multi-section.po-detail-page > .full-width-section > .datapage-container {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+    }
 }
 
 /* For tabbed layouts: only the active tab content stretches */
@@ -1090,10 +1297,6 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     outline-offset: 2px;
 }
 
-.close-modal:hover {
-    color: #333333;
-}
-
 /* ── Mobile sidebar ─────────────────────────────────────────────────────── */
 
 .hamburger-btn {
@@ -1198,20 +1401,20 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
 }
 
 /* ---------- Order Items table column widths --------------------------------
-   Scoped to #po-items-container so these only affect the Order Items table.
+   Scoped to #order-workflow-items-container so these only affect this Order Items DataPage.
    Column order (left→right, based on Caspio DataPage Elements panel):
      1 ProductUPC  2 Quantity  3 ROC On Hand  4 Description (fills remaining)
      5 QtyPicked   6 PickedBy  7 CreatedDate  8 Actions (Edit/Delete/Add)
    Adjust the px values here; any column without a width set shares the
    leftover space. If you reorder columns in Caspio, update the numbers. */
-#po-items-container .cbResultSetTable thead th:nth-child(1) { width: 150px; }
-#po-items-container .cbResultSetTable thead th:nth-child(2) { width: 80px;  }
-#po-items-container .cbResultSetTable thead th:nth-child(3) { width: 90px;  }
+#order-workflow-items-container .cbResultSetTable thead th:nth-child(1) { width: 150px; }
+#order-workflow-items-container .cbResultSetTable thead th:nth-child(2) { width: 80px;  }
+#order-workflow-items-container .cbResultSetTable thead th:nth-child(3) { width: 90px;  }
 /* th:nth-child(4) = Description — no width, absorbs all remaining space   */
-#po-items-container .cbResultSetTable thead th:nth-child(5) { width: 110px; }
-#po-items-container .cbResultSetTable thead th:nth-child(6) { width: 110px; }
-#po-items-container .cbResultSetTable thead th:nth-child(7) { width: 100px; }
-#po-items-container .cbResultSetTable thead th:nth-child(8) { width: 80px;  }
+#order-workflow-items-container .cbResultSetTable thead th:nth-child(5) { width: 110px; }
+#order-workflow-items-container .cbResultSetTable thead th:nth-child(6) { width: 110px; }
+#order-workflow-items-container .cbResultSetTable thead th:nth-child(7) { width: 100px; }
+#order-workflow-items-container .cbResultSetTable thead th:nth-child(8) { width: 80px;  }
 
 :is(.datapage-container, .tab-datapage-container) .cbFormFieldCell,
 :is(.datapage-container, .tab-datapage-container) .cbFormDataCell,
@@ -2377,6 +2580,47 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     width: auto !important;
 }
 
+/* Compact visual hierarchy for parent-record summary forms. Caspio's
+   "No Style" output supplies structure only, so the host app owns labels,
+   read-only values, and density. Supports both Caspio form renderers. */
+.detail-summary-section :is(.cbFormLabel, .cbFormLabelRequired),
+.detail-summary-section [data-cb-cell-name$="LabelCell"],
+.detail-summary-section section[data-cb-name="cbTable"] > div > div:first-child > label[for] {
+    display: block !important;
+    margin: 0 0 3px !important;
+    color: var(--c-ink-3) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    letter-spacing: .045em !important;
+    text-transform: uppercase !important;
+}
+
+.detail-summary-section :is(.cbFormData, .cbFormDataCell, .cbFormDataCellNumberDate),
+.detail-summary-section [data-cb-cell-name$="LabelCell"] + div {
+    color: var(--c-ink) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1.35 !important;
+}
+
+/* Order notes stay compact while being read and expand in place for editing.
+   This preserves the existing Caspio form submission; no separate modal. */
+#order-workflow-details-container textarea[name="EditRecordOrderNotes"] {
+    height: 54px !important;
+    min-height: 54px !important;
+    overflow-y: hidden !important;
+    resize: none !important;
+}
+
+#order-workflow-details-container textarea[name="EditRecordOrderNotes"]:focus {
+    height: 112px !important;
+    min-height: 112px !important;
+    overflow-y: auto !important;
+}
+
 /* When edge-to-edge inside a card, give the search form some inner air */
 .full-width-section > :is(.datapage-container, .tab-datapage-container) .cbFormTable,
 .card > :is(.datapage-container, .tab-datapage-container) .cbFormTable,
@@ -2435,7 +2679,7 @@ body.no-mono-num .id { font-family: var(--font-sans) !important; }
     border: 1px solid transparent !important;
 }
 
-/* Stolen Color Variants */
+/* Color variants */
 :is(.datapage-container, .tab-datapage-container) .rs-green  { background: #e8f7ee !important; color: #116239 !important; border-color: #bde8ce !important; }
 :is(.datapage-container, .tab-datapage-container) .rs-blue   { background: #eaf2ff !important; color: #1d4f91 !important; border-color: #c9ddff !important; }
 :is(.datapage-container, .tab-datapage-container) .rs-yellow { background: #fff7d6 !important; color: #755900 !important; border-color: #f5df84 !important; }

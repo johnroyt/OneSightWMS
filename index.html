@@ -3,114 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OneSight WMS operational dashboard for picks, receiving, counts, clinic readiness, and inventory exceptions.">
     <title>Warehouse Management System</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=20260827-auth-3">
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
     <div class="app-container" id="app"></div>
-    
-    <script src="js/main.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const app = document.getElementById('app');
-        app.innerHTML = `
-            <div id="sidebar-container"></div>
-            <div class="main-wrapper">
-                <div id="header-container"></div>
-                <main class="main-content">
-                    <!-- Dashboard Stats -->
-                    <div class="datapage-container" id="dashboard-stats-datapage">
-                    </div>
-                    
-                    <!-- Inventory Snapshot & Reorder Alerts Row -->
-                    <div class="dashboard-grid">
-                        <!-- Inventory Snapshot -->
-                        <div class="inventory-card">
-                            <div class="card-header">
-                                <h2 class="card-title">Inventory Snapshot</h2>
-                                <a href="#" style="color: #4c6ef5; font-size: 0.875rem;">View Details →</a>
+
+    <script src="js/main.js?v=20260827-auth-4"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div id="sidebar-container"></div>
+                <div class="main-wrapper">
+                    <div id="header-container"></div>
+                    <main class="main-content wms-dashboard" id="dashboard-main">
+                        <section class="dashboard-intro" aria-labelledby="dashboard-heading">
+                            <div>
+                                <p class="dashboard-eyebrow">Operations control tower</p>
+                                <h1 id="dashboard-heading">What needs attention today</h1>
+                                <p class="dashboard-subtitle">Live picks, receiving, inventory, and count exceptions from WMS.</p>
                             </div>
-                            <div class="location-inventory">
-                                <span class="location-name">ROC Main Warehouse</span>
-                                <span class="location-qty">12,450 units</span>
+                            <div class="dashboard-refresh-group">
+                                <span id="dashboard-as-of" class="dashboard-as-of" aria-live="polite">Connecting to WMS…</span>
+                                <button id="dashboard-refresh" class="dashboard-refresh" type="button">
+                                    <span class="refresh-mark" aria-hidden="true">↻</span>
+                                    Refresh
+                                </button>
                             </div>
-                            <div class="location-inventory">
-                                <span class="location-name">Pod - 6 Lane A - Atlanta Clinic</span>
-                                <span class="location-qty">850 units</span>
-                            </div>
-                            <div class="location-inventory">
-                                <span class="location-name">Pod - 4 Lane - Pending Shipment</span>
-                                <span class="location-qty">625 units</span>
-                            </div>
-                            <div class="location-inventory">
-                                <span class="location-name">Sale-for-Sight Pod - Idle</span>
-                                <span class="location-qty">320 units</span>
-                            </div>
+                        </section>
+
+                        <div id="dashboard-message" class="dashboard-message" hidden role="status"></div>
+
+                        <section class="dashboard-cards" aria-label="Operational summary">
+                            <button class="dashboard-kpi is-loading" type="button" data-card="readyToPick">
+                                <span class="kpi-accent"></span>
+                                <span class="kpi-label">Ready to pick</span>
+                                <span class="kpi-value" data-kpi-value>—</span>
+                                <span class="kpi-detail" data-kpi-detail>Loading current queue</span>
+                            </button>
+                            <button class="dashboard-kpi is-loading" type="button" data-card="staged">
+                                <span class="kpi-accent"></span>
+                                <span class="kpi-label">Staged / in transit</span>
+                                <span class="kpi-value" data-kpi-value>—</span>
+                                <span class="kpi-detail" data-kpi-detail>Loading transfer status</span>
+                            </button>
+                            <button class="dashboard-kpi is-loading" type="button" data-card="receiving">
+                                <span class="kpi-accent"></span>
+                                <span class="kpi-label">Open receiving</span>
+                                <span class="kpi-value" data-kpi-value>—</span>
+                                <span class="kpi-detail" data-kpi-detail>Loading purchase orders</span>
+                            </button>
+                            <button class="dashboard-kpi is-loading" type="button" data-card="counts">
+                                <span class="kpi-accent"></span>
+                                <span class="kpi-label">Open counts</span>
+                                <span class="kpi-value" data-kpi-value>—</span>
+                                <span class="kpi-detail" data-kpi-detail>Loading count sessions</span>
+                            </button>
+                            <button class="dashboard-kpi is-loading" type="button" data-card="inventoryExceptions">
+                                <span class="kpi-accent"></span>
+                                <span class="kpi-label">Critical stockouts</span>
+                                <span class="kpi-value" data-kpi-value>—</span>
+                                <span class="kpi-detail" data-kpi-detail>Loading inventory health</span>
+                            </button>
+                        </section>
+
+                        <div class="dashboard-primary-grid">
+                            <section class="dashboard-panel attention-panel" aria-labelledby="attention-title">
+                                <div class="dashboard-panel-header attention-header">
+                                    <div>
+                                        <div class="panel-title-line">
+                                            <h2 id="attention-title">Needs attention</h2>
+                                            <span id="attention-count" class="panel-count">—</span>
+                                        </div>
+                                        <p>Prioritized work across picking, receiving, counts, and inventory.</p>
+                                    </div>
+                                    <div class="attention-filters" role="group" aria-label="Filter action queue">
+                                        <button type="button" class="attention-filter active" data-filter="all">All</button>
+                                        <button type="button" class="attention-filter" data-filter="urgent">Urgent</button>
+                                        <button type="button" class="attention-filter" data-filter="warehouse">Warehouse</button>
+                                        <button type="button" class="attention-filter" data-filter="inventory">Inventory</button>
+                                    </div>
+                                </div>
+                                <div class="dashboard-table-wrap attention-table-wrap">
+                                    <table class="dashboard-table attention-table">
+                                        <thead><tr><th>Priority</th><th>Work item</th><th>Context</th><th>Due / age</th><th>Owner</th><th><span class="sr-only">Action</span></th></tr></thead>
+                                        <tbody id="attention-body"><tr class="loading-row"><td colspan="6">Loading the current action queue…</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </section>
+
+                            <section class="dashboard-panel readiness-panel" aria-labelledby="readiness-title">
+                                <div class="dashboard-panel-header">
+                                    <div>
+                                        <div class="panel-title-line"><h2 id="readiness-title">Upcoming readiness</h2><span class="panel-window">45 days</span></div>
+                                        <p>Orders due soon, from planning through completion.</p>
+                                    </div>
+                                    <a href="pages/orders/index.html" class="panel-link">All orders →</a>
+                                </div>
+                                <div id="readiness-list" class="readiness-list"><div class="panel-loading">Loading upcoming work…</div></div>
+                            </section>
                         </div>
-                        
-                        <!-- Reorder Alerts -->
-                        <div class="alert-card">
-                            <div class="card-header">
-                                <h2 class="card-title">SKUs Below Reorder Point</h2>
-                            </div>
-                            <ul class="alert-list">
-                                <li class="alert-item">
-                                    <span>SKU-1234: Sunglasses</span>
-                                    <button class="reorder-btn">Create PO</button>
-                                </li>
-                                <li class="alert-item">
-                                    <span>SKU-5678: OneSight Cases</span>
-                                    <button class="reorder-btn">Create PO</button>
-                                </li>
-                                <li class="alert-item">
-                                    <span>SKU-9012: Eye Drops</span>
-                                    <button class="reorder-btn">Create PO</button>
-                                </li>
-                            </ul>
+
+                        <div class="dashboard-secondary-grid">
+                            <section class="dashboard-panel shortages-panel" aria-labelledby="shortages-title">
+                                <div class="dashboard-panel-header">
+                                    <div>
+                                        <div class="panel-title-line"><h2 id="shortages-title">Critical replenishment gaps</h2><span id="shortages-count" class="panel-count">—</span></div>
+                                        <p>Active modeled locations only; confirmed inbound is already subtracted.</p>
+                                    </div>
+                                    <a href="pages/inventory/index.html" class="panel-link">Inventory →</a>
+                                </div>
+                                <div class="dashboard-table-wrap">
+                                    <table class="dashboard-table shortages-table">
+                                        <thead><tr><th>Product</th><th>Location</th><th class="num">On hand</th><th class="num">Target</th><th class="num">Inbound</th><th class="num">Net gap</th></tr></thead>
+                                        <tbody id="shortages-body"><tr class="loading-row"><td colspan="6">Loading scoped inventory gaps…</td></tr></tbody>
+                                    </table>
+                                </div>
+                                <p id="shortage-scope" class="panel-footnote"></p>
+                            </section>
+
+                            <section class="dashboard-panel trust-panel" aria-labelledby="trust-title">
+                                <div class="dashboard-panel-header">
+                                    <div><h2 id="trust-title">Inventory trust</h2><p>Signals that inventory records need validation.</p></div>
+                                    <a href="pages/inventory/index.html?tab=count-sessions" class="panel-link">Count sessions →</a>
+                                </div>
+                                <div class="trust-grid">
+                                    <div class="trust-metric"><span>Open count sessions</span><strong id="trust-open-counts">—</strong></div>
+                                    <div class="trust-metric"><span>Older than target</span><strong id="trust-old-counts">—</strong></div>
+                                    <div class="trust-metric danger"><span>Negative balances</span><strong id="trust-negative">—</strong></div>
+                                    <div class="trust-metric"><span>Blank quantities</span><strong id="trust-blank">—</strong></div>
+                                </div>
+                                <div class="trust-breakdown">
+                                    <h3>Locations with the most gaps</h3>
+                                    <div id="inventory-health-list" class="health-list"><div class="panel-loading">Loading location health…</div></div>
+                                </div>
+                            </section>
                         </div>
-                    </div>
-                    
-                    <!-- Transfer Orders Section -->
-                    <div class="full-width-section">
-                        <div class="tabs">
-                            <div class="tab active" onclick="switchTab(event, 'pending-transfers')">Pending Transfers</div>
-                            <div class="tab" onclick="switchTab(event, 'incoming-returns')">Incoming Returns</div>
+
+                        <div class="dashboard-activity-grid">
+                            <section class="dashboard-panel team-activity-panel" aria-labelledby="team-activity-title">
+                                <div class="dashboard-panel-header activity-header">
+                                    <div>
+                                        <h2 id="team-activity-title">Warehouse activity</h2>
+                                        <p>Recorded picking, incoming deliveries, and PO receiving by team member.</p>
+                                    </div>
+                                    <div class="activity-periods" role="group" aria-label="Warehouse activity period">
+                                        <button type="button" data-activity-period="week">Week</button>
+                                        <button type="button" class="active" data-activity-period="month">Month</button>
+                                        <button type="button" data-activity-period="ytd">YTD</button>
+                                    </div>
+                                </div>
+                                <div class="activity-summary" aria-label="Warehouse activity totals">
+                                    <div class="activity-total">
+                                        <span>Outbound picked</span>
+                                        <strong id="activity-picked-units">—</strong>
+                                        <small id="activity-picked-detail">Loading picks</small>
+                                    </div>
+                                    <div class="activity-total">
+                                        <span>Incoming deliveries</span>
+                                        <strong id="activity-deliveries">—</strong>
+                                        <small id="activity-deliveries-detail">Loading receipt log</small>
+                                    </div>
+                                    <div class="activity-total">
+                                        <span>PO units received</span>
+                                        <strong id="activity-po-units">—</strong>
+                                        <small id="activity-po-detail">Loading PO receipts</small>
+                                    </div>
+                                </div>
+                                <div class="dashboard-table-wrap">
+                                    <table class="dashboard-table activity-table">
+                                        <thead><tr><th>Team member</th><th class="num">Picked</th><th class="num">Orders</th><th class="num">Deliveries</th><th class="num">PO received</th></tr></thead>
+                                        <tbody id="activity-body"><tr class="loading-row"><td colspan="5">Loading team activity…</td></tr></tbody>
+                                    </table>
+                                </div>
+                                <p id="activity-footnote" class="panel-footnote">Only recorded WMS activity is shown; different work types are not combined into a score.</p>
+                            </section>
+
+                            <section class="dashboard-panel recent-activity-panel" aria-labelledby="movement-title">
+                                <div class="dashboard-panel-header">
+                                    <div><h2 id="movement-title">Recent activity</h2><p>Latest inventory ledger entries.</p></div>
+                                    <a href="pages/inventory/index.html" class="panel-link">Ledger →</a>
+                                </div>
+                                <div id="movements-list" class="movement-list"><div class="panel-loading">Loading recent activity…</div></div>
+                            </section>
                         </div>
-                        
-                        <div id="pending-transfers" class="tab-content active">
-                            <div class="datapage-container">
-                                <!-- Pending Transfers DataPage -->
-                                <p>Pending Transfers DataPage will be embedded here</p>
-                            </div>
-                        </div>
-                        
-                        <div id="incoming-returns" class="tab-content">
-                            <div class="datapage-container">
-                                <!-- Incoming Returns DataPage -->
-                                <p>Incoming Returns DataPage will be embedded here</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Recent Activity -->
-                    <div class="full-width-section">
-                        <div class="card-header">
-                            <h2 class="card-title">Recent Clinic Usage</h2>
-                            <button class="create-po-btn" style="background: #38a169;">+ Log Usage</button>
-                        </div>
-                        
-                        <div class="datapage-container">
-                            <!-- Clinic Consumption DataPage -->
-                            <p>Recent Clinic Usage DataPage will be embedded here</p>
-                        </div>
-                    </div>
-                </main>
-            </div>
-        `;
-        
-        // Use standard initialization
-        initializePage('Dashboard', 'Dashboard');
-    });
-</script>
+                    </main>
+                </div>
+            `;
+            initializePage('Dashboard', 'Dashboard');
+        });
+    </script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details - WMS</title>
-    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/styles.css?v=20260827-auth-3">
 </head>
 <body>
     <div class="app-container">
@@ -15,12 +15,8 @@
             
             <main class="main-content">
                 <!-- Order Details Section -->
-                <div class="full-width-section order-details-section">
-                    <div class="card-header">
-                        <div id="po-number" style="color: #4c6ef5; font-weight: 600;"></div>
-                    </div>
-                    
-                    <div id="po-details-container" class="datapage-container">
+                <div class="full-width-section order-details-section detail-summary-section">
+                    <div id="order-workflow-details-container" class="datapage-container">
                         <!-- Caspio PO Details DataPage will be embedded here -->
                         <p>Loading Order Details...</p>
                     </div>
@@ -32,7 +28,7 @@
                         <h2 class="card-title">Order Items</h2>
                     </div>
                     
-                    <div id="po-items-container" class="datapage-container">
+                    <div id="order-workflow-items-container" class="datapage-container">
                         <!-- Caspio PO Items DataPage will be embedded here -->
                         <p>Loading Order Items...</p>
                     </div>
@@ -41,7 +37,7 @@
         </div>
     </div>
     
-    <script src="../../js/main.js"></script>
+    <script src="../../js/main.js?v=20260827-auth-4"></script>
     <script>
         // First generate the sidebar and header
         document.getElementById('sidebar-container').innerHTML = generateSidebar('Orders');
@@ -62,7 +58,7 @@ for (const [key, value] of urlParams.entries()) {
 
 if (orderId) {
     // For Caspio embedding, create script elements programmatically instead
-    const detailsContainer = document.getElementById('po-details-container');
+    const detailsContainer = document.getElementById('order-workflow-details-container');
     const detailsScript = document.createElement('script');
     detailsScript.type = 'text/javascript';
     detailsScript.src = `https://c2ect483.caspio.com/dp/975940004ecc3253df0a438092c9/emb?OrderID=${orderId}`;
@@ -70,7 +66,7 @@ if (orderId) {
     detailsContainer.appendChild(detailsScript);
     
     // PO Items DataPage
-    const itemsContainer = document.getElementById('po-items-container');
+    const itemsContainer = document.getElementById('order-workflow-items-container');
     const itemsScript = document.createElement('script');
     itemsScript.type = 'text/javascript';
     itemsScript.src = `https://c2ect483.caspio.com/dp/97594000b4652b30419345b5ac30/emb?OrderID=${orderId}`;
@@ -78,8 +74,8 @@ if (orderId) {
     itemsContainer.appendChild(itemsScript);
 } else {
     // Handle case where no OrderID is provided
-    document.getElementById('po-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
-    document.getElementById('po-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
+    document.getElementById('order-workflow-details-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
+    document.getElementById('order-workflow-items-container').innerHTML = '<p style="color: #e53e3e;">Error: No Order ID provided.</p>';
 }
     </script>
     
