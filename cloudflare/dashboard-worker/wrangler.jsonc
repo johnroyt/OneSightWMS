@@ -8,7 +8,7 @@
   "vars": {
     "CASPIO_TOKEN_URL": "https://c2ect483.caspio.com/oauth/token",
     "CASPIO_API_BASE_URL": "https://c2ect483.caspio.com/rest/v2",
-    "ALLOWED_ORIGINS": "https://project-bj63w.vercel.app,http://localhost:8000,http://127.0.0.1:8000",
+    "ALLOWED_ORIGINS": "https://project-bj63w.vercel.app,https://johnroyt.github.io,http://localhost:8000,http://127.0.0.1:8000",
     "STAGED_SLA_DAYS": "3",
     "COUNT_SLA_DAYS": "1",
     "READINESS_DAYS": "45"
