@@ -59,7 +59,7 @@ const map = L.map(elements.map, {
   worldCopyJump: false,
 }).setView(NORTH_AMERICA_CENTER, NORTH_AMERICA_ZOOM);
 
-L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2t5k_1_124ad1d2c9d2487cdf7d8676", {
   attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
   maxZoom: 19,
   noWrap: true,
