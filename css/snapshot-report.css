@@ -1,0 +1,82 @@
+/* Scoped to the WMS snapshot mount or this report's optional Caspio header marker. */
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) {
+    --snapshot-ink: #11233a;
+    --snapshot-teal: #117c99;
+    color: var(--snapshot-ink);
+    font: 13px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#snapshot-files-datapage { overflow-x: auto; }
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) .cbResultSetTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e4e9ee;
+    border-radius: 10px;
+    background: #fff;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) .cbResultSetHeaderCell {
+    padding: 13px 16px;
+    background: #f3f7f9;
+    border: 0;
+    border-bottom: 1px solid #dde5eb;
+    text-align: left;
+    color: #43536a;
+    font: 600 12px/1.4 Inter, system-ui, sans-serif;
+    white-space: nowrap;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) .cbResultSetHeaderCell a {
+    color: #43536a;
+    text-decoration: none;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) :is(.cbResultSetData, .cbResultSetDataOddCell, .cbResultSetDataEvenCell) {
+    padding: 14px 16px;
+    border: 0;
+    border-bottom: 1px solid #edf0f3;
+    vertical-align: middle;
+    color: #23364d;
+    font: 13px/1.5 Inter, system-ui, sans-serif;
+    overflow-wrap: anywhere;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) .cbResultSetTable tr:hover td {
+    background-color: #f6fafb;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) a[href^="https://onesight-wms-snapshots-prod.s3.us-east-1.amazonaws.com/"],
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) a[href^="https://onesight-wms-snapshots-prod.s3.amazonaws.com/"] {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    box-sizing: border-box;
+    padding: 8px 16px !important;
+    border: 1px solid #117c99;
+    border-radius: 6px !important;
+    background: #117c99 !important;
+    color: #fff !important;
+    font: 600 12px/1.4 Inter, system-ui, sans-serif !important;
+    text-decoration: none !important;
+    white-space: nowrap;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) a[href^="https://onesight-wms-snapshots-prod.s3"]:hover {
+    background: #0a5a70 !important;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) :is(a, button, input, select):focus-visible {
+    outline: 3px solid #c8742c;
+    outline-offset: 3px;
+}
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) :is(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select) {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid #cbd5df;
+    border-radius: 5px;
+    font: inherit;
+}
+.wms-snapshot-report-marker { margin: 0 0 16px; color: #64748b; font: 12px/1.5 Inter, system-ui, sans-serif; }
+.wms-snapshot-report-marker span { display: inline-block; background: #e8f3f5; color: #0a5a70; padding: 5px 10px; border-radius: 5px; }
+:is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) [hidden] { display: none !important; }
+@media (max-width: 720px) {
+    form:has(.wms-snapshot-report-marker) { overflow-x: auto; }
+    :is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) .cbResultSetTable { min-width: 640px; }
+    :is(#snapshot-files-datapage, form:has(.wms-snapshot-report-marker)) :is(.cbResultSetHeaderCell, .cbResultSetData, .cbResultSetDataOddCell, .cbResultSetDataEvenCell) { padding: 12px; }
+}

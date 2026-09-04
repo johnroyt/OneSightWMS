@@ -68,7 +68,9 @@ const CASPIO_DATAPAGES = {
     chatterHistoryGlobal: 'https://c2ect483.caspio.com/dp/97594000568f3ec3f1e74e3b81a2/emb',
     purchaseOrderDetails:  'https://c2ect483.caspio.com/dp/97594000e98e324644c14ec3991f/emb',
     purchaseOrderItems:    'https://c2ect483.caspio.com/dp/9759400078819e1302ad47aa9c7f/emb',
-    purchaseOrderHistory:  'https://c2ect483.caspio.com/dp/9759400002acafc3e14b49cb995b/emb'
+    purchaseOrderHistory:  'https://c2ect483.caspio.com/dp/9759400002acafc3e14b49cb995b/emb',
+    // User-supplied WMS_SnapshotFiles report; authentication is enforced in Caspio.
+    snapshotFiles: 'https://c2ect483.caspio.com/dp/975940006188ecdbadb94113b1d6/emb'
 };
 
 const MODAL_OPTIONS = {
@@ -717,6 +719,7 @@ function navigateTo(page) {
         'Clinics & Events':  'pages/clinics/index.html',
         'Asset Schedule':    'pages/assets/index.html',
         'Location Labels':   'pages/management/barcodeLocationGen.html',
+        'Backups & Snapshots': 'pages/management/snapshots.html',
         'Scan-O-Matic':      'pages/management/ScanOMatic.html',
         'ROC Request':       'rocrequest/index.html'
     };
@@ -744,6 +747,7 @@ function getNavUrl(page) {
         'Clinics & Events':  'pages/clinics/index.html',
         'Asset Schedule':    'pages/assets/index.html',
         'Location Labels':   'pages/management/barcodeLocationGen.html',
+        'Backups & Snapshots': 'pages/management/snapshots.html',
         'Scan-O-Matic':      'pages/management/ScanOMatic.html',
         'ROC Request':       'rocrequest/index.html'
     };
@@ -775,7 +779,8 @@ const SIDEBAR_NAV = {
         { label: 'Asset Schedule',    icon: 'truck'     },
         { label: 'Location Labels',   icon: 'label'     },
         { label: 'Scan-O-Matic',      icon: 'scan'      },
-        { label: 'ROC Request',       icon: 'inbox'     }
+        { label: 'ROC Request',       icon: 'inbox'     },
+        { label: 'Backups & Snapshots', icon: 'download' }
     ]
 };
 

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backups &amp; Snapshots - OneSight WMS</title>
+    <link rel="stylesheet" href="../../css/styles.css?v=20260827-auth-3">
+    <link rel="stylesheet" href="../../css/snapshots.css?v=20260904-3">
+    <link rel="stylesheet" href="../../css/snapshot-report.css?v=20260904-1">
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        <div class="main-wrapper">
+            <div id="header-container"></div>
+            <main class="main-content wms-snapshots-page">
+                <section class="snapshot-intro" aria-labelledby="snapshot-heading">
+                    <div>
+                        <p class="snapshot-eyebrow">Management / Inventory records</p>
+                        <h2 id="snapshot-heading">Backups &amp; snapshots</h2>
+                        <p>Download the latest daily backup or browse retained weekly and monthly snapshots.</p>
+                    </div>
+                    <button class="snapshot-button snapshot-secondary" id="snapshot-refresh" type="button">Refresh files</button>
+                </section>
+                <section class="full-width-section snapshot-library" aria-labelledby="snapshot-files-heading">
+                    <div class="snapshot-section-heading"><div><h3 id="snapshot-files-heading">File library</h3><p>Daily backups and retained weekly and monthly files in one place.</p></div><span class="snapshot-badge">ZIP &amp; CSV</span></div>
+                    <p id="snapshot-files-status" class="snapshot-state" role="status">Preparing backup files…</p>
+                    <div id="snapshot-files-datapage" class="datapage-container"></div>
+                </section>
+                <noscript><p class="snapshot-state">Enable JavaScript to sign in and load backup files.</p></noscript>
+                <p class="snapshot-footnote">Dates describe when an export was captured—not a physical count or a guarantee of an exact accounting cutoff. Download links are temporary; refresh the page if a link expires.</p>
+            </main>
+        </div>
+    </div>
+    <script src="../../js/main.js?v=20260904-snapshots-3"></script>
+    <script src="../../js/snapshots-page.js?v=20260904-3"></script>
+</body>
+</html>
